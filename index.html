@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Alice's Garden | 爱丽丝庭院</title>
+    <base href="./">
+    <meta name="theme-color" content="#1a1c24">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        window.ASSET_PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='200' viewBox='0 0 160 200'%3E%3Crect fill='%23333' width='160' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23666' font-size='14' font-family='sans-serif'%3E图%3C/text%3E%3C/svg%3E";
+        (function() {
+            var LANG_KEY = "AliceGarden_Lang";
+            try {
+                var lang = localStorage.getItem(LANG_KEY);
+                if (lang === "en" || lang === "ms") {
+                    document.cookie = "googtrans=/zh-CN/" + lang + "; path=/";
+                    window.onGoogleTranslateReady = function() {
+                        if (typeof google !== "undefined" && google.translate && google.translate.TranslateElement) {
+                            new google.translate.TranslateElement({
+                                pageLanguage: "zh-CN",
+                                includedLanguages: "zh-CN,en,ms",
+                                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+                            }, "google_translate_element");
+                        }
+                    };
+                    var s = document.createElement("script");
+                    s.src = "https://translate.google.com/translate_a/element.js?cb=onGoogleTranslateReady";
+                    s.async = true;
+                    document.head.appendChild(s);
+                }
+            } catch (e) {}
+        })();
+    </script>
+</head>
+<body>
+    <!-- 时段背景图：最底层，仅刷新时按时间选 T1/T2/T3/T4，无纯色遮挡 -->
+    <div id="time-bg" class="time-bg" aria-hidden="true"></div>
+    <!-- 全局噪点层 -->
+    <div class="grain-layer" aria-hidden="true"></div>
+    <!-- 场景转场遮罩 -->
+    <div id="scene-transition" class="scene-transition" aria-hidden="true"></div>
+
+    <!-- Google Translate 挂载点（隐藏，仅用于自动翻译） -->
+    <div id="google_translate_element" class="google-translate-hidden" aria-hidden="true"></div>
+
+    <!-- 安装 App 页：未安装时仅显示此页，不显示登入；安装后或已安装不再显示 -->
+    <section id="install-page" class="install-page">
+        <div class="install-card glass-panel">
+            <h1 class="install-title">爱丽丝庭院</h1>
+            <p class="install-lang-label">选择语言 / Choose language / Pilih bahasa</p>
+            <div class="install-lang-options">
+                <button type="button" class="install-lang-btn" data-lang="zh-CN">中文</button>
+                <button type="button" class="install-lang-btn" data-lang="en">English</button>
+                <button type="button" class="install-lang-btn" data-lang="ms">Bahasa Melayu</button>
+            </div>
+            <p class="install-desc">请先安装为 App，安装后可获得图标与更好体验。本应用为在线版，更新代码后自动生效。</p>
+            <button type="button" id="install-app-btn" class="install-btn glow-btn">安装 App</button>
+            <div id="install-ios-tutorial" class="install-ios-tutorial hidden">
+                <p class="install-ios-tutorial-title">iPhone / iPad：添加到主屏幕</p>
+                <ol class="install-ios-steps">
+                    <li>点击 Safari 底部的 <strong>分享</strong> 按钮</li>
+                    <li>选择「<strong>添加到主屏幕</strong>」</li>
+                    <li>点击右上角「<strong>添加</strong>」</li>
+                </ol>
+                <p class="install-ios-tutorial-done">完成后点击下方按钮进入。</p>
+            </div>
+            <p id="install-ios-hint" class="install-ios-hint hidden">请点击浏览器菜单「<strong>添加到主屏幕</strong>」后，再点击下方按钮进入。</p>
+            <button type="button" id="install-done-btn" class="install-done-btn hidden">已安装，进入</button>
+        </div>
+    </section>
+
+    <!-- 以下为正式应用内容，未安装时隐藏 -->
+    <div id="app-shell" class="app-shell hidden">
+    <div id="loading-overlay" class="overlay loading-overlay hidden">
+        <div class="loading-content">
+            <div class="loader"></div>
+            <p id="loading-text">正在同步因果线…</p>
+        </div>
+    </div>
+
+    <div id="confirm-overlay" class="confirm-overlay hidden" aria-hidden="true">
+        <div class="confirm-box glass-panel">
+            <p id="confirm-message" class="confirm-message"></p>
+            <div class="confirm-buttons">
+                <button type="button" id="confirm-ok" class="confirm-btn confirm-btn-ok">确认</button>
+                <button type="button" id="confirm-cancel" class="confirm-btn confirm-btn-cancel">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <button type="button" id="btn-bgm" class="muted" aria-label="BGM">♫</button>
+
+    <!-- moichan 浮游导航：可拖动，点击切换开眼/闭眼并弹出「去哪里？」气泡 -->
+    <div id="moichan-nav" class="moichan-nav" aria-label="moichan导航">
+        <img id="moichan-nav-img" class="moichan-nav-img" src="assets/characters/moichan1.webp" alt="moichan导航" width="300" height="300">
+        <div id="moichan-nav-bubble" class="moichan-nav-bubble hidden">
+            <p class="moichan-nav-bubble-title">去哪里？</p>
+            <div class="moichan-nav-options">
+                <button type="button" class="moichan-nav-opt" data-go="GARDEN">庭院</button>
+                <button type="button" class="moichan-nav-opt" data-go="MARKET">市集</button>
+                <button type="button" class="moichan-nav-opt" data-go="LIBRARY">图书馆</button>
+                <button type="button" class="moichan-nav-opt" data-go="GALLERY">画廊</button>
+                <button type="button" class="moichan-nav-opt" data-go="DAILYTASK">每日任务</button>
+                <button type="button" class="moichan-nav-opt" data-go="DIVINATION">占卜</button>
+                <button type="button" class="moichan-nav-opt" data-go="MEMORY">记忆</button>
+                <button type="button" class="moichan-nav-opt moichan-nav-cancel" data-go="">不去</button>
+            </div>
+        </div>
+    </div>
+
+    <section id="scene-login" class="scene">
+        <div class="login-card">
+            <h1>灵魂认证</h1>
+            <p id="login-file-hint" class="login-hint hidden">请用本地服务器打开本页（不要双击 html），否则无法连接 GAS。在项目目录运行：<code>npx serve</code> 或 <code>python -m http.server 8080</code>，再访问终端里显示的地址。</p>
+            <div class="input-group">
+                <input type="text" id="input-uid" placeholder="UID (灵魂编号)" autocomplete="username">
+                <input type="password" id="input-pwd" placeholder="Password (契约密码)" autocomplete="current-password">
+            </div>
+            <button type="button" class="glow-btn" onclick="App.handleLogin()">开始认证</button>
+        </div>
+    </section>
+
+    <section id="scene-map" class="scene">
+        <header class="status-bar">
+            <div class="user-info">
+                <span id="display-name" class="code-text">Guest</span>
+                <span class="role-badge" id="display-role">访客</span>
+            </div>
+            <div class="currency">
+                <span class="label">因果值</span>
+                <span id="display-points" class="code-text">0</span>
+            </div>
+            <button type="button" class="logout-btn" onclick="App.logout()">登出</button>
+        </header>
+
+        <main class="map-container">
+            <div class="location-nodes">
+                <div class="node-item" data-node="GARDEN" onclick="App.navigateTo('GARDEN')">
+                    <div class="node-icon icon-garden"><img src="assets/icons/icon_garden.png" alt="庭院" onerror="this.style.display='none'"></div>
+                    <span>庭院</span>
+                </div>
+                <div class="node-item" data-node="MARKET" onclick="App.navigateTo('MARKET')">
+                    <div class="node-icon icon-market"><img src="assets/icons/icon_market.png" alt="市集" onerror="this.style.display='none'"></div>
+                    <span>市集</span>
+                </div>
+                <div class="node-item" onclick="App.navigateTo('LIBRARY')">
+                    <div class="node-icon icon-library"><img src="assets/icons/icon_library.png" alt="图书馆" onerror="this.style.display='none'"></div>
+                    <span>图书馆</span>
+                </div>
+                <div class="node-item" onclick="App.navigateTo('GALLERY')">
+                    <div class="node-icon icon-gallery"><img src="assets/icons/icon_gallery.png" alt="画廊" onerror="this.style.display='none'"></div>
+                    <span>画廊</span>
+                </div>
+                <div class="node-item" onclick="App.navigateTo('DAILYTASK')">
+                    <div class="node-icon icon-daily"><img src="assets/icons/icon_daily.png" alt="每日任务" onerror="this.style.display='none'"></div>
+                    <span>每日任务</span>
+                </div>
+                <div class="node-item" onclick="App.navigateTo('THEATER')">
+                    <div class="node-icon icon-theater"><img src="assets/icons/icon_theater.png" alt="歌剧" onerror="this.style.display='none'"></div>
+                    <span>歌剧</span>
+                </div>
+                <div class="node-item" onclick="App.navigateTo('DIVINATION')">
+                    <div class="node-icon icon-divination"><img src="assets/icons/icon_divination.png" alt="占卜" onerror="this.style.display='none'"></div>
+                    <span>占卜</span>
+                </div>
+                <div class="node-item" onclick="App.navigateTo('MEMORY')">
+                    <div class="node-icon icon-memory"><img src="assets/icons/icon_memory.png" alt="记忆" onerror="this.style.display='none'"></div>
+                    <span>记忆</span>
+                </div>
+            </div>
+
+            <div id="memory-wall-container" class="glass-panel">
+                <h3>Yume · 留言墙</h3>
+                <div id="wall-messages"></div>
+                <div class="post-area">
+                    <input type="text" id="wall-input" placeholder="输入你的因果足迹…" maxlength="200">
+                    <button type="button" onclick="App.handleWallPost()">同步</button>
+                </div>
+            </div>
+
+        </main>
+    </section>
+
+    <div id="stage-area" class="stage-area-draggable">
+        <button type="button" id="stage-area-hide-btn" class="stage-area-hide-btn" aria-label="隐藏立绘">隐藏</button>
+        <img id="main-character-sprite" src="assets/characters/yumedefault.webp" alt="Yume" onerror="this.onerror=null;this.src=window.ASSET_PLACEHOLDER||'';">
+        <div id="character-glow" class="sprite-glow-yume"></div>
+    </div>
+
+    <div id="hana-prologue" class="overlay hidden">
+        <div class="character-wrap">
+            <img id="hana-sprite" src="assets/characters/hana_prologue.webp" alt="Hana" onerror="this.onerror=null;this.src=window.ASSET_PLACEHOLDER||'';">
+        </div>
+        <div class="dialogue-box">
+            <div class="name-tag">Hana</div>
+            <div id="hana-text" class="typewriter"></div>
+            <div class="next-hint">点击继续</div>
+        </div>
+    </div>
+
+    <div id="card-story-overlay" class="overlay hidden">
+        <div class="card-story-card-wrap">
+            <img id="card-story-card-img" class="card-story-card-img" src="" alt="" onerror="this.style.display='none';">
+        </div>
+        <div class="character-wrap">
+            <img id="card-story-sprite" src="assets/characters/hanadefault.webp" alt="Hana" onerror="this.onerror=null;this.src=window.ASSET_PLACEHOLDER||'';">
+        </div>
+        <div class="dialogue-box breath-hana">
+            <div class="name-tag" id="card-story-name">Hana</div>
+            <div id="card-story-text" class="story-text"></div>
+            <div class="next-hint" id="card-story-next">点击继续</div>
+        </div>
+    </div>
+
+    <section id="scene-garden" class="scene">
+        <div class="garden-ui">
+            <button type="button" class="icon-back garden-back" onclick="App.showScene(ALICE_CONSTANTS.SCENES.MAP)">返回地图</button>
+            <div class="quiz-container" id="quiz-container"></div>
+        </div>
+    </section>
+
+    <section id="scene-divination" class="scene">
+        <div class="scene-panel">
+            <h2>Sienna · 占卜</h2>
+            <p class="view-subtitle">探索内心的因果轨迹</p>
+            <div class="divination-module glass-panel">
+                <p id="divination-phase-label" class="divination-phase-label" aria-live="polite"></p>
+                <button type="button" class="crystal-ball" id="divination-crystal-btn" onclick="Divination.onCrystalClick()" aria-label="开始占卜">
+                    <span class="crystal-ball-inner"></span>
+                    <span class="crystal-ball-label">开始占卜</span>
+                </button>
+                <div id="divination-cards-wrap" class="divination-cards-wrap" style="display: none;">
+                    <div id="divination-card-slots" class="divination-card-slots">
+                        <div class="divination-card-slot face-down" data-slot="0"><div class="divination-card-back"></div><div class="divination-card-face"><span class="divination-card-title"></span><span class="divination-card-faction"></span></div></div>
+                        <div class="divination-card-slot face-down" data-slot="1"><div class="divination-card-back"></div><div class="divination-card-face"><span class="divination-card-title"></span><span class="divination-card-faction"></span></div></div>
+                        <div class="divination-card-slot face-down" data-slot="2"><div class="divination-card-back"></div><div class="divination-card-face"><span class="divination-card-title"></span><span class="divination-card-faction"></span></div></div>
+                    </div>
+                </div>
+                <div id="divination-result-wrap" class="divination-result-wrap hidden">
+                    <h3 class="divination-result-title">— Sienna · 庭院低语 —</h3>
+                    <div id="divination-result-body" class="divination-result-body"></div>
+                </div>
+            </div>
+            <button type="button" class="icon-back" onclick="App.navigateTo('MAP')">返回地图</button>
+        </div>
+    </section>
+
+    <section id="scene-market" class="scene">
+        <div class="scene-panel">
+            <h2>Shella · 市集</h2>
+            <p class="question-text">产品展示</p>
+            <div class="shop-grid">
+                <div class="shop-item glass-panel">
+                    <h4>抽卡 x1</h4>
+                    <p class="cost">200 因果值/次</p>
+                    <p class="question-text">前往庭院由 Hana 进行抽卡。</p>
+                </div>
+                <div class="shop-item glass-panel">
+                    <h4>占卜</h4>
+                    <p class="cost">100 因果值/次</p>
+                    <p class="question-text">前往占卜由 Sienna 进行占卜。</p>
+                </div>
+                <div class="shop-item glass-panel">
+                    <h4>记忆</h4>
+                    <p class="cost">200 因果值/次</p>
+                    <p class="question-text">前往记忆由 大家 留下回忆。</p>
+                </div>
+            </div>
+            <button type="button" class="icon-back" onclick="App.navigateTo('MAP')">返回地图</button>
+        </div>
+    </section>
+
+    <section id="scene-library" class="scene">
+        <div class="scene-panel library-panel">
+            <h2>Mizuki · 图书馆</h2>
+            <p class="view-subtitle">角色设定集 · 翻阅书页浏览</p>
+            <div id="library-book" class="library-book">
+                <button type="button" class="library-book-nav library-book-prev" id="library-prev" aria-label="上一页">‹</button>
+                <div class="library-book-inner">
+                    <div id="library-page-content" class="library-page-content"></div>
+                    <button type="button" class="library-read-full" id="library-read-full">查看全文</button>
+                </div>
+                <button type="button" class="library-book-nav library-book-next" id="library-next" aria-label="下一页">›</button>
+            </div>
+            <p class="library-page-indicator"><span id="library-page-num">1</span> / <span id="library-page-total">7</span></p>
+            <button type="button" class="icon-back" onclick="App.navigateTo('MAP')">返回地图</button>
+        </div>
+        <div id="library-reader" class="library-reader-overlay hidden">
+            <div class="library-reader-inner">
+                <h3 id="library-reader-title" class="library-reader-title"></h3>
+                <div id="library-reader-text" class="library-reader-text"></div>
+                <div class="library-reader-footer">
+                    <button type="button" class="library-reader-prev" id="library-reader-prev">上一页</button>
+                    <span class="library-reader-pages"><button type="button" class="library-reader-page-btn" id="library-reader-page-1">1</button> <button type="button" class="library-reader-page-btn" id="library-reader-page-2">2</button> <button type="button" class="library-reader-page-btn" id="library-reader-page-3">3</button></span>
+                    <span class="library-reader-page-num" id="library-reader-page-num">第 1 页</span>
+                    <button type="button" class="library-reader-next" id="library-reader-next">下一页</button>
+                    <button type="button" class="library-reader-close" id="library-reader-close">关闭</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="scene-gallery" class="scene">
+        <div class="scene-panel">
+            <h2>Azalea · 画廊</h2>
+            <p class="view-subtitle">卡牌与因果的视觉归档</p>
+            <div id="gallery-collection" class="gallery-collection"></div>
+            <button type="button" class="icon-back" onclick="App.navigateTo('MAP')">返回地图</button>
+        </div>
+    </section>
+
+    <section id="scene-dailytask" class="scene">
+        <div class="scene-panel">
+            <h2>Meiling · 每日任务</h2>
+            <div class="glass-panel">
+                <p class="question-text">每日祈愿可获取因果值。</p>
+            </div>
+            <button type="button" class="checkin-btn" onclick="App.handleCheckin()">每日祈愿</button>
+            <button type="button" class="icon-back" onclick="App.navigateTo('MAP')">返回地图</button>
+        </div>
+    </section>
+
+    <section id="scene-theater" class="scene">
+        <div class="theater-wrapper">
+            <div class="theater-header">
+                <button type="button" class="icon-back" onclick="App.navigateTo('MAP')">返回地图</button>
+                <h2>— 歌剧 · 专使频道 —</h2>
+            </div>
+            <div class="video-responsive" id="theater-video-wrap">
+                <div id="theater-play-cover" class="theater-play-cover" aria-label="点击播放视频">
+                    <span class="theater-play-btn">▶ 点击播放</span>
+                </div>
+                <iframe id="theater-iframe" data-src="https://www.youtube.com/embed/dc4bzJA_WOk" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            <div class="channel-promo">
+                <p>因果的旋律在此汇聚</p>
+                <a href="https://www.youtube.com/@girlishmarinehana.channel7104" target="_blank" rel="noopener">关注频道</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="scene-alice-ending" class="scene">
+        <div id="alice-ending-wait" class="alice-ending-wait">
+            <div class="loader"></div>
+            <p class="alice-ending-wait-text">等待结局回应…</p>
+        </div>
+        <div id="alice-ending-bubble-wrap" class="alice-ending-bubble-wrap hidden">
+            <div class="fate-bubble breath-alice alice-ending-bubble">
+                <h3 class="fate-bubble-title">— Alice · 终局 —</h3>
+                <div id="alice-ending-content" class="fate-scroll"></div>
+                <div class="fate-footer">
+                    <button type="button" class="download-btn" id="alice-ending-download">下载结局</button>
+                    <button type="button" class="reset-btn" id="alice-ending-close">关闭</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 记忆：拍照场地，最多 10 个 container，可加 assets 内 .webp 或本地上传 -->
+    <section id="scene-memory" class="scene scene-memory">
+        <div id="memory-stage" class="memory-stage" tabindex="0">
+            <div id="memory-containers" class="memory-containers"></div>
+        </div>
+        <div id="memory-ui" class="memory-ui">
+            <button type="button" id="memory-add-container" class="memory-btn memory-btn-add" title="添加容器 (最多10个)">+</button>
+            <button type="button" id="memory-hide-ui" class="memory-btn">Hide UI</button>
+            <button type="button" id="memory-screenshot" class="memory-btn">拍照</button>
+            <button type="button" id="memory-back-map" class="memory-btn">返回地图</button>
+        </div>
+        <div id="memory-add-popover" class="memory-popover hidden">
+            <button type="button" id="memory-source-local" class="memory-popover-btn">本地图片</button>
+            <button type="button" id="memory-source-assets" class="memory-popover-btn">庭院图片</button>
+        </div>
+        <div id="memory-assets-panel" class="memory-assets-panel hidden">
+            <div class="memory-assets-header">
+                <span>选择 .webp 图片</span>
+                <button type="button" id="memory-assets-close" class="memory-assets-close">×</button>
+            </div>
+            <div id="memory-assets-grid" class="memory-assets-grid"></div>
+        </div>
+        <div id="memory-container-toolbar" class="memory-container-toolbar hidden">
+            <span id="memory-toolbar-label" class="memory-toolbar-label">编号1</span>
+            <button type="button" id="memory-toolbar-move" class="memory-toolbar-btn">移动</button>
+            <button type="button" id="memory-toolbar-edit" class="memory-toolbar-btn">Edit</button>
+        </div>
+        <div id="memory-edit-panel" class="memory-edit-panel hidden">
+            <div class="memory-edit-panel-header">
+                <span id="memory-edit-panel-title">Edit</span>
+                <span id="memory-edit-panel-z" class="memory-edit-panel-z">z: 0</span>
+                <button type="button" id="memory-edit-panel-close" class="memory-edit-panel-close" aria-label="关闭">×</button>
+            </div>
+            <div class="memory-edit-panel-body">
+                <button type="button" data-action="rotate90">Rotate 90°</button>
+                <button type="button" data-action="flipV">Flip Vertical</button>
+                <button type="button" data-action="flipH">Flip Horizontal</button>
+                <button type="button" data-action="front">Bring Front +1</button>
+                <button type="button" data-action="back">Send Back -1</button>
+                <button type="button" data-action="crop">Crop</button>
+                <button type="button" data-action="resize">Resize %</button>
+                <button type="button" data-action="delete">Delete</button>
+            </div>
+        </div>
+        <input type="file" id="memory-upload-input" accept="image/*" class="hidden" aria-hidden="true">
+    </section>
+
+    <div id="alice-fate" class="fate-overlay hidden">
+        <div class="fate-bubble breath-alice">
+            <h3 class="fate-bubble-title">— Alice · 终局 —</h3>
+            <div id="fate-content" class="fate-scroll"></div>
+            <div class="fate-footer">
+                <button type="button" class="download-btn" id="fate-download">下载结局</button>
+                <button type="button" class="reset-btn" onclick="document.getElementById('alice-fate').classList.add('hidden'); App.navigateTo('MAP');">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="bgm-audio" loop preload="metadata">
+        <!-- 将 src 设为你的 BGM 地址，例如：src="assets/bgm/theme.mp3" -->
+    </audio>
+
+    <!-- 渐变层已改为透明，不遮挡时段背景；星光在最底层之上 -->
+    <div id="bg-gradient" class="bg-gradient" aria-hidden="true"></div>
+    <div class="stars-bg" aria-hidden="true"></div>
+    </div><!-- /#app-shell -->
+
+    <script src="constants.js"></script>
+    <script src="js/install-gate.js"></script>
+    <script src="assets/gardenArchetypes/gardenArchetypes.js"></script>
+    <script src="js/character.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/alice-features.js"></script>
+    <script src="js/divination.js"></script>
+    <script src="js/moichan-nav.js"></script>
+    <script src="js/sprite-stage.js"></script>
+    <script src="js/app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
+    <script src="js/memory-studio.js"></script>
+    <script>
+        (function() {
+            var hour = (new Date()).getHours();
+            var path = "assets/backgrounds/";
+            var file = "T2.webp";
+            if (hour >= 5 && hour < 11) file = "T1.webp";
+            else if (hour >= 11 && hour < 14) file = "T2.webp";
+            else if (hour >= 14 && hour < 18) file = "T3.webp";
+            else file = "T4.webp";
+            var el = document.getElementById("time-bg");
+            if (el) el.style.backgroundImage = "url(" + path + file + ")";
+            var bgm = document.getElementById("bgm-audio");
+            if (bgm) BGM.audio = bgm;
+            window.onload = function() {
+                if (typeof InstallGate !== "undefined" && InstallGate.run) InstallGate.run();
+                else if (typeof App !== "undefined" && App.init) App.init();
+            };
+        })();
+    </script>
+</body>
+</html>

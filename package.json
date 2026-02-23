@@ -1,0 +1,7 @@
+{
+  "name": "alice-garden",
+  "private": true,
+  "scripts": {
+    "start": "npx serve . -l 3000"
+  }
+}
