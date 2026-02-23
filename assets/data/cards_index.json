@@ -1,0 +1,16 @@
+[
+  {
+    "id": "CARD_001",
+    "name": "深海：她不想松开的手",
+    "rarity": "SSR",
+    "themeColor": "#16213e",
+    "cover": "assets/ui/card_back.webp"
+  },
+  {
+    "id": "CARD_002",
+    "name": "余烬：废墟中的守望者",
+    "rarity": "SR",
+    "themeColor": "#4a2c2a",
+    "cover": "assets/ui/card_back.webp"
+  }
+]
