@@ -253,6 +253,7 @@
                 img.src = src;
                 img.alt = src.split("/").pop();
                 img.loading = "lazy";
+                img.draggable = false;
                 img.onerror = function () { cell.style.display = "none"; };
                 img.onclick = function () {
                     addContainer(src);
@@ -360,6 +361,7 @@
         var img = document.createElement("img");
         img.src = src;
         img.alt = "";
+        img.draggable = false;
         img.dataset.rotate = String(options.rotate || 0);
         img.dataset.scaleX = String(options.scaleX != null ? options.scaleX : 1);
         img.dataset.scaleY = String(options.scaleY != null ? options.scaleY : 1);

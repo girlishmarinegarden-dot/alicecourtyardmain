@@ -138,6 +138,13 @@ const App = {
     },
 
     async init() {
+        var shell = document.getElementById("app-shell");
+        if (shell && !shell._noSaveImgBound) {
+            shell._noSaveImgBound = true;
+            document.addEventListener("contextmenu", function (e) {
+                if (e.target && e.target.tagName === "IMG" && shell.contains(e.target)) e.preventDefault();
+            }, false);
+        }
         this.showLoading("连接因果线…");
         var state = Auth.getState();
         var token = Auth.getToken();
@@ -495,6 +502,7 @@ const UI = {
         `;
         var cardBack = document.getElementById("gacha-card-back");
         if (cardBack) {
+            cardBack.draggable = false;
             cardBack.onerror = function() { this.style.display = "none"; };
             cardBack.onclick = function() { App.startGachaFlow(); };
         }

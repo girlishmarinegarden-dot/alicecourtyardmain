@@ -103,6 +103,7 @@ const CharacterFavor = {
      */
     setSprite(img, charId, emotion) {
         if (!img) return;
+        img.draggable = false;
         if (charId) {
             img.dataset.charId = charId;
             img.classList.add("js-favor-sprite");

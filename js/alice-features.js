@@ -217,6 +217,7 @@
         img.src = imgSrc;
         img.alt = name || id;
         img.className = "card-chip-img";
+        img.draggable = false;
         var caption = document.createElement("span");
         caption.className = "card-chip-name";
         caption.textContent = name || id || "?";
