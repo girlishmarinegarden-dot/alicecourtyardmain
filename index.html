@@ -94,7 +94,7 @@
 
     <!-- moichan 浮游导航：可拖动，点击切换开眼/闭眼并弹出「去哪里？」气泡 -->
     <div id="moichan-nav" class="moichan-nav" aria-label="moichan导航">
-        <img id="moichan-nav-img" class="moichan-nav-img" src="assets/characters/moichan1.webp" alt="moichan导航" width="300" height="300">
+        <img id="moichan-nav-img" class="moichan-nav-img" src="assets/characters/moichan1.webp" alt="moichan导航" width="300" height="300" draggable="false">
         <div id="moichan-nav-bubble" class="moichan-nav-bubble hidden">
             <p class="moichan-nav-bubble-title">去哪里？</p>
             <div class="moichan-nav-options">
@@ -138,35 +138,35 @@
         <main class="map-container">
             <div class="location-nodes">
                 <div class="node-item" data-node="GARDEN" onclick="App.navigateTo('GARDEN')">
-                    <div class="node-icon icon-garden"><img src="assets/icons/icon_garden.png" alt="庭院" onerror="this.style.display='none'"></div>
+                    <div class="node-icon icon-garden"><img src="assets/icons/icon_garden.png" alt="庭院" draggable="false" onerror="this.style.display='none'"></div>
                     <span>庭院</span>
                 </div>
                 <div class="node-item" data-node="MARKET" onclick="App.navigateTo('MARKET')">
-                    <div class="node-icon icon-market"><img src="assets/icons/icon_market.png" alt="市集" onerror="this.style.display='none'"></div>
+                    <div class="node-icon icon-market"><img src="assets/icons/icon_market.png" alt="市集" draggable="false" onerror="this.style.display='none'"></div>
                     <span>市集</span>
                 </div>
                 <div class="node-item" onclick="App.navigateTo('LIBRARY')">
-                    <div class="node-icon icon-library"><img src="assets/icons/icon_library.png" alt="图书馆" onerror="this.style.display='none'"></div>
+                    <div class="node-icon icon-library"><img src="assets/icons/icon_library.png" alt="图书馆" draggable="false" onerror="this.style.display='none'"></div>
                     <span>图书馆</span>
                 </div>
                 <div class="node-item" onclick="App.navigateTo('GALLERY')">
-                    <div class="node-icon icon-gallery"><img src="assets/icons/icon_gallery.png" alt="画廊" onerror="this.style.display='none'"></div>
+                    <div class="node-icon icon-gallery"><img src="assets/icons/icon_gallery.png" alt="画廊" draggable="false" onerror="this.style.display='none'"></div>
                     <span>画廊</span>
                 </div>
                 <div class="node-item" onclick="App.navigateTo('DAILYTASK')">
-                    <div class="node-icon icon-daily"><img src="assets/icons/icon_daily.png" alt="每日任务" onerror="this.style.display='none'"></div>
+                    <div class="node-icon icon-daily"><img src="assets/icons/icon_daily.png" alt="每日任务" draggable="false" onerror="this.style.display='none'"></div>
                     <span>每日任务</span>
                 </div>
                 <div class="node-item" onclick="App.navigateTo('THEATER')">
-                    <div class="node-icon icon-theater"><img src="assets/icons/icon_theater.png" alt="歌剧" onerror="this.style.display='none'"></div>
+                    <div class="node-icon icon-theater"><img src="assets/icons/icon_theater.png" alt="歌剧" draggable="false" onerror="this.style.display='none'"></div>
                     <span>歌剧</span>
                 </div>
                 <div class="node-item" onclick="App.navigateTo('DIVINATION')">
-                    <div class="node-icon icon-divination"><img src="assets/icons/icon_divination.png" alt="占卜" onerror="this.style.display='none'"></div>
+                    <div class="node-icon icon-divination"><img src="assets/icons/icon_divination.png" alt="占卜" draggable="false" onerror="this.style.display='none'"></div>
                     <span>占卜</span>
                 </div>
                 <div class="node-item" onclick="App.navigateTo('MEMORY')">
-                    <div class="node-icon icon-memory"><img src="assets/icons/icon_memory.png" alt="记忆" onerror="this.style.display='none'"></div>
+                    <div class="node-icon icon-memory"><img src="assets/icons/icon_memory.png" alt="记忆" draggable="false" onerror="this.style.display='none'"></div>
                     <span>记忆</span>
                 </div>
             </div>
@@ -185,13 +185,13 @@
 
     <div id="stage-area" class="stage-area-draggable">
         <button type="button" id="stage-area-hide-btn" class="stage-area-hide-btn" aria-label="隐藏立绘">隐藏</button>
-        <img id="main-character-sprite" src="assets/characters/yumedefault.webp" alt="Yume" onerror="this.onerror=null;this.src=window.ASSET_PLACEHOLDER||'';">
+        <img id="main-character-sprite" src="assets/characters/yumedefault.webp" alt="Yume" draggable="false" onerror="this.onerror=null;this.src=window.ASSET_PLACEHOLDER||'';">
         <div id="character-glow" class="sprite-glow-yume"></div>
     </div>
 
     <div id="hana-prologue" class="overlay hidden">
         <div class="character-wrap">
-            <img id="hana-sprite" src="assets/characters/hana_prologue.webp" alt="Hana" onerror="this.onerror=null;this.src=window.ASSET_PLACEHOLDER||'';">
+            <img id="hana-sprite" src="assets/characters/hana_prologue.webp" alt="Hana" draggable="false" onerror="this.onerror=null;this.src=window.ASSET_PLACEHOLDER||'';">
         </div>
         <div class="dialogue-box">
             <div class="name-tag">Hana</div>
@@ -202,10 +202,10 @@
 
     <div id="card-story-overlay" class="overlay hidden">
         <div class="card-story-card-wrap">
-            <img id="card-story-card-img" class="card-story-card-img" src="" alt="" onerror="this.style.display='none';">
+            <img id="card-story-card-img" class="card-story-card-img" src="" alt="" draggable="false" onerror="this.style.display='none';">
         </div>
         <div class="character-wrap">
-            <img id="card-story-sprite" src="assets/characters/hanadefault.webp" alt="Hana" onerror="this.onerror=null;this.src=window.ASSET_PLACEHOLDER||'';">
+            <img id="card-story-sprite" src="assets/characters/hanadefault.webp" alt="Hana" draggable="false" onerror="this.onerror=null;this.src=window.ASSET_PLACEHOLDER||'';">
         </div>
         <div class="dialogue-box breath-hana">
             <div class="name-tag" id="card-story-name">Hana</div>
@@ -264,7 +264,7 @@
                 </div>
                 <div class="shop-item glass-panel">
                     <h4>记忆</h4>
-                    <p class="cost">0 因果值/次</p>
+                    <p class="cost">200 因果值/次</p>
                     <p class="question-text">前往记忆由 大家 留下回忆。</p>
                 </div>
             </div>
@@ -459,4 +459,3 @@
     </script>
 </body>
 </html>
-

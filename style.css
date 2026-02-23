@@ -49,6 +49,33 @@ html, body {
 #app-shell { color: var(--silver); }
 .map-container { color: var(--silver); }
 
+/* 立绘 / icon 防长按下载（禁止 Save Image、选择等），覆盖所有模块 */
+#stage-area img,
+.node-icon img,
+.moichan-nav-img,
+#hana-prologue img,
+#card-story-overlay img,
+.card-story-card-img,
+.memory-containers .memory-container img,
+.memory-assets-grid .memory-asset-item img,
+.gacha-card-back-wrap img,
+.gallery-collection img,
+.gallery-collection .card-chip-img,
+.library-page-content img,
+.library-book img,
+.library-card img,
+.divination-card-slot img,
+#app-shell .character-wrap img {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    user-drag: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
 /* 第 0 层：时段背景图（T1/T2/T3/T4），DOM 最前 + z-index 最低，不被任何纯色遮挡 */
 .time-bg {
     position: fixed;
