@@ -442,7 +442,7 @@
             }
             case "back": {
                 var z = parseInt(wrap.style.zIndex || "0", 10) - 1;
-                z = Math.max(-10, z);
+                z = Math.max(0, z);
                 wrap.style.zIndex = String(z);
                 updateEditPanelZ();
                 break;
@@ -503,3 +503,4 @@
         init();
     }
 })();
+
