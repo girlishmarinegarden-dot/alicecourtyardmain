@@ -275,16 +275,29 @@
     <section id="scene-library" class="scene">
         <div class="scene-panel library-panel">
             <h2>Mizuki · 图书馆</h2>
-            <p class="view-subtitle">角色设定集 · 翻阅书页浏览</p>
-            <div id="library-book" class="library-book">
-                <button type="button" class="library-book-nav library-book-prev" id="library-prev" aria-label="上一页">‹</button>
-                <div class="library-book-inner">
-                    <div id="library-page-content" class="library-page-content"></div>
-                    <button type="button" class="library-read-full" id="library-read-full">查看全文</button>
+            <p class="view-subtitle">选择一本书开始阅读</p>
+            <div id="library-shelf" class="library-shelf">
+                <div class="library-cover-wrap" data-book-id="book1" title="点击阅读">
+                    <img class="library-cover-img" src="assets/ui/bc1.webp" alt="角色设定集" draggable="false">
+                    <span class="library-cover-title">角色设定集</span>
                 </div>
-                <button type="button" class="library-book-nav library-book-next" id="library-next" aria-label="下一页">›</button>
+                <div class="library-cover-wrap" data-book-id="book2" title="点击阅读">
+                    <img class="library-cover-img" src="assets/ui/bc2.webp" alt="设定集二" draggable="false">
+                    <span class="library-cover-title">设定集二</span>
+                </div>
             </div>
-            <p class="library-page-indicator"><span id="library-page-num">1</span> / <span id="library-page-total">7</span></p>
+            <div id="library-book-wrap" class="library-book-wrap hidden">
+                <button type="button" class="library-back-shelf" id="library-back-shelf">返回书柜</button>
+                <div id="library-book" class="library-book">
+                    <button type="button" class="library-book-nav library-book-prev" id="library-prev" aria-label="上一页">‹</button>
+                    <div class="library-book-inner">
+                        <div id="library-page-content" class="library-page-content"></div>
+                        <button type="button" class="library-read-full" id="library-read-full">查看全文</button>
+                    </div>
+                    <button type="button" class="library-book-nav library-book-next" id="library-next" aria-label="下一页">›</button>
+                </div>
+                <p class="library-page-indicator"><span id="library-page-num">1</span> / <span id="library-page-total">7</span></p>
+            </div>
             <button type="button" class="icon-back" onclick="App.navigateTo('MAP')">返回地图</button>
         </div>
         <div id="library-reader" class="library-reader-overlay hidden">

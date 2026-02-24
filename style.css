@@ -64,6 +64,7 @@ html, body {
 .library-page-content img,
 .library-book img,
 .library-card img,
+.library-shelf .library-cover-img,
 .divination-card-slot img,
 #app-shell .character-wrap img {
     -webkit-touch-callout: none;
@@ -1358,6 +1359,69 @@ body.mood-warm   { --bg-accent: #1a1410; }
 body.mood-dream  { --bg-accent: #18101a; }
 
 .view-subtitle { font-size: 0.9rem; color: var(--silver-dim); margin-bottom: 1rem; letter-spacing: 0.05em; }
+
+/* ——— 图书馆：书柜封面 → 点击进入翻阅 ——— */
+.library-shelf {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1.25rem;
+    max-width: 420px;
+    width: 100%;
+    margin: 1rem 0;
+}
+.library-cover-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 0.75rem;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+.library-cover-wrap:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0 24px rgba(212, 175, 55, 0.35);
+    border-color: var(--gold-glow);
+}
+.library-cover-img {
+    width: 100%;
+    max-width: 120px;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    border-radius: 6px;
+}
+.library-cover-title {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--silver-dim);
+    text-align: center;
+}
+.library-book-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+.library-book-wrap.hidden { display: none !important; }
+.library-shelf.hidden { display: none !important; }
+.library-back-shelf {
+    align-self: flex-start;
+    margin-bottom: 0.5rem;
+    padding: 0.4rem 0.9rem;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    color: var(--silver-dim);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+}
+.library-back-shelf:hover {
+    border-color: var(--gold-glow);
+    color: var(--gold-glow);
+}
 
 /* ——— 图书馆：书本翻阅 ——— */
 .library-panel { display: flex; flex-direction: column; align-items: center; padding: 1rem; }

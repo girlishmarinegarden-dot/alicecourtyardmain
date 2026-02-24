@@ -58,8 +58,14 @@
         }
     }
 
-    /** 图书馆：书本翻阅，一页一个设定；全文阅读用分页 */
+    /** 图书馆：书柜封面（bc1/bc2）点击后进入翻阅；可扩展更多书 */
     var LIBRARY_CHARS = ["alice", "yume", "hana", "azalea", "meiling", "shella", "mizuki"];
+    var LIBRARY_BOOKS = [
+        { id: "book1", cover: "assets/ui/bc1.webp", title: "角色设定集", chars: LIBRARY_CHARS },
+        { id: "book2", cover: "assets/ui/bc2.webp", title: "设定集二", chars: LIBRARY_CHARS }
+    ];
+    var libraryCurrentBookId = null;
+    var libraryCurrentBookChars = LIBRARY_CHARS.slice();
     var libraryCurrentPage = 0;
     var libraryReaderPages = [];
     var libraryReaderCurrent = 0;
@@ -108,9 +114,10 @@
         var numEl = document.getElementById("library-page-num");
         var totalEl = document.getElementById("library-page-total");
         if (!content) return;
-        var total = LIBRARY_CHARS.length;
+        var chars = libraryCurrentBookChars.length ? libraryCurrentBookChars : LIBRARY_CHARS;
+        var total = chars.length;
         libraryCurrentPage = Math.max(0, Math.min(index, total - 1));
-        var key = LIBRARY_CHARS[libraryCurrentPage];
+        var key = chars[libraryCurrentPage];
         var entry = getLibraryEntry(key);
         if (!entry) return;
         if (numEl) numEl.textContent = libraryCurrentPage + 1;
@@ -126,7 +133,8 @@
     }
 
     function openLibraryReader() {
-        var key = LIBRARY_CHARS[libraryCurrentPage];
+        var chars = libraryCurrentBookChars.length ? libraryCurrentBookChars : LIBRARY_CHARS;
+        var key = chars[libraryCurrentPage];
         var entry = getLibraryEntry(key);
         if (!entry) return;
         libraryReaderTitle = entry.title;
@@ -193,10 +201,39 @@
         if (btn3) btn3.onclick = function () { goToPage(2); };
     }
 
-    function renderLibraryCards() {
-        var book = document.getElementById("library-book");
+    function showLibraryShelf() {
+        var shelf = document.getElementById("library-shelf");
+        var wrap = document.getElementById("library-book-wrap");
+        if (shelf) shelf.classList.remove("hidden");
+        if (wrap) wrap.classList.add("hidden");
+    }
+
+    function openLibraryBook(bookId) {
+        var book = LIBRARY_BOOKS.filter(function (b) { return b.id === bookId; })[0];
         if (!book) return;
+        libraryCurrentBookId = bookId;
+        libraryCurrentBookChars = (book.chars && book.chars.length) ? book.chars.slice() : LIBRARY_CHARS.slice();
+        libraryCurrentPage = 0;
+        var shelf = document.getElementById("library-shelf");
+        var wrap = document.getElementById("library-book-wrap");
+        if (shelf) shelf.classList.add("hidden");
+        if (wrap) wrap.classList.remove("hidden");
         renderLibraryBookPage(0);
+    }
+
+    function renderLibraryCards() {
+        var shelf = document.getElementById("library-shelf");
+        var wrap = document.getElementById("library-book-wrap");
+        var book = document.getElementById("library-book");
+        if (!shelf || !book) return;
+        showLibraryShelf();
+        shelf.querySelectorAll(".library-cover-wrap").forEach(function (el) {
+            var bookId = el.getAttribute("data-book-id");
+            if (!bookId) return;
+            el.onclick = function () { openLibraryBook(bookId); };
+        });
+        var backShelfBtn = document.getElementById("library-back-shelf");
+        if (backShelfBtn) backShelfBtn.onclick = showLibraryShelf;
         var prevBtn = document.getElementById("library-prev");
         var nextBtn = document.getElementById("library-next");
         var readFullBtn = document.getElementById("library-read-full");
