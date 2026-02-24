@@ -1406,9 +1406,14 @@ body.mood-dream  { --bg-accent: #18101a; }
 }
 .library-book-wrap.hidden { display: none !important; }
 .library-shelf.hidden { display: none !important; }
+
+.library-back-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
 .library-back-shelf {
-    align-self: flex-start;
-    margin-bottom: 0.5rem;
     padding: 0.4rem 0.9rem;
     background: var(--glass);
     border: 1px solid var(--glass-border);
@@ -1422,6 +1427,7 @@ body.mood-dream  { --bg-accent: #18101a; }
     border-color: var(--gold-glow);
     color: var(--gold-glow);
 }
+.library-back-shelf.hidden { display: none !important; }
 
 /* ——— 图书馆：书本翻阅 ——— */
 .library-panel { display: flex; flex-direction: column; align-items: center; padding: 1rem; }

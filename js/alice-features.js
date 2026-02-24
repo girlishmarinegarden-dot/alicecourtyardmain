@@ -58,13 +58,10 @@
         }
     }
 
-    /** 图书馆：书柜封面（bc1/bc2）点击后进入翻阅；可扩展更多书 */
+    /** 图书馆：书册与内容来自 assets/books/（booksindex.js 提供 window.LIBRARY_BOOKS / LIBRARY_BOOK_CONTENT） */
     var LIBRARY_CHARS = ["alice", "yume", "hana", "azalea", "meiling", "shella", "mizuki"];
-    var LIBRARY_BOOKS = [
-        { id: "book1", cover: "assets/ui/bc1.webp", title: "角色设定集", chars: LIBRARY_CHARS },
-        { id: "book2", cover: "assets/ui/bc2.webp", title: "设定集二", chars: LIBRARY_CHARS }
-    ];
     var libraryCurrentBookId = null;
+    var libraryCurrentBookEntries = [];
     var libraryCurrentBookChars = LIBRARY_CHARS.slice();
     var libraryCurrentPage = 0;
     var libraryReaderPages = [];
@@ -114,28 +111,44 @@
         var numEl = document.getElementById("library-page-num");
         var totalEl = document.getElementById("library-page-total");
         if (!content) return;
-        var chars = libraryCurrentBookChars.length ? libraryCurrentBookChars : LIBRARY_CHARS;
-        var total = chars.length;
+        var entries = libraryCurrentBookEntries;
+        var total = entries.length;
+        if (total === 0) {
+            var chars = libraryCurrentBookChars.length ? libraryCurrentBookChars : LIBRARY_CHARS;
+            total = chars.length;
+        }
         libraryCurrentPage = Math.max(0, Math.min(index, total - 1));
-        var key = chars[libraryCurrentPage];
-        var entry = getLibraryEntry(key);
+        var entry;
+        if (entries.length > 0) {
+            entry = entries[libraryCurrentPage];
+        } else {
+            var chars = libraryCurrentBookChars.length ? libraryCurrentBookChars : LIBRARY_CHARS;
+            var key = chars[libraryCurrentPage];
+            entry = getLibraryEntry(key);
+        }
         if (!entry) return;
+        var fn = entry.func != null ? entry.func : (entry["function"] != null ? entry["function"] : "");
         if (numEl) numEl.textContent = libraryCurrentPage + 1;
         if (totalEl) totalEl.textContent = total;
         content.innerHTML =
-            "<h3 class=\"library-page-title\" style=\"color:" + (entry.color) + "\">" + entry.title + "</h3>" +
-            "<p class=\"library-page-role\">" + entry.role + " · " + entry.function + "</p>" +
-            "<p class=\"library-page-p\"><strong>职能：</strong>" + entry.function + "</p>" +
-            "<p class=\"library-page-p\"><strong>性格：</strong>" + entry.personality + "</p>";
+            "<h3 class=\"library-page-title\" style=\"color:" + (entry.color || "#888") + "\">" + (entry.title || "") + "</h3>" +
+            "<p class=\"library-page-role\">" + (entry.role || "") + " · " + fn + "</p>" +
+            "<p class=\"library-page-p\"><strong>职能：</strong>" + fn + "</p>" +
+            "<p class=\"library-page-p\"><strong>性格：</strong>" + (entry.personality || "") + "</p>";
         content.classList.remove("library-page-flip-in");
         content.offsetHeight;
         content.classList.add("library-page-flip-in");
     }
 
     function openLibraryReader() {
-        var chars = libraryCurrentBookChars.length ? libraryCurrentBookChars : LIBRARY_CHARS;
-        var key = chars[libraryCurrentPage];
-        var entry = getLibraryEntry(key);
+        var entry;
+        if (libraryCurrentBookEntries.length > 0) {
+            entry = libraryCurrentBookEntries[libraryCurrentPage];
+        } else {
+            var chars = libraryCurrentBookChars.length ? libraryCurrentBookChars : LIBRARY_CHARS;
+            var key = chars[libraryCurrentPage];
+            entry = getLibraryEntry(key);
+        }
         if (!entry) return;
         libraryReaderTitle = entry.title;
         libraryReaderPages = splitIntoReaderPages(entry.fullText);
@@ -204,20 +217,27 @@
     function showLibraryShelf() {
         var shelf = document.getElementById("library-shelf");
         var wrap = document.getElementById("library-book-wrap");
+        var backShelfBtn = document.getElementById("library-back-shelf");
         if (shelf) shelf.classList.remove("hidden");
         if (wrap) wrap.classList.add("hidden");
+        if (backShelfBtn) backShelfBtn.classList.add("hidden");
     }
 
     function openLibraryBook(bookId) {
-        var book = LIBRARY_BOOKS.filter(function (b) { return b.id === bookId; })[0];
+        var books = (typeof window !== "undefined" && window.LIBRARY_BOOKS) ? window.LIBRARY_BOOKS : [];
+        var book = books.filter(function (b) { return b.id === bookId; })[0];
         if (!book) return;
+        var content = (typeof window !== "undefined" && window.LIBRARY_BOOK_CONTENT) ? window.LIBRARY_BOOK_CONTENT[bookId] : null;
         libraryCurrentBookId = bookId;
+        libraryCurrentBookEntries = (content && Array.isArray(content)) ? content.slice() : [];
         libraryCurrentBookChars = (book.chars && book.chars.length) ? book.chars.slice() : LIBRARY_CHARS.slice();
         libraryCurrentPage = 0;
         var shelf = document.getElementById("library-shelf");
         var wrap = document.getElementById("library-book-wrap");
+        var backShelfBtn = document.getElementById("library-back-shelf");
         if (shelf) shelf.classList.add("hidden");
         if (wrap) wrap.classList.remove("hidden");
+        if (backShelfBtn) backShelfBtn.classList.remove("hidden");
         renderLibraryBookPage(0);
     }
 
@@ -227,11 +247,15 @@
         var book = document.getElementById("library-book");
         if (!shelf || !book) return;
         showLibraryShelf();
-        shelf.querySelectorAll(".library-cover-wrap").forEach(function (el) {
-            var bookId = el.getAttribute("data-book-id");
-            if (!bookId) return;
-            el.onclick = function () { openLibraryBook(bookId); };
-        });
+        var backShelfBtn = document.getElementById("library-back-shelf");
+        if (backShelfBtn) backShelfBtn.classList.add("hidden");
+        shelf.onclick = function (e) {
+            var wrapEl = e.target && e.target.closest ? e.target.closest(".library-cover-wrap") : null;
+            if (wrapEl) {
+                var bookId = wrapEl.getAttribute("data-book-id");
+                if (bookId) openLibraryBook(bookId);
+            }
+        };
         var backShelfBtn = document.getElementById("library-back-shelf");
         if (backShelfBtn) backShelfBtn.onclick = showLibraryShelf;
         var prevBtn = document.getElementById("library-prev");

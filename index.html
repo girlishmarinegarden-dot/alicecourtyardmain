@@ -278,16 +278,27 @@
             <p class="view-subtitle">选择一本书开始阅读</p>
             <div id="library-shelf" class="library-shelf">
                 <div class="library-cover-wrap" data-book-id="book1" title="点击阅读">
-                    <img class="library-cover-img" src="assets/ui/bc1.webp" alt="角色设定集" draggable="false">
-                    <span class="library-cover-title">角色设定集</span>
+                    <img class="library-cover-img" src="assets/ui/bc1.webp" alt="庭院角色" draggable="false">
+                    <span class="library-cover-title">庭院角色</span>
                 </div>
                 <div class="library-cover-wrap" data-book-id="book2" title="点击阅读">
-                    <img class="library-cover-img" src="assets/ui/bc2.webp" alt="设定集二" draggable="false">
-                    <span class="library-cover-title">设定集二</span>
+                    <img class="library-cover-img" src="assets/ui/bc2.webp" alt="世界观" draggable="false">
+                    <span class="library-cover-title">世界观</span>
+                </div>
+                <div class="library-cover-wrap" data-book-id="book3" title="点击阅读">
+                    <img class="library-cover-img" src="assets/ui/bc3.webp" alt="镜子" draggable="false">
+                    <span class="library-cover-title">镜子</span>
+                </div>
+                <div class="library-cover-wrap" data-book-id="book4" title="点击阅读">
+                    <img class="library-cover-img" src="assets/ui/bc4.webp" alt="黑之书" draggable="false">
+                    <span class="library-cover-title">黑之书</span>
+                </div>
+                <div class="library-cover-wrap" data-book-id="book5" title="点击阅读">
+                    <img class="library-cover-img" src="assets/ui/bc5.webp" alt="白之书" draggable="false">
+                    <span class="library-cover-title">白之书</span>
                 </div>
             </div>
             <div id="library-book-wrap" class="library-book-wrap hidden">
-                <button type="button" class="library-back-shelf" id="library-back-shelf">返回书柜</button>
                 <div id="library-book" class="library-book">
                     <button type="button" class="library-book-nav library-book-prev" id="library-prev" aria-label="上一页">‹</button>
                     <div class="library-book-inner">
@@ -298,7 +309,10 @@
                 </div>
                 <p class="library-page-indicator"><span id="library-page-num">1</span> / <span id="library-page-total">7</span></p>
             </div>
-            <button type="button" class="icon-back" onclick="App.navigateTo('MAP')">返回地图</button>
+            <div class="library-back-buttons">
+                <button type="button" class="library-back-shelf icon-back" id="library-back-shelf">返回书柜</button>
+                <button type="button" class="icon-back" onclick="App.navigateTo('MAP')">返回地图</button>
+            </div>
         </div>
         <div id="library-reader" class="library-reader-overlay hidden">
             <div class="library-reader-inner">
@@ -441,6 +455,12 @@
     <script src="constants.js"></script>
     <script src="js/install-gate.js"></script>
     <script src="assets/gardenArchetypes/gardenArchetypes.js"></script>
+    <script src="assets/books/book1.js"></script>
+    <script src="assets/books/book2.js"></script>
+    <script src="assets/books/book3.js"></script>
+    <script src="assets/books/book4.js"></script>
+    <script src="assets/books/book5.js"></script>
+    <script src="assets/books/booksindex.js"></script>
     <script src="js/character.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/game.js"></script>
