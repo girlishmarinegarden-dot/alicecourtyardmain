@@ -83,8 +83,8 @@ const ALICE_CONSTANTS = {
         CARDS_IMAGES: "assets/cards/"
     },
 
-    /** assets/bgm/ 下参与随机播放的 .mp3 文件名（可增删） */
-    BGM_FILES: ["theme.mp3"],
+    /** assets/bgm/ 下按顺序连续播放的 .mp3 文件名（theme → ed → theme …） */
+    BGM_FILES: ["theme.mp3", "ed.mp3"],
 
     /** 角色好感度状态机：角色 id -> 默认图；表情名 -> 文件名后缀（无图时用 default） */
     CHARACTERS: {

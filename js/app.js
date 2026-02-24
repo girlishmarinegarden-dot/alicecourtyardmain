@@ -62,7 +62,7 @@ const App = {
             if (id === "scene-theater" && BGM.audio) BGM.audio.pause();
             if (prevId === "scene-theater" && id !== "scene-theater" && BGM.audio) {
                 var btn = document.getElementById("btn-bgm");
-                if (btn && !btn.classList.contains("muted")) BGM.playRandom();
+                if (btn && !btn.classList.contains("muted")) BGM.playNext();
             }
             var iframe = document.getElementById("theater-iframe");
             var cover = document.getElementById("theater-play-cover");
@@ -681,19 +681,24 @@ App.finishQuiz = async function() {
 
 const BGM = {
     audio: null,
-    getRandomSrc() {
+    /** 当前播放到列表中的索引，播完后播下一首并循环 */
+    _playIndex: 0,
+    getNextSrc() {
         var list = ALICE_CONSTANTS.BGM_FILES;
         var dir = ALICE_CONSTANTS.PATHS.BGM_DIR || "assets/bgm/";
         if (!list || list.length === 0) return dir + "theme.mp3";
-        var file = list[Math.floor(Math.random() * list.length)];
+        var file = list[this._playIndex % list.length];
         return (dir + file).replace(/\/+/g, "/");
     },
-    playRandom() {
+    /** 按顺序播下一首（theme → ed → theme …） */
+    playNext() {
         if (!this.audio) return;
         this.audio.removeAttribute("loop");
-        this.audio.src = this.getRandomSrc();
+        this.audio.src = this.getNextSrc();
         this.audio.load();
         this.audio.play().catch(function() {});
+        var list = ALICE_CONSTANTS.BGM_FILES;
+        if (list && list.length > 0) this._playIndex = (this._playIndex + 1) % list.length;
     },
     init() {
         var self = this;
@@ -707,9 +712,12 @@ const BGM = {
         }
         if (this.audio) {
             this.audio.addEventListener("ended", function() {
-                if (btn && !btn.classList.contains("muted")) self.playRandom();
+                if (btn && !btn.classList.contains("muted")) self.playNext();
             });
-            if (on) this.playRandom();
+            if (on) {
+                this._playIndex = 0;
+                this.playNext();
+            }
         }
     },
     toggle() {
@@ -722,8 +730,12 @@ const BGM = {
             btn.textContent = next ? "♪" : "♫";
         }
         if (this.audio) {
-            if (next) this.playRandom();
-            else this.audio.pause();
+            if (next) {
+                this._playIndex = 0;
+                this.playNext();
+            } else {
+                this.audio.pause();
+            }
         }
     }
 };
