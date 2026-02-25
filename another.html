@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>不规则异世界 | Alice's Garden</title>
+    <base href="./">
+    <meta name="theme-color" content="#1a1c24">
+    <link rel="stylesheet" href="cache-stage.css">
+</head>
+<body class="another-page">
+    <div class="time-bg" aria-hidden="true"></div>
+    <div class="grain-layer" aria-hidden="true"></div>
+
+    <!-- 18+ 年龄门 -->
+    <main class="another-main" id="agegate-section">
+        <div class="another-card glass-panel">
+            <h1 class="another-title">爱丽丝庭院 · 成人提示</h1>
+            <p class="another-desc">
+                本网站包含成人内容，仅限18岁以上访问。<br>
+                This site contains adult content. You must be 18+ to enter.
+            </p>
+            <div class="agegate-actions">
+                <button class="install-btn glow-btn agegate-btn" onclick="enterSite()">我已满18岁 / I am 18+</button>
+                <button class="install-btn agegate-btn" onclick="exitSite()">未满18岁 / Not 18+</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- 18+ 通过后的主区域：导航 + 各 Section -->
+    <div id="app-hub" class="another-hub hidden">
+        <nav class="another-nav" aria-label="主菜单">
+            <button type="button" class="another-nav-btn active" data-section="home">主页</button>
+            <button type="button" class="another-nav-btn" data-section="gallery">图集 Gallery</button>
+            <button type="button" class="another-nav-btn" data-section="shop">商店</button>
+            <button type="button" class="another-nav-btn" data-section="puzzle">解密游戏</button>
+            <button type="button" class="another-nav-btn" data-section="stress">释放压力</button>
+            <button type="button" class="another-nav-btn" data-section="roast">恶搞吐槽</button>
+            <button type="button" class="another-nav-btn" data-section="cache">缓存舞台</button>
+            <button type="button" class="another-nav-btn" data-section="interaction">互动</button>
+        </nav>
+
+        <!-- Section: 主页（入口） -->
+        <section class="another-section another-main" id="home-section" data-section="home">
+            <div class="another-card glass-panel home-shell">
+                <h1 class="another-title">不规则异世界</h1>
+                <p class="another-desc">选择要进入的模块</p>
+                <div class="home-grid">
+                    <button type="button" class="home-entry" data-section="gallery">
+                        <span class="home-entry-icon" aria-hidden="true">🖼</span>
+                        <span class="home-entry-title">图集 Gallery</span>
+                        <span class="home-entry-desc">梦幻相册 · 分类浏览</span>
+                    </button>
+                    <button type="button" class="home-entry" data-section="shop">
+                        <span class="home-entry-icon" aria-hidden="true">🛒</span>
+                        <span class="home-entry-title">商店</span>
+                        <span class="home-entry-desc">商品与兑换</span>
+                    </button>
+                    <button type="button" class="home-entry" data-section="puzzle">
+                        <span class="home-entry-icon" aria-hidden="true">🔐</span>
+                        <span class="home-entry-title">解密游戏</span>
+                        <span class="home-entry-desc">谜题与密码</span>
+                    </button>
+                    <button type="button" class="home-entry" data-section="stress">
+                        <span class="home-entry-icon" aria-hidden="true">💥</span>
+                        <span class="home-entry-title">释放压力</span>
+                        <span class="home-entry-desc">戳泡泡 · 放松一下</span>
+                    </button>
+                    <button type="button" class="home-entry" data-section="roast">
+                        <span class="home-entry-icon" aria-hidden="true">🎭</span>
+                        <span class="home-entry-title">恶搞吹牛吐槽</span>
+                        <span class="home-entry-desc">随机来一句 · 纯娱乐</span>
+                    </button>
+                    <button type="button" class="home-entry" data-section="cache">
+                        <span class="home-entry-icon" aria-hidden="true">📡</span>
+                        <span class="home-entry-title">缓存舞台</span>
+                        <span class="home-entry-desc">ALICE 残骸 · 人格副本</span>
+                    </button>
+                    <button type="button" class="home-entry" data-section="interaction">
+                        <span class="home-entry-icon" aria-hidden="true">💬</span>
+                        <span class="home-entry-title">互动</span>
+                        <span class="home-entry-desc">留言与小游戏</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Gallery（独立图集） -->
+        <section class="another-section another-main hidden" id="gallery-section" data-section="gallery">
+            <div class="another-card glass-panel gallery-shell">
+                <h1 class="another-title">爱丽丝庭院 · Gallery</h1>
+                <p class="another-desc">Alice Courtyard · 梦幻相册（防盗版预览模式）</p>
+                <div id="stats" class="gallery-stats">加载中...</div>
+                <div class="tabs" id="level1-tabs"></div>
+                <div class="tabs" id="level2-tabs"></div>
+                <div class="tabs" id="level3-tabs"></div>
+                <div id="gallery"></div>
+                <div id="gallery-pagination"></div>
+            </div>
+            <div id="overlay">
+                <div class="close-btn" onclick="closePreview()">X</div>
+                <iframe id="drivePreview" allow="autoplay"></iframe>
+            </div>
+            <button id="unlockR18Btn" type="button" onclick="openR18Modal()">Unlock R18 🔓</button>
+            <div id="r18Modal">
+                <div class="modal-content">
+                    <h3>🔒 R18 内容解锁</h3>
+                    <p class="gallery-subtitle">请输入访问密码</p>
+                    <input id="r18Password" type="password" placeholder="输入密码">
+                    <button class="modal-btn" type="button" onclick="checkR18Password()">确认解锁</button>
+                    <button class="modal-refresh-btn" type="button" onclick="refreshData()">刷新相册</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: 商店（外链 Shopee 店铺） -->
+        <section class="another-section another-main hidden" id="shop-section" data-section="shop">
+            <div class="another-card glass-panel shop-shell">
+                <h1 class="another-title">商店</h1>
+                <p class="another-desc">实体/周边在 Shopee 马来西亚站贩售，点击下方按钮前往店铺。</p>
+                <a id="shop-go-store" href="https://shopee.com.my/shop/1063009262" target="_blank" rel="noopener noreferrer" class="shop-cta glow-btn">前往 Shopee 店铺</a>
+                <div class="shop-featured-wrap">
+                    <h2 class="shop-featured-title">精选 / Featured</h2>
+                    <div id="shop-featured" class="shop-featured"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: 解密游戏 -->
+        <section class="another-section another-main hidden" id="puzzle-section" data-section="puzzle">
+            <div class="another-card glass-panel puzzle-shell">
+                <div class="puzzle-header">
+                    <h1 class="another-title">解密游戏</h1>
+                    <p class="another-desc">根据提示破解谜题，输入正确答案进入下一关。部分关卡需解锁 R18。</p>
+                    <div class="puzzle-actions">
+                        <button type="button" id="puzzle-unlock-btn" class="install-btn glow-btn">解锁 R18 关卡</button>
+                    </div>
+                </div>
+                <div class="puzzle-game">
+                    <p class="puzzle-level-hint">第 <span id="puzzle-level-num">1</span> 关</p>
+                    <div class="puzzle-clue-wrap">
+                        <label class="puzzle-clue-label">谜题 / 密文</label>
+                        <p id="puzzle-clue" class="puzzle-clue"></p>
+                    </div>
+                    <div class="puzzle-answer-wrap">
+                        <label for="puzzle-input" class="puzzle-answer-label">你的答案</label>
+                        <input type="text" id="puzzle-input" class="puzzle-input" placeholder="输入答案" autocomplete="off">
+                        <button type="button" id="puzzle-submit" class="install-btn glow-btn">提交</button>
+                    </div>
+                    <p id="puzzle-feedback" class="puzzle-feedback hidden"></p>
+                    <div id="puzzle-complete" class="puzzle-complete hidden">
+                        <p class="puzzle-complete-text">🎉 全部通关！</p>
+                    </div>
+                </div>
+            </div>
+            <div id="puzzle-r18-modal" class="puzzle-modal">
+                <div class="modal-content">
+                    <h3>🔒 解锁 R18 关卡</h3>
+                    <p class="gallery-subtitle">输入密码后开放限定谜题</p>
+                    <input id="puzzle-r18-password" type="password" placeholder="输入密码">
+                    <button type="button" class="modal-btn" id="puzzle-r18-confirm">确认</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: 恶搞吹牛吐槽 -->
+        <section class="another-section another-main hidden" id="roast-section" data-section="roast">
+            <div class="another-card glass-panel roast-shell">
+                <h1 class="another-title">恶搞吹牛吐槽</h1>
+                <p class="another-desc">选个分类，点「来一句」随机抽一条，纯娱乐～</p>
+                <div class="roast-tabs" id="roast-tabs">
+                    <button type="button" class="roast-tab active" data-roast-cat="all">全部</button>
+                    <button type="button" class="roast-tab" data-roast-cat="bullshit">吹牛</button>
+                    <button type="button" class="roast-tab" data-roast-cat="roast">吐槽</button>
+                    <button type="button" class="roast-tab" data-roast-cat="meme">恶搞</button>
+                </div>
+                <div class="roast-display">
+                    <p id="roast-text" class="roast-text">点击下方按钮来一句</p>
+                </div>
+                <button type="button" id="roast-next" class="roast-btn glow-btn">来一句</button>
+            </div>
+        </section>
+
+        <!-- Section: 缓存舞台（ALICE 人格副本残骸） -->
+        <section class="another-section another-main hidden cache-stage-section" id="cache-section" data-section="cache">
+            <div class="cache-stage-wrap">
+                <header class="cache-status-bar" aria-label="系统状态">
+                    <div class="cache-status-left">
+                        <span class="cache-label">SYSTEM:</span>
+                        <span class="cache-value cache-offline">ALICE (OFFLINE)</span>
+                        <span class="cache-gap">|</span>
+                        <span class="cache-label">CACHE:</span>
+                        <span class="cache-value cache-active">EX-V ACTIVE</span>
+                        <span class="cache-gap">|</span>
+                        <span class="cache-label">STABILITY:</span>
+                        <span id="stability-value" class="cache-value cache-stability">72%</span>
+                    </div>
+                    <div class="cache-status-right">
+                        <span class="cache-tag">fragment</span>
+                        <span class="cache-tag">residual</span>
+                    </div>
+                </header>
+                <main class="cache-main">
+                    <div class="cache-stage-frame">
+                        <div class="cache-glitch-bg" aria-hidden="true"></div>
+                        <div class="cache-stage-inner">
+                            <h1 id="stage-title" class="cache-stage-title"></h1>
+                            <div id="stage-body-wrap" class="cache-stage-body-wrap">
+                                <p id="stage-body" class="cache-stage-body"></p>
+                            </div>
+                            <p id="stage-meta" class="cache-stage-meta"></p>
+                        </div>
+                    </div>
+                </main>
+                <div id="cache-flicker" class="cache-flicker hidden" aria-hidden="true"></div>
+                <div id="cache-heavy-flicker" class="cache-heavy-flicker hidden" aria-hidden="true"></div>
+                <div id="cache-collapse" class="cache-collapse-overlay hidden" aria-hidden="true">
+                    <span class="cache-collapse-text">SYSTEM COLLAPSE</span>
+                </div>
+                <div id="recovery-failed" class="cache-recovery-failed hidden" aria-hidden="true">
+                    <span class="cache-recovery-text">SYSTEM RECOVERY FAILED</span>
+                </div>
+                <div class="cache-volex-bar" aria-label="互动">
+                    <button type="button" id="btn-observe" class="cache-volex-btn">[ 观测片段 ]</button>
+                    <button type="button" id="btn-interfere" class="cache-volex-btn">[ 发送干扰 ]</button>
+                    <button type="button" id="btn-silent" class="cache-volex-btn">[ 保持静默 ]</button>
+                    <button type="button" id="btn-record" class="cache-volex-btn">[ 记录此刻 ]</button>
+                </div>
+                <div class="cache-danmaku-track" id="danmaku-track" aria-label="弹幕">
+                    <div class="cache-danmaku-lane" id="danmaku-lane"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: 释放压力游戏 -->
+        <section class="another-section another-main hidden" id="stress-section" data-section="stress">
+            <div class="another-card glass-panel stress-shell">
+                <h1 class="another-title">释放压力</h1>
+                <p class="another-desc">戳破泡泡，放松一下～ 点击任意泡泡即可。</p>
+                <div class="stress-bar">
+                    <span class="stress-count">已戳破 <span id="stress-count-num">0</span> 个</span>
+                    <button type="button" id="stress-reset" class="install-btn">清零</button>
+                </div>
+                <div id="stress-bubbles" class="stress-bubbles"></div>
+            </div>
+        </section>
+
+        <!-- Section: 互动 · RPG 冒险 -->
+        <section class="another-section another-main hidden" id="interaction-section" data-section="interaction">
+            <div class="another-card glass-panel rpg-shell">
+                <div class="rpg-header">
+                    <h1 class="another-title">RPG 冒险</h1>
+                    <p class="another-desc">方向键移动 · 与 NPC 对话触发剧情 · 部分剧情需解锁 R18</p>
+                    <div class="rpg-header-actions">
+                        <button type="button" id="rpg-unlock-btn" class="install-btn glow-btn">解锁 R18 剧情</button>
+                    </div>
+                </div>
+                <div class="rpg-layout">
+                    <div class="rpg-game-wrap">
+                        <div class="rpg-stats">
+                            <span class="rpg-stat"><span class="rpg-stat-label">HP</span><span id="rpg-hp-bar" class="rpg-bar"><span id="rpg-hp-fill" class="rpg-bar-fill"></span></span><span id="rpg-hp-text">100/100</span></span>
+                            <span class="rpg-stat"><span class="rpg-stat-label">位置</span><span id="rpg-pos">1,1</span></span>
+                        </div>
+                        <div id="rpg-map" class="rpg-map"></div>
+                        <div id="rpg-player" class="rpg-player"></div>
+                    </div>
+                    <div id="rpg-dialogue" class="rpg-dialogue hidden">
+                        <p id="rpg-dialogue-text" class="rpg-dialogue-text"></p>
+                        <div id="rpg-choices" class="rpg-choices"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="rpg-r18-modal" class="game-modal">
+                <div class="modal-content">
+                    <h3>🔒 解锁 R18 剧情</h3>
+                    <p class="gallery-subtitle">输入密码后开放限定事件与对话</p>
+                    <input id="rpg-r18-password" type="password" placeholder="输入密码">
+                    <button type="button" class="modal-btn" id="rpg-r18-confirm">确认</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="cache-stage.js"></script>
+</body>
+</html>
