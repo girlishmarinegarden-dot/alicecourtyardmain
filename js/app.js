@@ -115,6 +115,18 @@ const App = {
         }
     },
 
+    /** 首次进入地图时对 BGM 按钮做一次柔和脉冲，引导打开 BGM（仅一次，localStorage 标记） */
+    tryBgmWelcomePulse() {
+        try {
+            if (localStorage.getItem("alice_bgm_pulse_shown")) return;
+            var btn = document.getElementById("btn-bgm");
+            if (!btn) return;
+            localStorage.setItem("alice_bgm_pulse_shown", "1");
+            btn.classList.add("welcome-pulse");
+            setTimeout(function () { btn.classList.remove("welcome-pulse"); }, 2200);
+        } catch (e) {}
+    },
+
     updateUI() {
         const s = Auth.getState();
         const nameEl = document.getElementById("display-name");
@@ -154,6 +166,7 @@ const App = {
             this.updateUI();
             this.showScene(ALICE_CONSTANTS.SCENES.MAP);
             this.initYumeWall();
+            this.tryBgmWelcomePulse();
             if (typeof AliceFeatures !== "undefined" && AliceFeatures.updateEnvironment) {
                 AliceFeatures.updateEnvironment();
                 setInterval(AliceFeatures.updateEnvironment, 60000);
@@ -358,6 +371,7 @@ const App = {
             this.updateUI();
             this.showScene(ALICE_CONSTANTS.SCENES.MAP);
             this.initYumeWall();
+            this.tryBgmWelcomePulse();
         } catch (e) {
             alert(e.message || "认证失败");
         }

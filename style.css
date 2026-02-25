@@ -18,6 +18,7 @@
     --line: 1px solid var(--glass-border);
     --shadow-silver: 0 0 20px rgba(255, 255, 255, 0.08);
     --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     --font: "SF Pro Text", "PingFang SC", "Microsoft YaHei", sans-serif;
     --gold-glow: #d4af37;
     --royal-purple: #4b0082;
@@ -32,6 +33,10 @@
     --safe-bottom: env(safe-area-inset-bottom, 0);
     --safe-left: env(safe-area-inset-left, 0);
     --safe-right: env(safe-area-inset-right, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -577,10 +582,14 @@ body.memory-active #stage-area {
     border-radius: 8px;
     cursor: pointer;
     font-size: 0.9rem;
-    transition: border-color 0.2s, background 0.2s, color 0.2s;
+    transition: transform var(--transition-fast), border-color 0.2s, background 0.2s, color 0.2s;
 }
 .install-btn:hover,
 .glow-btn:hover { background: var(--hana-glow); color: #0a0a12; }
+.install-btn:active,
+.glow-btn:active { transform: scale(0.98); }
+.install-btn:focus-visible,
+.glow-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--gold-glow); }
 .install-ios-tutorial {
     text-align: left;
     margin-bottom: 1rem;
@@ -619,6 +628,39 @@ body.memory-active #stage-area {
 }
 .install-done-btn:hover { background: var(--hana-glow); color: #0a0a12; }
 .app-shell.hidden { display: none !important; }
+
+/* ——— 不规则异世界（another.html）独立主页 ——— */
+.another-page {
+    min-height: 100vh;
+    display: flex; justify-content: center; align-items: center;
+    padding: 1rem;
+    box-sizing: border-box;
+    background: var(--void-deep);
+}
+.another-main {
+    width: 100%; max-width: 420px;
+}
+.another-card {
+    padding: 2rem;
+    text-align: center;
+    border: var(--line);
+    border-radius: 12px;
+    background: var(--glass);
+}
+.another-title {
+    font-size: 1.25rem; font-weight: 300;
+    color: var(--gold-glow);
+    letter-spacing: 0.15em;
+    margin-bottom: 1rem;
+}
+.another-desc {
+    font-size: 0.9rem; color: var(--silver-dim);
+    margin-bottom: 1.5rem; line-height: 1.6;
+}
+.another-back-btn {
+    text-decoration: none;
+    margin-bottom: 0;
+}
 
 /* Google Translate 挂载点与工具栏隐藏（仅用于自动翻译，不显示 UI） */
 .google-translate-hidden {
@@ -697,6 +739,7 @@ body top.skiptranslate { display: none !important; }
     border-radius: 8px;
     font-size: 0.9rem;
     cursor: pointer;
+    transition: transform var(--transition-fast), border-color 0.2s, background 0.2s, color 0.2s;
     border: 1px solid var(--glass-border);
     background: #252830;
     color: var(--silver);
@@ -707,6 +750,8 @@ body top.skiptranslate { display: none !important; }
 }
 .confirm-btn-ok:hover { background: rgba(212, 175, 55, 0.15); }
 .confirm-btn-cancel:hover { background: rgba(255,255,255,0.06); }
+.confirm-btn:active { transform: scale(0.97); }
+.confirm-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--gold-glow); }
 
 .input-group { margin: 0.5rem 0; }
 
@@ -787,12 +832,15 @@ body top.skiptranslate { display: none !important; }
     padding: 1.25rem; min-width: 100px;
     background: var(--glass);
     border: var(--line); border-radius: 12px;
-    cursor: pointer; transition: var(--transition);
+    cursor: pointer; transition: transform var(--transition-fast), border-color var(--transition), box-shadow var(--transition), color var(--transition);
     color: var(--silver);
 }
-.node-item:hover { border-color: var(--hana); box-shadow: 0 0 24px var(--hana-glow); }
+.node-item:hover { border-color: var(--hana); box-shadow: 0 0 24px var(--hana-glow); transform: scale(1.03); }
+.node-item:active { transform: scale(0.98); }
+.node-item:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--gold-glow); }
 .node-item.locked { opacity: 0.6; cursor: not-allowed; }
-.node-item.locked:hover { border-color: var(--glass-border); box-shadow: none; }
+.node-item.locked:hover { border-color: var(--glass-border); box-shadow: none; transform: none; }
+.node-item.locked:active { transform: none; }
 .node-icon {
     width: 40px; height: 40px;
     border: var(--line); border-radius: 8px;
@@ -821,8 +869,11 @@ body top.skiptranslate { display: none !important; }
     border: 1px solid var(--hana-glow);
     border-radius: 8px; cursor: pointer;
     font-size: 0.85rem;
+    transition: transform var(--transition-fast), border-color 0.2s, background 0.2s, color 0.2s;
 }
 .checkin-btn:hover { background: var(--hana-glow); color: #0a0a12; }
+.checkin-btn:active:not(:disabled) { transform: scale(0.97); }
+.checkin-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--gold-glow); }
 .checkin-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ——— Yume 留言墙（主页） ——— */
@@ -848,8 +899,11 @@ body top.skiptranslate { display: none !important; }
     color: var(--silver);
     border: 1px solid var(--alice-glow);
     border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+    transition: transform var(--transition-fast), border-color 0.2s, background 0.2s, color 0.2s;
 }
 .post-area button:hover { background: var(--alice-glow); color: #0a0a12; }
+.post-area button:active { transform: scale(0.97); }
+.post-area button:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--gold-glow); }
 
 /* ——— 立绘区域（可拖动移开，隐藏/显示按钮）——— */
 #stage-area {
@@ -1098,8 +1152,11 @@ body top.skiptranslate { display: none !important; }
     color: var(--silver);
     border: var(--line); border-radius: 6px;
     cursor: pointer; font-size: 0.85rem;
+    transition: transform var(--transition-fast), border-color 0.2s, color 0.2s;
 }
 .icon-back:hover { border-color: var(--hana); color: var(--hana); }
+.icon-back:active { transform: scale(0.97); }
+.icon-back:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--gold-glow); }
 .theater-header h2 { font-size: 1rem; font-weight: 300; color: var(--silver-dim); letter-spacing: 0.15em; }
 .video-responsive { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px; border: var(--line); }
 .video-responsive iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
@@ -1258,12 +1315,20 @@ body top.skiptranslate { display: none !important; }
     font-size: 1.1rem;
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 0 15px rgba(180,140,255,0.3), 0 0 25px rgba(212,175,55,0.2);
-    transition: border-color 0.3s, color 0.3s, box-shadow 0.3s;
+    transition: transform var(--transition-fast), border-color 0.3s, color 0.3s, box-shadow 0.3s;
 }
 #btn-bgm:hover {
     border-color: var(--gold-glow);
     color: var(--gold-glow);
     box-shadow: 0 0 20px var(--yume-glow), 0 0 30px rgba(212,175,55,0.5);
+}
+#btn-bgm:active { transform: scale(0.92); }
+#btn-bgm:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--gold-glow); }
+/* 首访时可给 #btn-bgm 加 .welcome-pulse 触发一次柔和脉冲，吸引打开 BGM */
+#btn-bgm.welcome-pulse { animation: bgmWelcomePulse 2s ease-out 1; }
+@keyframes bgmWelcomePulse {
+    0%, 100% { box-shadow: 0 0 15px rgba(180,140,255,0.3), 0 0 25px rgba(212,175,55,0.2); }
+    50% { box-shadow: 0 0 28px rgba(180,140,255,0.5), 0 0 40px rgba(212,175,55,0.4); }
 }
 #btn-bgm.muted { opacity: 0.5; }
 
@@ -1346,7 +1411,7 @@ body top.skiptranslate { display: none !important; }
 .scene-transition {
     position: fixed; inset: 0; z-index: 9998; pointer-events: none;
     background: #12141c;
-    opacity: 0; visibility: hidden; transition: opacity 0.25s ease, visibility 0.25s;
+    opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s;
 }
 .scene-transition.active {
     opacity: 1; visibility: visible;

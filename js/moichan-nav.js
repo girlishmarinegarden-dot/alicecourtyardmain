@@ -129,6 +129,10 @@
     function runOptionAction(btn) {
         var go = btn && btn.getAttribute("data-go");
         closeBubble();
+        if (go === "ANOTHER") {
+            window.location.href = "another.html";
+            return;
+        }
         if (go && typeof App !== "undefined" && App.navigateTo) App.navigateTo(go);
     }
 
