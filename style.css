@@ -51,7 +51,13 @@ html, body {
     background: transparent;
     min-height: 100vh;
 }
-#app-shell { color: var(--silver); }
+#app-shell {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 100vh;
+    color: var(--silver);
+}
 .map-container { color: var(--silver); }
 
 /* 立绘 / icon 防长按下载（禁止 Save Image、选择等），覆盖所有模块 */
@@ -150,8 +156,14 @@ html, body {
 
 /* 场景（透明背景，z-index 高于背景层 time-bg(0)/bg-gradient(1)/stars(2)，保证内容在星光之上） */
 .scene {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    display: none; opacity: 0; transition: opacity 0.5s ease;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 100vh;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
     background: transparent;
     z-index: 10;
 }
@@ -912,6 +924,9 @@ body top.skiptranslate { display: none !important; }
     display: flex; justify-content: flex-end; align-items: flex-end;
     z-index: 1000;
 }
+body.alice-ending-active #stage-area,
+body.alice-ending-active .moichan-nav { display: none !important; }
+body.alice-ending-active #btn-bgm { z-index: 10001; }
 .stage-area-draggable {
     pointer-events: auto;
     cursor: move;
@@ -973,18 +988,216 @@ body top.skiptranslate { display: none !important; }
     animation: breathHanaOpacity 4s ease-in-out infinite;
 }
 
-/* ——— Hana 序幕 / 卡牌故事 ——— */
-#hana-prologue, #card-story-overlay {
+/* ——— Hana 序幕 ——— */
+#hana-prologue {
     justify-content: flex-end; align-items: center;
     background: #12141c;
     color: var(--silver);
 }
-#card-story-overlay {
-    flex-direction: row;
-    flex-wrap: wrap;
-    padding: 1rem;
-    gap: 0 1.5rem;
+
+/* ——— Galgame 卡牌故事（业内标准 galgame 界面）——— */
+.galgame-overlay {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: stretch;
+    background: #0a0a12;
+    color: var(--silver);
+    padding: 0;
+    overflow: hidden;
+    animation: galgameOverlayIn 0.5s ease-out;
 }
+@keyframes galgameOverlayIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.galgame-bg {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 0;
+}
+.galgame-bg::after {
+    content: "";
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 35%, transparent 60%);
+    pointer-events: none;
+}
+.galgame-card-img-wrap {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    right: auto;
+    width: clamp(200px, 24vw, 320px);
+    aspect-ratio: 2/3;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 20px var(--hana-glow);
+    border: 1px solid var(--hana-glow);
+    z-index: 2;
+}
+.galgame-card-img-wrap.hidden { display: none !important; }
+.card-story-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.galgame-character-wrap {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: auto;
+    height: 75vh;
+    max-height: 520px;
+    z-index: 1;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    cursor: move;
+    touch-action: none;
+}
+.galgame-character-wrap.galgame-character-hidden { opacity: 0; pointer-events: none; }
+.galgame-character-wrap img {
+    height: 100%;
+    max-width: 45vw;
+    object-fit: contain;
+    object-position: right bottom;
+    filter: drop-shadow(0 0 30px rgba(160,255,200,0.2));
+    pointer-events: none;
+}
+.galgame-character-hide-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 2;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.75rem;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 6px;
+    color: var(--silver-dim);
+    cursor: pointer;
+    pointer-events: auto;
+}
+.galgame-character-hide-btn:hover { color: var(--hana); border-color: var(--hana); }
+.galgame-dialogue-box {
+    position: relative;
+    z-index: 3;
+    flex-shrink: 0;
+    width: 92%;
+    max-width: 800px;
+    margin: 0 auto 3vh;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(180deg, rgba(26,28,36,0.95) 0%, rgba(18,20,28,0.98) 100%);
+    border: 1px solid var(--glass-border);
+    border-left: 3px solid var(--hana);
+    border-radius: 12px;
+    box-shadow: 0 -4px 30px rgba(0,0,0,0.4), 0 0 20px var(--hana-glow);
+    backdrop-filter: blur(12px);
+}
+.galgame-dialogue-box.hidden { display: none !important; }
+.galgame-name-tag {
+    font-size: 0.8rem;
+    color: var(--hana);
+    margin-bottom: 0.6rem;
+    letter-spacing: 0.2em;
+    font-weight: 600;
+    text-shadow: 0 0 10px var(--hana-glow);
+}
+.galgame-story-text {
+    line-height: 1.85;
+    min-height: 2.2em;
+    font-size: 1.05rem;
+    color: var(--silver);
+}
+.galgame-next-hint {
+    font-size: 0.75rem;
+    color: var(--silver-dim);
+    margin-top: 0.8rem;
+    opacity: 0.9;
+    animation: galgameHintPulse 1.5s ease-in-out infinite;
+}
+@keyframes galgameHintPulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+.galgame-choices-wrap {
+    position: relative;
+    z-index: 3;
+    display: block;
+    width: 92%;
+    max-width: 560px;
+    margin: 0 auto 4vh;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(180deg, rgba(26,28,36,0.95) 0%, rgba(18,20,28,0.98) 100%);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    box-shadow: 0 -4px 30px rgba(0,0,0,0.4);
+    backdrop-filter: blur(12px);
+    flex-shrink: 0;
+}
+.galgame-choices-wrap.hidden { display: none !important; }
+.galgame-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+.galgame-choice-btn {
+    display: block;
+    width: 100%;
+    padding: 0.9rem 1.2rem;
+    background: rgba(40,44,56,0.8);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    color: var(--silver);
+    font-size: 1rem;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+.galgame-choice-btn:hover {
+    background: rgba(60,68,80,0.9);
+    border-color: var(--hana);
+    box-shadow: 0 0 15px var(--hana-glow);
+}
+.galgame-choice-btn:active { transform: scale(0.98); }
+.galgame-choice-manual {
+    border-style: dashed;
+    color: var(--hana);
+}
+.galgame-manual-wrap {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--glass-border);
+}
+.galgame-manual-wrap.hidden { display: none !important; }
+.galgame-manual-input {
+    width: 100%;
+    padding: 0.9rem 1.2rem;
+    margin-bottom: 0.6rem;
+    background: rgba(30,32,42,0.9);
+    border: 2px solid var(--royal-purple);
+    border-radius: 10px;
+    color: var(--silver);
+    font-size: 1rem;
+    transition: border-color 0.25s, box-shadow 0.25s;
+}
+.galgame-manual-input:focus {
+    outline: none;
+    border-color: var(--hana);
+    box-shadow: 0 0 12px var(--hana-glow);
+}
+.galgame-manual-submit {
+    width: 100%;
+    padding: 0.7rem 1rem;
+}
+
+/* 兼容旧结构 */
+#card-story-overlay { padding: 0; }
 .card-story-card-wrap {
     flex-shrink: 0;
     width: 180px;
@@ -994,12 +1207,6 @@ body top.skiptranslate { display: none !important; }
     overflow: hidden;
     box-shadow: 0 0 24px var(--hana-glow);
     border: 1px solid var(--hana-glow);
-}
-.card-story-card-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
 }
 .character-wrap img { height: 80vh; max-height: 600px; object-fit: contain; margin-right: 5%; }
 .dialogue-box {
@@ -1248,6 +1455,11 @@ body top.skiptranslate { display: none !important; }
 
 /* ——— Alice 终局独立 section（与庭院分离，此处才出现 Alice 立绘 + 气泡框）——— */
 #scene-alice-ending {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 100vh;
     justify-content: center;
     align-items: center;
     padding: 1rem;
@@ -1273,6 +1485,204 @@ body top.skiptranslate { display: none !important; }
     max-width: 520px;
 }
 #scene-alice-ending .alice-ending-bubble { max-height: 70vh; }
+
+/* ——— Alice 终局 · Galgame 过场（全屏 loading → webm + 歌词滚动 → 白/黑/glitch → 最终两按钮）——— */
+.scene-alice-ending {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+}
+
+.alice-ending-loading {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #0a0a12;
+}
+.alice-ending-loading.hidden { display: none !important; }
+.alice-ending-loading-video {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    opacity: 0.9;
+}
+.alice-ending-loading-fallback {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 2rem;
+}
+.alice-ending-loading-cutin {
+    width: 120px;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, var(--alice), transparent);
+    animation: alice-ending-cutin 1.2s ease-in-out infinite;
+}
+@keyframes alice-ending-cutin {
+    0%, 100% { opacity: 0.3; transform: scaleX(0.6); }
+    50% { opacity: 1; transform: scaleX(1); }
+}
+.alice-ending-loading-text {
+    font-size: 1rem;
+    color: var(--alice);
+    letter-spacing: 0.25em;
+    animation: alice-ending-pulse 1.5s ease-in-out infinite;
+}
+@keyframes alice-ending-pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+.alice-ending-stage {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+}
+.alice-ending-stage.hidden { display: none !important; }
+.alice-ending-video {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    height: 100%;
+    z-index: 1;
+    object-fit: cover;
+    object-position: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 1.2s ease;
+}
+.alice-ending-stage { overflow: hidden; }
+.alice-ending-video.playing { opacity: 1; }
+.alice-ending-video.fade-out { opacity: 0; }
+
+.alice-ending-lyric-wrap {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    height: 66.67vh;
+    width: 92%;
+    max-width: 640px;
+    padding: 10px 0;
+    overflow: hidden;
+    background: rgba(12, 22, 48, 0.82);
+    box-sizing: border-box;
+}
+.alice-ending-lyric-text {
+    color: rgba(255,255,255,0.95);
+    font-size: 1.05rem;
+    line-height: 2;
+    white-space: pre-wrap;
+    word-break: break-word;
+    padding: 10px 1rem 10px;
+    transform: translateY(100%);
+    animation: alice-ending-lyric-scroll 60s linear forwards;
+    box-sizing: border-box;
+}
+@keyframes alice-ending-lyric-scroll {
+    from { transform: translateY(100%); }
+    to { transform: translateY(-100%); }
+}
+.alice-ending-lyric-text.done { animation: none; transform: translateY(-100%); }
+
+.alice-ending-effect {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 1.5s ease;
+}
+.alice-ending-effect.white-book {
+    background: radial-gradient(ellipse 80% 80% at 50% 50%, rgba(255,255,255,0.85), rgba(255,248,240,0.7));
+    opacity: 1;
+}
+.alice-ending-effect.black-book {
+    background: rgba(0,0,0,0.92);
+    opacity: 1;
+}
+.alice-ending-effect.glitch {
+    background: #0a0a12;
+    opacity: 1;
+    animation: alice-ending-glitch 0.4s steps(1) 8;
+}
+@keyframes alice-ending-glitch {
+    0%, 90%, 100% { filter: none; opacity: 1; }
+    25% { filter: hue-rotate(90deg); opacity: 0.9; }
+    45% { filter: hue-rotate(-60deg); opacity: 0.95; }
+    70% { filter: hue-rotate(180deg); opacity: 0.9; }
+}
+
+.alice-ending-final {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10,10,18,0.4);
+    opacity: 0;
+    animation: alice-ending-final-in 1.2s ease forwards;
+}
+.alice-ending-final.hidden { display: none !important; }
+@keyframes alice-ending-final-in {
+    to { opacity: 1; }
+}
+.alice-ending-final-inner {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 3rem;
+    flex-wrap: wrap;
+}
+.alice-ending-final-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+}
+.alice-ending-final-buttons .download-btn,
+.alice-ending-final-buttons .reset-btn {
+    min-width: 180px;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+}
+.alice-ending-final-sprite {
+    max-height: 55vh;
+    max-width: 40vw;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 0 24px var(--alice-glow));
+}
 
 /* ——— 商店 ——— */
 #scene-market { padding: 1rem; overflow-y: auto; }

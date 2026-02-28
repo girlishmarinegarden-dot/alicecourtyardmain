@@ -87,19 +87,40 @@ const Game = {
 
     defaultOptions: ["指引的微光", "脚下的泥土", "远方的钟声", "内心的直觉"],
 
+    /** 支持新 galgame 格式（dialogs/question/emotion/type/options）与旧格式（纯字符串数组） */
     getQuestions() {
         const q = this.currentDetail && this.currentDetail.questions;
         const opts = this.defaultOptions;
-        if (Array.isArray(q) && q.length >= ALICE_CONSTANTS.BALANCE.QUIZ_COUNT) {
-            return q.slice(0, ALICE_CONSTANTS.BALANCE.QUIZ_COUNT).map(text => ({
-                text: typeof text === "string" ? text : (text.text || ""),
-                options: Array.isArray(text.options) ? text.options : opts
+        if (!Array.isArray(q) || q.length < ALICE_CONSTANTS.BALANCE.QUIZ_COUNT) {
+            return Array(ALICE_CONSTANTS.BALANCE.QUIZ_COUNT).fill(null).map((_, i) => ({
+                text: `第 ${i + 1} 题：当你步入迷雾，你更愿意相信？`,
+                options: opts,
+                dialogs: [],
+                emotion: "default",
+                type: "manual",
+                manualInput: false
             }));
         }
-        return Array(ALICE_CONSTANTS.BALANCE.QUIZ_COUNT).fill(null).map((_, i) => ({
-            text: `第 ${i + 1} 题：当你步入迷雾，你更愿意相信？`,
-            options: opts
-        }));
+        return q.slice(0, ALICE_CONSTANTS.BALANCE.QUIZ_COUNT).map(item => {
+            if (typeof item === "string") {
+                return {
+                    text: item,
+                    options: opts,
+                    dialogs: [],
+                    emotion: "default",
+                    type: "manual",
+                    manualInput: false
+                };
+            }
+            return {
+                text: item.question || item.text || "",
+                options: Array.isArray(item.options) ? item.options : opts,
+                dialogs: Array.isArray(item.dialogs) ? item.dialogs : [],
+                emotion: item.emotion || "default",
+                type: item.type || "manual",
+                manualInput: !!item.manualInput
+            };
+        });
     },
 
     answer(optionIndexOrText) {
@@ -121,7 +142,8 @@ const Game = {
         var answers = this.answers.slice();
         var questionAnswers = [];
         for (var i = 0; i < ALICE_CONSTANTS.BALANCE.QUIZ_COUNT; i++) {
-            var qText = (questions[i] && questions[i].text) ? String(questions[i].text) : "第" + (i + 1) + "题";
+            var q = questions[i];
+            var qText = (q && (q.text || q.question)) ? String(q.text || q.question) : "第" + (i + 1) + "题";
             var aText = i < answers.length ? String(answers[i]) : "";
             questionAnswers.push({ question: qText, answer: aText });
         }

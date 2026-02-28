@@ -80,7 +80,11 @@ const ALICE_CONSTANTS = {
         CARD_BACK: "assets/ui/card_back.webp",
         BGM_DIR: "assets/bgm/",
         /** 画廊卡牌立绘/卡面图，文件名与卡牌 id 一致，如 CARD_001.webp */
-        CARDS_IMAGES: "assets/cards/"
+        CARDS_IMAGES: "assets/cards/",
+        /** Alice 终局：loading 过场 webm（可选），无则用 CSS 过场 */
+        ALICE_ENDING_LOADING_VIDEO: "assets/videos/ending_loading.webm",
+        /** Alice 终局：背景 webm，播放时 fade in，结束 fade out，不 loop */
+        ALICE_ENDING_VIDEO: "assets/videos/alice_ending.webm"
     },
 
     /** assets/bgm/ 下按顺序连续播放的 .mp3 文件名（theme → ed → theme …） */

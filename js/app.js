@@ -59,6 +59,7 @@ const App = {
             var target = document.getElementById(id);
             if (target) target.classList.add("active");
             document.body.classList.toggle("memory-active", id === "scene-memory");
+            document.body.classList.toggle("alice-ending-active", id === "scene-alice-ending");
             if (id === "scene-theater" && BGM.audio) BGM.audio.pause();
             if (prevId === "scene-theater" && id !== "scene-theater" && BGM.audio) {
                 var btn = document.getElementById("btn-bgm");
@@ -94,7 +95,7 @@ const App = {
                 CharacterFavor.stopStayTimer();
                 if (charId) CharacterFavor.startStayTimer(charId);
             }
-            if (charId) self.setMainSpriteChar(charId);
+            if (charId && id !== "scene-alice-ending") self.setMainSpriteChar(charId);
             if (id === "scene-library" && typeof AliceFeatures !== "undefined" && AliceFeatures.renderLibraryCards) {
                 AliceFeatures.renderLibraryCards();
             }
@@ -352,8 +353,9 @@ const App = {
         } else {
             Game.currentDetail = null;
         }
+        await UI.runGalgameFlow({ detail: Game.currentDetail, startFromIndex: progress.questionIndex || 0 });
         this.showScene(ALICE_CONSTANTS.SCENES.GARDEN);
-        UI.renderQuiz();
+        App.finishQuiz();
     },
 
     async handleLogin() {
@@ -522,47 +524,378 @@ const UI = {
         }
     },
 
+    /** Galgame 开场：过场动画 + fixedStory 慢速打字 */
     async showCardStory(detail) {
+        return UI.runGalgameFlow({ detail: detail, startFromIndex: 0 });
+    },
+
+    /**
+     * Galgame 独立区：开场 + 10 题（dialogs 气泡 → 问题 → 选择/手写）
+     * - 仅操作 #card-story-overlay 内元素，不调用 CharacterFavor，不影响 #stage-area 主立绘
+     * - 固定流程（name + fixedStory + question + answer → GAS）由 Game.buildFatePayload / submitToAlice 处理，此处不改
+     */
+    async runGalgameFlow(opts) {
+        var detail = opts.detail || Game.currentDetail;
+        var startFromIndex = opts.startFromIndex || 0;
+        if (!detail) return;
+
         var overlay = document.getElementById("card-story-overlay");
+        var bgEl = document.getElementById("galgame-bg");
+        var cardImgWrap = document.getElementById("galgame-card-img-wrap");
+        var cardImg = document.getElementById("card-story-card-img");
+        var charWrap = document.getElementById("galgame-character-wrap");
+        var sprite = document.getElementById("card-story-sprite");
+        var dialogueBox = document.getElementById("galgame-dialogue-box");
         var nameEl = document.getElementById("card-story-name");
         var textEl = document.getElementById("card-story-text");
         var nextEl = document.getElementById("card-story-next");
-        var cardSprite = document.getElementById("card-story-sprite");
-        var cardImg = document.getElementById("card-story-card-img");
-        if (!overlay) return;
-        if (cardImg && detail && detail.id) {
-            var cardsDir = ALICE_CONSTANTS.PATHS.CARDS_IMAGES || "assets/cards/";
-            cardImg.src = (cardsDir + detail.id + ".webp").replace(/\/+/g, "/");
-            cardImg.alt = detail.name || detail.id;
-            cardImg.style.display = "";
-        } else if (cardImg) {
-            cardImg.src = "";
-            cardImg.style.display = "none";
+        var choicesWrap = document.getElementById("galgame-choices-wrap");
+        var choicesEl = document.getElementById("galgame-choices");
+        var manualWrap = document.getElementById("galgame-manual-wrap");
+        var manualInput = document.getElementById("galgame-manual-input");
+        var manualSubmit = document.getElementById("galgame-manual-submit");
+
+        if (!overlay || !textEl) return;
+
+        var CHAR_DELAY = 45;
+        var GALGAME_POS_KEY = "AliceGarden_GalgameHanaPos";
+        var GALGAME_HIDDEN_KEY = "AliceGarden_GalgameHanaHidden";
+
+        /** 独立区：galgame 立绘位置与隐藏（仅本浮层，与 #stage-area 无关） */
+        function initGalgameCharacterDragAndHide() {
+            if (!charWrap) return;
+            if (charWrap.dataset.galgameDragInited) {
+                var hideBtn = document.getElementById("galgame-character-hide-btn");
+                try {
+                    var raw = localStorage.getItem(GALGAME_POS_KEY);
+                    if (raw) {
+                        var o = JSON.parse(raw);
+                        if (o && typeof o.right === "number" && typeof o.bottom === "number") {
+                            charWrap.style.right = o.right + "px";
+                            charWrap.style.bottom = o.bottom + "px";
+                            charWrap.style.left = "auto";
+                        }
+                    } else {
+                        charWrap.style.right = "0";
+                        charWrap.style.bottom = "0";
+                        charWrap.style.left = "auto";
+                    }
+                    var hidden = localStorage.getItem(GALGAME_HIDDEN_KEY) === "true";
+                    charWrap.classList.toggle("galgame-character-hidden", hidden);
+                    if (hideBtn) { hideBtn.textContent = hidden ? "显示" : "隐藏"; }
+                } catch (e) {}
+                return;
+            }
+            charWrap.dataset.galgameDragInited = "1";
+            var hideBtn = document.getElementById("galgame-character-hide-btn");
+            var drag = { active: false, startX: 0, startY: 0 };
+
+            function loadPos() {
+                try {
+                    var raw = localStorage.getItem(GALGAME_POS_KEY);
+                    if (raw) {
+                        var o = JSON.parse(raw);
+                        if (o && typeof o.right === "number" && typeof o.bottom === "number") {
+                            charWrap.style.right = o.right + "px";
+                            charWrap.style.bottom = o.bottom + "px";
+                            charWrap.style.left = "auto";
+                            return;
+                        }
+                    }
+                } catch (e) {}
+                charWrap.style.right = "0";
+                charWrap.style.bottom = "0";
+                charWrap.style.left = "auto";
+            }
+
+            function savePos() {
+                try {
+                    var rect = charWrap.getBoundingClientRect();
+                    var wrap = overlay.getBoundingClientRect();
+                    localStorage.setItem(GALGAME_POS_KEY, JSON.stringify({
+                        right: Math.round(wrap.right - rect.right),
+                        bottom: Math.round(wrap.bottom - rect.bottom)
+                    }));
+                } catch (e) {}
+            }
+
+            function applyHidden() {
+                try {
+                    var hidden = localStorage.getItem(GALGAME_HIDDEN_KEY) === "true";
+                    charWrap.classList.toggle("galgame-character-hidden", hidden);
+                    if (hideBtn) {
+                        hideBtn.textContent = hidden ? "显示" : "隐藏";
+                        hideBtn.setAttribute("aria-label", hidden ? "显示立绘" : "隐藏立绘");
+                    }
+                } catch (e) {}
+            }
+
+            loadPos();
+            applyHidden();
+
+            if (hideBtn) {
+                hideBtn.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    try {
+                        var hidden = localStorage.getItem(GALGAME_HIDDEN_KEY) !== "true";
+                        localStorage.setItem(GALGAME_HIDDEN_KEY, hidden ? "true" : "false");
+                        applyHidden();
+                    } catch (err) {}
+                };
+            }
+
+            function onPointerDown(e) {
+                if (hideBtn && (e.target === hideBtn || hideBtn.contains(e.target))) return;
+                drag.active = true;
+                drag.startX = e.clientX != null ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+                drag.startY = e.clientY != null ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+            }
+
+            function onPointerMove(e) {
+                if (!drag.active) return;
+                e.preventDefault();
+                var x = e.clientX != null ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+                var y = e.clientY != null ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+                var dx = x - drag.startX;
+                var dy = y - drag.startY;
+                drag.startX = x;
+                drag.startY = y;
+                var rect = charWrap.getBoundingClientRect();
+                var wrap = overlay.getBoundingClientRect();
+                var curRight = wrap.right - rect.right;
+                var curBottom = wrap.bottom - rect.bottom;
+                var newRight = Math.max(0, Math.min(wrap.width - 50, curRight - dx));
+                var newBottom = Math.max(0, Math.min(wrap.height - 50, curBottom - dy));
+                charWrap.style.right = newRight + "px";
+                charWrap.style.bottom = newBottom + "px";
+                charWrap.style.left = "auto";
+            }
+
+            function onPointerUp() {
+                if (drag.active) {
+                    drag.active = false;
+                    savePos();
+                }
+            }
+
+            charWrap.addEventListener("pointerdown", onPointerDown, { passive: true });
+            overlay.addEventListener("pointermove", onPointerMove, { passive: false });
+            overlay.addEventListener("pointerup", onPointerUp, { passive: true });
+            overlay.addEventListener("pointerleave", onPointerUp, { passive: true });
         }
-        if (cardSprite && typeof CharacterFavor !== "undefined") CharacterFavor.showCharacter(cardSprite, "hana");
-        overlay.classList.remove("hidden");
-        if (nameEl) nameEl.textContent = "Hana";
-        if (textEl) textEl.textContent = detail.fixedStory || "";
-        if (nextEl) nextEl.textContent = "点击继续";
-        return new Promise(function (resolve) {
-            overlay.onclick = function () {
-                overlay.classList.add("hidden");
-                resolve();
+
+        /** 独立区：仅设置 galgame 浮层内 Hana 立绘，不调用 CharacterFavor，不影响其他模块 */
+        function setGalgameHanaEmotion(emotion) {
+            if (!sprite) return;
+            var emo = (emotion || "default").trim();
+            var path = (emo === "default") ? "assets/characters/hanadefault.webp" : "assets/characters/hana_" + emo + ".webp";
+            sprite.removeAttribute("data-char-id");
+            sprite.classList.remove("js-favor-sprite");
+            sprite.draggable = false;
+            sprite.alt = "Hana";
+            sprite.onerror = function() {
+                if (sprite.dataset.galgameFallback === "1") {
+                    sprite.src = (typeof window !== "undefined" && window.ASSET_PLACEHOLDER) ? window.ASSET_PLACEHOLDER : "";
+                    sprite.onerror = null;
+                    return;
+                }
+                sprite.dataset.galgameFallback = "1";
+                sprite.src = "assets/characters/hanadefault.webp";
             };
-        });
+            delete sprite.dataset.galgameFallback;
+            sprite.src = path;
+        }
+
+        function setBackground() {
+            if (bgEl && detail.background) {
+                bgEl.style.backgroundImage = "url(" + (detail.background || "").replace(/\/+/g, "/") + ")";
+                bgEl.style.display = "";
+            } else if (bgEl) bgEl.style.display = "none";
+        }
+
+        function setCardImg() {
+            if (cardImg && detail.id) {
+                var dir = ALICE_CONSTANTS.PATHS.CARDS_IMAGES || "assets/cards/";
+                cardImg.src = (dir + detail.id + ".webp").replace(/\/+/g, "/");
+                cardImg.alt = detail.name || detail.id;
+                cardImg.style.display = "";
+                if (cardImgWrap) cardImgWrap.classList.remove("hidden");
+            } else {
+                if (cardImg) cardImg.style.display = "none";
+                if (cardImgWrap) cardImgWrap.classList.add("hidden");
+            }
+        }
+
+        function hideChoices() {
+            if (choicesWrap) choicesWrap.classList.add("hidden");
+            if (choicesEl) choicesEl.innerHTML = "";
+            if (manualWrap) {
+                manualWrap.classList.add("hidden");
+                if (manualInput) manualInput.value = "";
+            }
+        }
+
+        function showDialogueBox() {
+            if (dialogueBox) dialogueBox.classList.remove("hidden");
+            hideChoices();
+            if (nextEl) nextEl.classList.remove("hidden");
+        }
+
+        function showChoices(q) {
+            if (dialogueBox) dialogueBox.classList.add("hidden");
+            if (choicesWrap) choicesWrap.classList.remove("hidden");
+            if (choicesEl) choicesEl.innerHTML = "";
+            var showManualNow = q.type === "manual";
+            if (manualWrap) manualWrap.classList.toggle("hidden", !showManualNow);
+            if (manualInput) manualInput.maxLength = ALICE_CONSTANTS.BALANCE.ANSWER_MAX_LEN || 30;
+        }
+
+        function typewriter(el, text, delay) {
+            return new Promise(function(resolve) {
+                if (!el) return resolve();
+                el.textContent = "";
+                var i = 0;
+                var t = setInterval(function() {
+                    el.textContent += text.charAt(i);
+                    i++;
+                    if (i >= text.length) {
+                        clearInterval(t);
+                        resolve();
+                    }
+                }, delay || CHAR_DELAY);
+            });
+        }
+
+        function waitClick() {
+            return new Promise(function(resolve) {
+                var handler = function() {
+                    overlay.removeEventListener("click", handler);
+                    resolve();
+                };
+                overlay.addEventListener("click", handler);
+            });
+        }
+
+        setBackground();
+        setCardImg();
+        setGalgameHanaEmotion("default");
+        if (nameEl) nameEl.textContent = "Hana";
+        showDialogueBox();
+        overlay.classList.remove("hidden");
+        initGalgameCharacterDragAndHide();
+
+        if (startFromIndex === 0 && (detail.fixedStory || "").trim()) {
+            await typewriter(textEl, detail.fixedStory.trim(), CHAR_DELAY);
+            nextEl.textContent = "点击继续";
+            await waitClick();
+        }
+
+        var questions = Game.getQuestions();
+        for (var idx = startFromIndex; idx < ALICE_CONSTANTS.BALANCE.QUIZ_COUNT; idx++) {
+            var q = questions[idx];
+            if (!q) continue;
+
+            setGalgameHanaEmotion(q.emotion);
+
+            if (q.dialogs && q.dialogs.length > 0) {
+                showDialogueBox();
+                for (var d = 0; d < q.dialogs.length; d++) {
+                    textEl.textContent = "";
+                    await typewriter(textEl, q.dialogs[d], CHAR_DELAY);
+                    nextEl.textContent = "点击继续";
+                    await waitClick();
+                }
+            }
+
+            showDialogueBox();
+            textEl.textContent = "";
+            await typewriter(textEl, q.text, CHAR_DELAY);
+            nextEl.textContent = "点击继续";
+            await waitClick();
+
+            showChoices(q);
+            var answerPromise = new Promise(function(resolveAnswer) {
+                var resolved = false;
+                function submitAnswer(val) {
+                    if (resolved) return;
+                    resolved = true;
+                    hideChoices();
+                    Game.answer(val);
+                    Game.saveProgress();
+                    resolveAnswer();
+                }
+
+                if (q.type === "choice" || (q.type === "choice_manual" && q.options && q.options.length > 0)) {
+                    (q.options || []).forEach(function(opt) {
+                        var btn = document.createElement("button");
+                        btn.type = "button";
+                        btn.className = "galgame-choice-btn";
+                        btn.textContent = opt;
+                        btn.onclick = function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            submitAnswer(opt);
+                        };
+                        if (choicesEl) choicesEl.appendChild(btn);
+                    });
+                    if (q.manualInput) {
+                        var manualBtn = document.createElement("button");
+                        manualBtn.type = "button";
+                        manualBtn.className = "galgame-choice-btn galgame-choice-manual";
+                        manualBtn.textContent = "手动输入…";
+                        manualBtn.onclick = function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (manualWrap) manualWrap.classList.remove("hidden");
+                            if (manualInput) manualInput.focus();
+                        };
+                        if (choicesEl) choicesEl.appendChild(manualBtn);
+                    }
+                }
+
+                if (q.type === "manual" || q.manualInput) {
+                    if (manualWrap) manualWrap.classList.remove("hidden");
+                    if (manualInput) {
+                        manualInput.placeholder = "在此输入你的回答…";
+                        manualInput.value = "";
+                        manualInput.focus();
+                    }
+                    var doManualSubmit = function(e) {
+                        if (e) { e.preventDefault(); e.stopPropagation(); }
+                        var val = manualInput ? manualInput.value.trim() : "";
+                        if (!val) {
+                            alert("请输入你的回答。");
+                            return;
+                        }
+                        submitAnswer(val);
+                    };
+                    if (manualSubmit) manualSubmit.onclick = function(e) { doManualSubmit(e); };
+                    if (manualInput) {
+                        manualInput.onkeydown = function(ev) {
+                            if (ev.key === "Enter") { ev.preventDefault(); doManualSubmit(); }
+                        };
+                    }
+                }
+            });
+            await answerPromise;
+        }
+
+        overlay.classList.add("hidden");
+        hideChoices();
     },
 
     renderQuiz() {
-        const questions = Game.getQuestions();
-        const idx = Game.answers.length;
+        var questions = Game.getQuestions();
+        var idx = Game.answers.length;
         if (idx >= ALICE_CONSTANTS.BALANCE.QUIZ_COUNT) {
             App.finishQuiz();
             return;
         }
-        const q = questions[idx];
-        const container = document.getElementById("quiz-container");
+        var q = questions[idx];
+        var container = document.getElementById("quiz-container");
         if (!container) return;
-        const maxLen = ALICE_CONSTANTS.BALANCE.ANSWER_MAX_LEN || 30;
+        var maxLen = ALICE_CONSTANTS.BALANCE.ANSWER_MAX_LEN || 30;
         container.innerHTML = `
             <div class="quiz-header quiz-header-style2">${idx + 1} / ${ALICE_CONSTANTS.BALANCE.QUIZ_COUNT}</div>
             <div class="question-text dream-question-text">${escapeHtml(q.text)}</div>
@@ -573,9 +906,9 @@ const UI = {
             </div>
             <button type="button" class="quiz-submit-btn glow-button" id="quiz-submit-btn">提交</button>
         `;
-        const inputEl = document.getElementById("quiz-answer-input");
-        const countEl = document.getElementById("quiz-char-count");
-        const submitBtn = document.getElementById("quiz-submit-btn");
+        var inputEl = document.getElementById("quiz-answer-input");
+        var countEl = document.getElementById("quiz-char-count");
+        var submitBtn = document.getElementById("quiz-submit-btn");
         function updateCount() {
             var len = (inputEl && inputEl.value) ? inputEl.value.length : 0;
             if (countEl) countEl.textContent = len + " / " + maxLen;
@@ -588,7 +921,7 @@ const UI = {
             inputEl.focus();
         }
         if (submitBtn) {
-            submitBtn.onclick = () => {
+            submitBtn.onclick = function() {
                 var text = inputEl ? inputEl.value.trim() : "";
                 if (!text) {
                     alert("请输入你的回答。");
@@ -601,7 +934,7 @@ const UI = {
                 Game.answer(text);
                 Game.saveProgress();
                 App.setMainSpriteChar("hana");
-                this.renderQuiz();
+                UI.renderQuiz();
             };
         }
     },
@@ -619,26 +952,119 @@ const UI = {
         }
     },
 
-    /** 在 Alice 终局独立 section 中显示结局气泡（与 Hana 庭院分离） */
+    /** 在 Alice 终局独立 section 中显示结局气泡（兼容旧逻辑） */
     showFateInSection(fateText) {
-        var waitEl = document.getElementById("alice-ending-wait");
-        var bubbleWrap = document.getElementById("alice-ending-bubble-wrap");
-        var contentEl = document.getElementById("alice-ending-content");
-        var downloadBtn = document.getElementById("alice-ending-download");
-        var closeBtn = document.getElementById("alice-ending-close");
-        if (waitEl) waitEl.classList.add("hidden");
-        if (bubbleWrap) bubbleWrap.classList.remove("hidden");
-        if (contentEl) contentEl.textContent = (fateText && String(fateText).trim()) ? fateText : "（终局文本尚未生成。）";
-        if (downloadBtn) downloadBtn.onclick = function() { Game.downloadEnding(fateText || "", Game.currentDetail && Game.currentDetail.name); };
-        if (closeBtn) closeBtn.onclick = function() { App.navigateTo("MAP"); };
+        UI.showFateInSectionGalgame(fateText);
     },
 
-    /** 进入 Alice 终局 section 时显示等待状态、隐藏气泡 */
-    showAliceEndingWait() {
+    /** 全屏 loading 过场（GAS 请求中）：不立即加载 Alice 立绘 */
+    showAliceEndingLoading() {
+        var loading = document.getElementById("alice-ending-loading");
+        var stage = document.getElementById("alice-ending-stage");
         var waitEl = document.getElementById("alice-ending-wait");
-        var bubbleWrap = document.getElementById("alice-ending-bubble-wrap");
-        if (waitEl) waitEl.classList.remove("hidden");
-        if (bubbleWrap) bubbleWrap.classList.add("hidden");
+        var video = document.getElementById("alice-ending-loading-video");
+        if (stage) stage.classList.add("hidden");
+        if (waitEl) waitEl.classList.add("hidden");
+        if (loading) loading.classList.remove("hidden");
+        if (video) {
+            var src = (ALICE_CONSTANTS.PATHS && ALICE_CONSTANTS.PATHS.ALICE_ENDING_LOADING_VIDEO) || "assets/videos/ending_loading.webm";
+            video.src = src;
+            video.play().catch(function() {});
+        }
+    },
+
+    /** Galgame 终局流程：隐藏 loading → webm 背景 + 歌词滚动 → 白/黑/glitch 效果 → 肃静空白 + 两按钮 */
+    showFateInSectionGalgame(fateText) {
+        var loading = document.getElementById("alice-ending-loading");
+        var stage = document.getElementById("alice-ending-stage");
+        var videoEl = document.getElementById("alice-ending-video");
+        var lyricWrap = document.getElementById("alice-ending-lyric-wrap");
+        var lyricText = document.getElementById("alice-ending-lyric-text");
+        var effectEl = document.getElementById("alice-ending-effect");
+        var finalEl = document.getElementById("alice-ending-final");
+        var downloadBtn = document.getElementById("alice-ending-download");
+        var closeBtn = document.getElementById("alice-ending-close");
+
+        if (!stage || !lyricText) return;
+
+        var text = (fateText && String(fateText).trim()) ? fateText : "（终局文本尚未生成。）";
+
+        if (loading) loading.classList.add("hidden");
+        stage.classList.remove("hidden");
+        if (effectEl) {
+            effectEl.classList.remove("white-book", "black-book", "glitch");
+        }
+        if (finalEl) finalEl.classList.add("hidden");
+
+        lyricText.textContent = text;
+        lyricText.classList.remove("done");
+        lyricText.style.animationDuration = "45s";
+        var durationSec = 45;
+        function setLyricDuration() {
+            var h = lyricText.scrollHeight;
+            if (h > 0) durationSec = Math.max(35, Math.min(120, Math.round(h / 55) + 20));
+            lyricText.style.animationDuration = durationSec + "s";
+        }
+        requestAnimationFrame(function() { setLyricDuration(); });
+
+        var videoSrc = (ALICE_CONSTANTS.PATHS && ALICE_CONSTANTS.PATHS.ALICE_ENDING_VIDEO) || "assets/videos/alice_ending.webm";
+        if (videoEl) {
+            videoEl.classList.remove("playing", "fade-out");
+            videoEl.src = videoSrc;
+            videoEl.loop = true;
+            videoEl.play().catch(function() {});
+            setTimeout(function() { videoEl.classList.add("playing"); }, 100);
+            videoEl.onended = function() {
+                videoEl.classList.add("fade-out");
+            };
+        }
+
+        var effectDuration = 2800;
+        var hasWhite = text.indexOf("白之书") !== -1;
+        var hasBlack = text.indexOf("黑之书") !== -1;
+        function applyEffect() {
+            if (!effectEl) return;
+            if (hasWhite) effectEl.classList.add("white-book");
+            else if (hasBlack) effectEl.classList.add("black-book");
+            else effectEl.classList.add("glitch");
+        }
+
+        function showFinal() {
+            if (lyricWrap) lyricWrap.classList.add("hidden");
+            if (finalEl) finalEl.classList.remove("hidden");
+            if (downloadBtn) downloadBtn.onclick = function() { Game.downloadEnding(fateText || "", Game.currentDetail && Game.currentDetail.name); };
+            if (closeBtn) closeBtn.onclick = function() { App.navigateTo("MAP"); };
+        }
+
+        function pauseLyricScroll() {
+            if (lyricText) lyricText.style.animationPlayState = "paused";
+        }
+        function resumeLyricScroll() {
+            if (lyricText) lyricText.style.animationPlayState = "running";
+        }
+        var stageEl = document.getElementById("alice-ending-stage");
+        if (stageEl) {
+            stageEl.addEventListener("pointerdown", pauseLyricScroll, { passive: true });
+            stageEl.addEventListener("pointerup", resumeLyricScroll, { passive: true });
+            stageEl.addEventListener("pointerleave", resumeLyricScroll, { passive: true });
+        }
+        if (lyricWrap) {
+            lyricWrap.addEventListener("pointerdown", pauseLyricScroll, { passive: true });
+            lyricWrap.addEventListener("pointerup", resumeLyricScroll, { passive: true });
+            lyricWrap.addEventListener("pointerleave", resumeLyricScroll, { passive: true });
+        }
+
+        lyricText.addEventListener("animationend", function onLyricEnd() {
+            lyricText.removeEventListener("animationend", onLyricEnd);
+            lyricText.classList.add("done");
+            applyEffect();
+            setTimeout(showFinal, effectDuration);
+        });
+    },
+
+    /** 进入 Alice 终局 section 时显示全屏 loading，不切 Alice 立绘 */
+    showAliceEndingWait() {
+        UI.showAliceEndingLoading();
     }
 };
 
@@ -658,11 +1084,11 @@ App.startGachaFlow = async function() {
             if (s) Auth.updateLocal({ points: (s.points || 0) - cost });
             self.updateUI();
             self.hideLoading();
-            await UI.showCardStory(detail);
             Game.currentDetail = detail;
             Game.saveProgress();
+            await UI.showCardStory(detail);
             self.showScene(ALICE_CONSTANTS.SCENES.GARDEN);
-            UI.renderQuiz();
+            App.finishQuiz();
         } catch (e) {
             self.hideLoading();
             alert(e.message || "抽卡失败");
@@ -672,7 +1098,6 @@ App.startGachaFlow = async function() {
 
 App.finishQuiz = async function() {
     this.showScene(ALICE_CONSTANTS.SCENES.ALICE_ENDING);
-    this.setMainSpriteChar("alice");
     UI.showAliceEndingWait();
     try {
         var fateText = await Game.submitToAlice();

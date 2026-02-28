@@ -201,17 +201,27 @@
         </div>
     </div>
 
-    <div id="card-story-overlay" class="overlay hidden">
-        <div class="card-story-card-wrap">
+    <!-- Galgame 卡牌故事：开场过场 + 问题对白 -->
+    <div id="card-story-overlay" class="galgame-overlay overlay hidden">
+        <div id="galgame-bg" class="galgame-bg" aria-hidden="true"></div>
+        <div id="galgame-card-img-wrap" class="galgame-card-img-wrap">
             <img id="card-story-card-img" class="card-story-card-img" src="" alt="" draggable="false" onerror="this.style.display='none';">
         </div>
-        <div class="character-wrap">
+        <div id="galgame-character-wrap" class="galgame-character-wrap">
+            <button type="button" id="galgame-character-hide-btn" class="galgame-character-hide-btn" aria-label="隐藏立绘">隐藏</button>
             <img id="card-story-sprite" src="assets/characters/hanadefault.webp" alt="Hana" draggable="false" onerror="this.onerror=null;this.src=window.ASSET_PLACEHOLDER||'';">
         </div>
-        <div class="dialogue-box breath-hana">
-            <div class="name-tag" id="card-story-name">Hana</div>
-            <div id="card-story-text" class="story-text"></div>
-            <div class="next-hint" id="card-story-next">点击继续</div>
+        <div id="galgame-dialogue-box" class="galgame-dialogue-box">
+            <div class="galgame-name-tag" id="card-story-name">Hana</div>
+            <div id="card-story-text" class="galgame-story-text"></div>
+            <div class="galgame-next-hint" id="card-story-next">点击继续</div>
+        </div>
+        <div id="galgame-choices-wrap" class="galgame-choices-wrap hidden">
+            <div id="galgame-choices" class="galgame-choices"></div>
+            <div id="galgame-manual-wrap" class="galgame-manual-wrap hidden">
+                <input type="text" id="galgame-manual-input" class="galgame-manual-input" placeholder="在此输入你的回答…" maxlength="30" autocomplete="off">
+                <button type="button" id="galgame-manual-submit" class="galgame-manual-submit glow-btn">提交</button>
+            </div>
         </div>
     </div>
 
@@ -369,20 +379,41 @@
         </div>
     </section>
 
-    <section id="scene-alice-ending" class="scene">
-        <div id="alice-ending-wait" class="alice-ending-wait">
-            <div class="loader"></div>
-            <p class="alice-ending-wait-text">等待结局回应…</p>
+    <section id="scene-alice-ending" class="scene scene-alice-ending">
+        <!-- 全屏 loading 过场（GAS 请求中）：webm 或 cut-in 特效 -->
+        <div id="alice-ending-loading" class="alice-ending-loading hidden">
+            <video id="alice-ending-loading-video" class="alice-ending-loading-video" muted playsinline preload="auto" loop aria-hidden="true">
+                <source src="assets/videos/ending_loading.webm" type="video/webm">
+            </video>
+            <div id="alice-ending-loading-fallback" class="alice-ending-loading-fallback">
+                <div class="alice-ending-loading-cutin"></div>
+                <p class="alice-ending-loading-text">因果编织中…</p>
+                <div class="loader"></div>
+            </div>
         </div>
-        <div id="alice-ending-bubble-wrap" class="alice-ending-bubble-wrap hidden">
-            <div class="fate-bubble breath-alice alice-ending-bubble">
-                <h3 class="fate-bubble-title">— Alice · 终局 —</h3>
-                <div id="alice-ending-content" class="fate-scroll"></div>
-                <div class="fate-footer">
-                    <button type="button" class="download-btn" id="alice-ending-download">下载结局</button>
-                    <button type="button" class="reset-btn" id="alice-ending-close">关闭</button>
+        <!-- 结局舞台：webm 背景 + 歌词滚动 + 效果层 + 最终两按钮 -->
+        <div id="alice-ending-stage" class="alice-ending-stage hidden">
+            <video id="alice-ending-video" class="alice-ending-video" muted playsinline preload="auto" loop aria-hidden="true">
+                <source src="assets/videos/alice_ending.webm" type="video/webm">
+            </video>
+            <div id="alice-ending-lyric-wrap" class="alice-ending-lyric-wrap">
+                <div id="alice-ending-lyric-text" class="alice-ending-lyric-text"></div>
+            </div>
+            <div id="alice-ending-effect" class="alice-ending-effect" aria-hidden="true"></div>
+            <div id="alice-ending-final" class="alice-ending-final hidden">
+                <div class="alice-ending-final-inner">
+                    <div class="alice-ending-final-buttons">
+                        <button type="button" class="download-btn" id="alice-ending-download">下载结局</button>
+                        <button type="button" class="reset-btn" id="alice-ending-close">返回庭院</button>
+                    </div>
+                    <img id="alice-ending-final-sprite" class="alice-ending-final-sprite" src="assets/characters/alicedefault.webp" alt="Alice" draggable="false" onerror="this.style.display='none'">
                 </div>
             </div>
+        </div>
+        <!-- 兼容旧逻辑的占位（由 JS 控制显隐） -->
+        <div id="alice-ending-wait" class="alice-ending-wait hidden"></div>
+        <div id="alice-ending-bubble-wrap" class="alice-ending-bubble-wrap hidden">
+            <div id="alice-ending-content" class="fate-scroll"></div>
         </div>
     </section>
 
