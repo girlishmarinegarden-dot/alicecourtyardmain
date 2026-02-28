@@ -997,15 +997,8 @@ const UI = {
         if (finalEl) finalEl.classList.add("hidden");
 
         lyricText.textContent = text;
-        lyricText.classList.remove("done");
-        lyricText.style.animationDuration = "45s";
-        var durationSec = 45;
-        function setLyricDuration() {
-            var h = lyricText.scrollHeight;
-            if (h > 0) durationSec = Math.max(35, Math.min(120, Math.round(h / 55) + 20));
-            lyricText.style.animationDuration = durationSec + "s";
-        }
-        requestAnimationFrame(function() { setLyricDuration(); });
+        lyricText.classList.remove("done", "animating");
+        lyricText.style.animation = "none";
 
         var videoSrc = (ALICE_CONSTANTS.PATHS && ALICE_CONSTANTS.PATHS.ALICE_ENDING_VIDEO) || "assets/videos/alice_ending.webm";
         if (videoEl) {
@@ -1036,12 +1029,97 @@ const UI = {
             if (closeBtn) closeBtn.onclick = function() { App.navigateTo("MAP"); };
         }
 
+        var lyricPaused = false;
+        var lyricRafId = null;
+        var lyricCurrentY = 0;
+        var lyricInitialY = 0;
+        var lyricMinY = 0;
+        var lyricSpeed = 0;
+        var lyricDurationSec = 45;
+        var lyricEnded = false;
+        var scrollResumeTimer = null;
+
+        function setLyricTransform(px) {
+            if (lyricText) lyricText.style.transform = "translateY(" + px + "px)";
+        }
+
+        function runLyricTick(now) {
+            if (lyricEnded || !lyricText) return;
+            if (lyricPaused) {
+                lyricRafId = requestAnimationFrame(runLyricTick);
+                return;
+            }
+            var dt = (now - (runLyricTick.last || now)) / 1000;
+            runLyricTick.last = now;
+            lyricCurrentY -= lyricSpeed * dt;
+            if (lyricCurrentY < lyricMinY) lyricCurrentY = lyricMinY;
+            setLyricTransform(lyricCurrentY);
+            if (lyricCurrentY <= lyricMinY) {
+                lyricEnded = true;
+                if (lyricText) lyricText.classList.add("done");
+                applyEffect();
+                setTimeout(showFinal, effectDuration);
+                return;
+            }
+            lyricRafId = requestAnimationFrame(runLyricTick);
+        }
+
+        function startLyricAnimation() {
+            var wrap = lyricWrap;
+            var h = lyricText ? lyricText.scrollHeight : 0;
+            var wrapH = wrap ? wrap.clientHeight : 400;
+            if (h > 0) lyricDurationSec = Math.max(35, Math.min(120, Math.round(h / 55) + 20));
+            /* 字幕从框的垂直中间开始：让首行出现在框中部 */
+            lyricInitialY = Math.max(0, Math.round(h - wrapH / 2));
+            lyricMinY = -Math.max(h, 100);
+            lyricCurrentY = lyricInitialY;
+            lyricSpeed = (lyricInitialY + Math.max(h, 100)) / lyricDurationSec;
+            lyricEnded = false;
+            runLyricTick.last = performance.now();
+            setLyricTransform(lyricCurrentY);
+            if (lyricRafId != null) cancelAnimationFrame(lyricRafId);
+            lyricRafId = requestAnimationFrame(runLyricTick);
+        }
+
         function pauseLyricScroll() {
-            if (lyricText) lyricText.style.animationPlayState = "paused";
+            lyricPaused = true;
         }
         function resumeLyricScroll() {
-            if (lyricText) lyricText.style.animationPlayState = "running";
+            lyricPaused = false;
         }
+        function onLyricWheel(e) {
+            e.preventDefault();
+            pauseLyricScroll();
+            lyricCurrentY += e.deltaY;
+            if (lyricCurrentY > lyricInitialY) lyricCurrentY = lyricInitialY;
+            if (lyricCurrentY < lyricMinY) lyricCurrentY = lyricMinY;
+            setLyricTransform(lyricCurrentY);
+            clearTimeout(scrollResumeTimer);
+            scrollResumeTimer = setTimeout(resumeLyricScroll, 320);
+        }
+        function onLyricTouchStart(e) {
+            if (e.touches.length !== 1) return;
+            lyricTouchStartY = e.touches[0].clientY;
+            lyricTouchStartScrollY = lyricCurrentY;
+        }
+        var lyricTouchStartY = 0, lyricTouchStartScrollY = 0;
+        function onLyricTouchMove(e) {
+            if (e.touches.length !== 1) return;
+            e.preventDefault();
+            var y = e.touches[0].clientY;
+            var delta = lyricTouchStartY - y;
+            lyricTouchStartY = y;
+            lyricTouchStartScrollY += delta;
+            lyricCurrentY = lyricTouchStartScrollY;
+            if (lyricCurrentY > lyricInitialY) lyricCurrentY = lyricInitialY;
+            if (lyricCurrentY < lyricMinY) lyricCurrentY = lyricMinY;
+            setLyricTransform(lyricCurrentY);
+            pauseLyricScroll();
+        }
+        function onLyricTouchEnd() {
+            scrollResumeTimer = setTimeout(resumeLyricScroll, 280);
+        }
+
         var stageEl = document.getElementById("alice-ending-stage");
         if (stageEl) {
             stageEl.addEventListener("pointerdown", pauseLyricScroll, { passive: true });
@@ -1052,13 +1130,21 @@ const UI = {
             lyricWrap.addEventListener("pointerdown", pauseLyricScroll, { passive: true });
             lyricWrap.addEventListener("pointerup", resumeLyricScroll, { passive: true });
             lyricWrap.addEventListener("pointerleave", resumeLyricScroll, { passive: true });
+            lyricWrap.addEventListener("wheel", onLyricWheel, { passive: false });
+            lyricWrap.addEventListener("touchstart", onLyricTouchStart, { passive: true });
+            lyricWrap.addEventListener("touchmove", onLyricTouchMove, { passive: false });
+            lyricWrap.addEventListener("touchend", onLyricTouchEnd, { passive: true });
+            lyricWrap.addEventListener("touchcancel", onLyricTouchEnd, { passive: true });
+        }
+        var lyricPauseBtn = document.getElementById("alice-ending-lyric-pause-btn");
+        if (lyricPauseBtn) {
+            lyricPauseBtn.addEventListener("pointerdown", function(e) { e.preventDefault(); pauseLyricScroll(); }, { passive: false });
+            lyricPauseBtn.addEventListener("pointerup", resumeLyricScroll, { passive: true });
+            lyricPauseBtn.addEventListener("pointerleave", resumeLyricScroll, { passive: true });
         }
 
-        lyricText.addEventListener("animationend", function onLyricEnd() {
-            lyricText.removeEventListener("animationend", onLyricEnd);
-            lyricText.classList.add("done");
-            applyEffect();
-            setTimeout(showFinal, effectDuration);
+        requestAnimationFrame(function() {
+            startLyricAnimation();
         });
     },
 

@@ -234,12 +234,42 @@ const Game = {
         }
     },
 
+    /** 生成 galgame 风格结局 HTML，含翻译按钮（Google Translate） */
+    buildEndingHtml(fateText, cardName) {
+        const text = (fateText != null ? String(fateText) : "").trim() || "（暂无结局文本）";
+        const rawTitle = (cardName != null ? cardName : (this.currentDetail && this.currentDetail.name)) || "终局";
+        const escapeHtml = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        const escaped = escapeHtml(text);
+        const titleEsc = escapeHtml(rawTitle);
+        const encoded = encodeURIComponent(text);
+        const gUrl = (tl) => "https://translate.google.com/?sl=auto&tl=" + tl + "&op=translate&text=" + encoded;
+        return "<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<title>" + titleEsc + " - 结局</title>\n<style>\n" +
+            "*{box-sizing:border-box;margin:0;padding:0}\nbody{min-height:100vh;background:linear-gradient(180deg,#0a0a14 0%,#1a1528 30%,#0f0e1a 100%);color:rgba(255,255,255,0.92);font-family:\"Noto Serif SC\",\"Source Han Serif CN\",Georgia,serif;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1rem;line-height:2.2}\n" +
+            ".ending-wrap{max-width:42rem;width:100%;position:relative}\n" +
+            ".ending-wrap::before{content:'';position:absolute;inset:-20px;background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(120,80,160,0.15),transparent 70%);pointer-events:none}\n" +
+            ".ending-title{font-size:1rem;letter-spacing:0.4em;color:rgba(255,235,200,0.85);margin-bottom:2rem;text-align:center}\n" +
+            ".ending-text{font-size:1.05rem;white-space:pre-wrap;word-break:break-word;padding:1.5rem 0;border-top:1px solid rgba(255,255,255,0.12);border-bottom:1px solid rgba(255,255,255,0.12)}\n" +
+            ".translate-bar{display:flex;flex-wrap:wrap;gap:0.75rem;margin-top:2rem;justify-content:center}\n" +
+            ".translate-bar a{display:inline-block;padding:0.5rem 1rem;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.25);border-radius:8px;color:rgba(255,255,255,0.9);text-decoration:none;font-size:0.9rem;transition:background 0.2s,border-color 0.2s}\n" +
+            ".translate-bar a:hover{background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.4)}\n" +
+            ".ending-footer{ margin-top:2rem;font-size:0.8rem;color:rgba(255,255,255,0.45)}\n" +
+            "</style>\n</head>\n<body>\n<div class=\"ending-wrap\">\n" +
+            "<p class=\"ending-title\">" + titleEsc + "</p>\n" +
+            "<div class=\"ending-text\" id=\"ending-text\">" + escaped + "</div>\n" +
+            "<div class=\"translate-bar\">\n" +
+            "<a href=\"" + gUrl("zh-CN") + "\" target=\"_blank\" rel=\"noopener\">中文</a>\n" +
+            "<a href=\"" + gUrl("en") + "\" target=\"_blank\" rel=\"noopener\">English</a>\n" +
+            "<a href=\"" + gUrl("ms") + "\" target=\"_blank\" rel=\"noopener\">Bahasa Melayu</a>\n" +
+            "</div>\n<p class=\"ending-footer\">使用上方按钮可在 Google 翻译中查看中文 / 英文 / 马来文</p>\n</div>\n</body>\n</html>";
+    },
+
     downloadEnding(fateText, cardName) {
         const baseName = (cardName != null ? cardName : (this.currentDetail && this.currentDetail.name)) || "终局";
         const safeName = String(baseName).replace(/[/\\?*:"|<>]/g, "_");
         const dateStr = new Date().toISOString().slice(0, 10);
-        const name = safeName + "_" + dateStr + ".txt";
-        const blob = new Blob([fateText != null ? String(fateText) : ""], { type: "text/plain;charset=utf-8" });
+        const name = safeName + "_" + dateStr + ".html";
+        const html = this.buildEndingHtml(fateText, cardName);
+        const blob = new Blob(["\uFEFF" + html], { type: "text/html;charset=utf-8" });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
         a.download = name;

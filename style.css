@@ -1595,19 +1595,40 @@ body.alice-ending-active #btn-bgm { z-index: 10001; }
     background: rgba(12, 22, 48, 0.82);
     box-sizing: border-box;
 }
+.alice-ending-lyric-pause-btn {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    z-index: 3;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.8rem;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 6px;
+    color: rgba(255,255,255,0.9);
+    cursor: pointer;
+    pointer-events: auto;
+}
+.alice-ending-lyric-pause-btn:hover { background: rgba(0,0,0,0.7); border-color: rgba(255,255,255,0.5); }
 .alice-ending-lyric-text {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
     color: rgba(255,255,255,0.95);
     font-size: 1.05rem;
     line-height: 2;
     white-space: pre-wrap;
     word-break: break-word;
     padding: 10px 1rem 10px;
-    transform: translateY(100%);
-    animation: alice-ending-lyric-scroll 60s linear forwards;
+    transform: translateY(0);
     box-sizing: border-box;
 }
+.alice-ending-lyric-text.animating {
+    animation: alice-ending-lyric-scroll 60s linear forwards;
+}
 @keyframes alice-ending-lyric-scroll {
-    from { transform: translateY(100%); }
+    from { transform: translateY(0); }
     to { transform: translateY(-100%); }
 }
 .alice-ending-lyric-text.done { animation: none; transform: translateY(-100%); }
