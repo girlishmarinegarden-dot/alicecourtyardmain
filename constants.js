@@ -81,6 +81,10 @@ const ALICE_CONSTANTS = {
         BGM_DIR: "assets/bgm/",
         /** 画廊卡牌立绘/卡面图，文件名与卡牌 id 一致，如 CARD_001.webp */
         CARDS_IMAGES: "assets/cards/",
+        /** 开门过渡：钥匙图、锁孔图、开门视频 */
+        OPENDOOR_KEY: "assets/ui/key.webp",
+        OPENDOOR_KEYHOLE: "assets/ui/keyhole.webp",
+        OPENDOOR_VIDEO: "assets/videos/opendoor.webm",
         /** 进入庭院时 Hana 前往中 loading 循环视频 */
         HANA_LOADING_VIDEO: "assets/videos/hanaloading.webm",
         /** Alice 终局：loading 过场 webm（可选），无则用 CSS 过场 */

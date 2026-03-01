@@ -87,6 +87,15 @@
         </video>
     </div>
 
+    <!-- 🗝️ Alice Courtyard 开门过渡：动画钥匙(掉落/弹跳/90°) → 结束后隐藏，idle 钥匙出现并可拖动 → 接触锁孔触发视频 -->
+    <div id="opendoor-overlay" class="opendoor-overlay hidden" aria-hidden="true">
+        <div class="opendoor-bg" aria-hidden="true"></div>
+        <video id="opendoor-video" class="opendoor-video" muted playsinline preload="auto" aria-hidden="true"></video>
+        <img id="opendoor-keyhole" class="opendoor-keyhole" src="assets/ui/keyhole.webp" alt="" draggable="false" aria-hidden="true">
+        <img id="opendoor-key" class="opendoor-key opendoor-key-anim" src="assets/ui/key.webp" alt="" draggable="false" aria-hidden="true">
+        <img id="opendoor-key-idle" class="opendoor-key-idle hidden" src="assets/ui/key.webp" alt="" draggable="false" aria-hidden="true">
+    </div>
+
     <div id="confirm-overlay" class="confirm-overlay hidden" aria-hidden="true">
         <div class="confirm-box glass-panel">
             <p id="confirm-message" class="confirm-message"></p>
@@ -508,6 +517,7 @@
     <script src="js/divination.js"></script>
     <script src="js/moichan-nav.js"></script>
     <script src="js/sprite-stage.js"></script>
+    <script src="js/opendoor-transition.js"></script>
     <script src="js/app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
     <script src="js/memory-studio.js"></script>

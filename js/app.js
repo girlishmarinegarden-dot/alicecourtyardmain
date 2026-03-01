@@ -390,13 +390,22 @@ const App = {
             const out = await Auth.refreshFromGAS();
             if (out) this.worldData = out.world;
             this.updateUI();
-            this.showScene(ALICE_CONSTANTS.SCENES.MAP);
-            this.initYumeWall();
-            this.tryBgmWelcomePulse();
+            this.hideLoading();
+            if (typeof OpenDoorTransition !== "undefined" && OpenDoorTransition.run) {
+                OpenDoorTransition.run(function () {
+                    this.showScene(ALICE_CONSTANTS.SCENES.MAP);
+                    this.initYumeWall();
+                    this.tryBgmWelcomePulse();
+                }.bind(this));
+            } else {
+                this.showScene(ALICE_CONSTANTS.SCENES.MAP);
+                this.initYumeWall();
+                this.tryBgmWelcomePulse();
+            }
         } catch (e) {
+            this.hideLoading();
             alert(e.message || "认证失败");
         }
-        this.hideLoading();
     },
 
     /** 是否以 file 协议打开（易导致 Failed to fetch） */
