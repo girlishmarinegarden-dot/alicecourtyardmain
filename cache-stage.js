@@ -122,6 +122,11 @@
   var r18Unlocked = false;
   var currentPage = 1;
   var currentFolderImages = [];
+  var gallerySearchQuery = '';
+  var gallerySortBy = 'time-desc';
+  var galleryViewMode = 'grid';
+  var galleryPageSize = 60;
+  var NEW_BADGE_COUNT = 8; // 最新 N 张显示 NEW 闪光
 
   function closePreview() {
     var overlay = document.getElementById('overlay');
@@ -161,18 +166,73 @@
     return images.filter(function (img) { return !img.folder.includes('/R18/'); });
   }
 
+  function getFilteredAndSortedImages() {
+    var visible = getVisibleImages();
+    var q = (gallerySearchQuery || '').trim().toLowerCase();
+    if (q) {
+      visible = visible.filter(function (i) {
+        return (i.name && i.name.toLowerCase().indexOf(q) !== -1) ||
+          (i.folder && i.folder.toLowerCase().indexOf(q) !== -1);
+      });
+    }
+    if (currentPath.length > 0) {
+      var prefix = currentPath.join('/');
+      visible = visible.filter(function (i) { return i.folder === prefix || i.folder.indexOf(prefix + '/') === 0; });
+    }
+    var sortBy = gallerySortBy || 'time-desc';
+    visible = visible.slice().sort(function (a, b) {
+      if (sortBy === 'time-desc') {
+        var ta = a.time ? new Date(a.time).getTime() : 0;
+        var tb = b.time ? new Date(b.time).getTime() : 0;
+        return tb - ta;
+      }
+      if (sortBy === 'time-asc') {
+        var ta2 = a.time ? new Date(a.time).getTime() : 0;
+        var tb2 = b.time ? new Date(b.time).getTime() : 0;
+        return ta2 - tb2;
+      }
+      var na = (a.name || '').toLowerCase();
+      var nb = (b.name || '').toLowerCase();
+      if (sortBy === 'name-asc') return na.localeCompare(nb);
+      return nb.localeCompare(na);
+    });
+    return visible;
+  }
+
+  function getNewIds() {
+    var visible = getVisibleImages().slice();
+    visible.sort(function (a, b) {
+      var ta = a.time ? new Date(a.time).getTime() : 0;
+      var tb = b.time ? new Date(b.time).getTime() : 0;
+      return tb - ta;
+    });
+    var ids = {};
+    for (var i = 0; i < Math.min(NEW_BADGE_COUNT, visible.length); i++) {
+      if (visible[i].id) ids[visible[i].id] = true;
+    }
+    return ids;
+  }
+
   function loadData() {
+    var statsEl = document.getElementById('stats');
+    var loadingEl = document.getElementById('gallery-loading');
+    var galleryEl = document.getElementById('gallery');
+    if (loadingEl) { loadingEl.classList.remove('hidden'); loadingEl.textContent = '正在加载图库…'; }
+    if (statsEl) statsEl.textContent = '加载中…';
+    if (galleryEl) galleryEl.innerHTML = '';
     fetch(CONFIG.WEB_APP_URL)
       .then(function (res) { return res.json(); })
       .then(function (data) {
         images = data.images || [];
+        if (loadingEl) loadingEl.classList.add('hidden');
         buildBreadcrumbTabs();
         renderCurrentFolder();
         updateStats();
       })
       .catch(function () {
-        var stats = document.getElementById('stats');
-        if (stats) stats.textContent = '加载失败，请刷新页面';
+        if (loadingEl) loadingEl.classList.add('hidden');
+        if (statsEl) statsEl.textContent = '加载失败，请检查网络或稍后重试';
+        if (galleryEl) galleryEl.innerHTML = '<p class="gallery-error">无法连接图库服务，请稍后重试或使用「刷新」按钮。</p>';
       });
   }
 
@@ -231,55 +291,67 @@
   function renderCurrentFolder() {
     var gallery = document.getElementById('gallery');
     if (!gallery) return;
-    var visibleImages = getVisibleImages();
-    var filtered = visibleImages;
-    if (currentPath.length > 0) {
-      var prefix = currentPath.join('/');
-      filtered = visibleImages.filter(function (i) { return i.folder === prefix || i.folder.startsWith(prefix + '/'); });
-    }
-    currentFolderImages = filtered;
+    currentFolderImages = getFilteredAndSortedImages();
     if (currentFolderImages.length === 0) {
-      gallery.innerHTML = '空空如也～';
+      gallery.innerHTML = '<p class="gallery-empty">暂无匹配的图片，可尝试调整搜索或分类。</p>';
+      gallery.className = 'gallery-grid gallery-empty-state';
       var pager = document.getElementById('gallery-pagination');
       if (pager) pager.innerHTML = '';
       updateStats();
       return;
     }
+    gallery.className = 'gallery-grid' + (galleryViewMode === 'list' ? ' gallery-list-view' : '');
     renderPage(1);
+  }
+
+  function openPreview(im) {
+    var match = im.direct && im.direct.match(/id=([^&]+)/);
+    if (!match) return;
+    var fileId = match[1];
+    var previewUrl = 'https://drive.google.com/file/d/' + fileId + '/preview';
+    var iframe = document.getElementById('drivePreview');
+    var overlay = document.getElementById('overlay');
+    if (iframe && overlay) { iframe.src = previewUrl; overlay.style.display = 'flex'; overlay.setAttribute('aria-hidden', 'false'); }
   }
 
   function renderPage(page) {
     var gallery = document.getElementById('gallery');
     if (!gallery) return;
+    var pageSize = galleryPageSize || CONFIG.PAGE_SIZE;
     var total = currentFolderImages.length;
-    var maxPage = Math.max(1, Math.ceil(total / CONFIG.PAGE_SIZE));
+    var maxPage = Math.max(1, Math.ceil(total / pageSize));
     currentPage = Math.min(Math.max(1, page), maxPage);
     gallery.innerHTML = '';
-    var start = (currentPage - 1) * CONFIG.PAGE_SIZE;
-    var end = Math.min(start + CONFIG.PAGE_SIZE, total);
+    gallery.className = 'gallery-grid' + (galleryViewMode === 'list' ? ' gallery-list-view' : '');
+    var start = (currentPage - 1) * pageSize;
+    var end = Math.min(start + pageSize, total);
+    var newIds = getNewIds();
     var fragment = document.createDocumentFragment();
     for (var i = start; i < end; i++) {
       var img = currentFolderImages[i];
       var card = document.createElement('div');
-      card.className = 'card';
+      card.className = 'card gallery-card' + (newIds[img.id] ? ' gallery-card-new' : '');
+      card.setAttribute('role', 'listitem');
+      if (newIds[img.id]) {
+        var newBadge = document.createElement('span');
+        newBadge.className = 'gallery-new-badge';
+        newBadge.setAttribute('aria-label', '最新');
+        newBadge.textContent = 'NEW';
+        card.appendChild(newBadge);
+      }
       var image = new Image();
       image.loading = 'lazy';
       image.src = img.thumb;
-      image.alt = '';
+      image.alt = img.name || '';
       image.onload = image.onerror = function () { gallery.style.columnCount = '1'; requestAnimationFrame(function () { gallery.style.columnCount = ''; }); };
       card.appendChild(image);
-      card.onclick = (function (im) {
-        return function (ev) {
-          ev.stopPropagation();
-          var match = im.direct.match(/id=([^&]+)/);
-          if (!match) return;
-          var fileId = match[1];
-          var previewUrl = 'https://drive.google.com/file/d/' + fileId + '/preview';
-          var iframe = document.getElementById('drivePreview');
-          var overlay = document.getElementById('overlay');
-          if (iframe && overlay) { iframe.src = previewUrl; overlay.style.display = 'flex'; }
-        };
-      })(img);
+      if (galleryViewMode === 'list') {
+        var caption = document.createElement('span');
+        caption.className = 'gallery-card-caption';
+        caption.textContent = img.name || '';
+        card.appendChild(caption);
+      }
+      card.onclick = (function (im) { return function (ev) { ev.stopPropagation(); openPreview(im); }; })(img);
       fragment.appendChild(card);
     }
     gallery.appendChild(fragment);
@@ -327,18 +399,22 @@
     var stats = document.getElementById('stats');
     if (!stats) return;
     var totalInFolder = currentFolderImages.length;
-    var maxPage = totalInFolder > 0 ? Math.ceil(totalInFolder / CONFIG.PAGE_SIZE) : 1;
-    stats.textContent = '共 ' + visibleImages.length + ' 张照片' + (currentPath.length > 0 ? ' · 当前分类：' + totalInFolder + ' 张' : '') + (totalInFolder > 0 ? ' · 第 ' + currentPage + '/' + maxPage + ' 页' : '');
+    var pageSize = galleryPageSize || CONFIG.PAGE_SIZE;
+    var maxPage = totalInFolder > 0 ? Math.ceil(totalInFolder / pageSize) : 1;
+    var text = '共 ' + visibleImages.length + ' 张';
+    if (gallerySearchQuery.trim()) text += ' · 搜索匹配 ' + totalInFolder + ' 张';
+    else if (currentPath.length > 0) text += ' · 当前分类 ' + totalInFolder + ' 张';
+    if (totalInFolder > 0) text += ' · 第 ' + currentPage + '/' + maxPage + ' 页';
+    stats.textContent = text;
   }
 
-  function refreshData() {
-    if (!confirm('确定要刷新相册数据吗？')) return;
-    var btn = event.target;
-    btn.disabled = true;
-    btn.textContent = '刷新中...';
+  function refreshData(btn) {
+    if (!confirm('确定要刷新图库数据吗？')) return;
+    var ref = btn || (typeof event !== 'undefined' && event.target);
+    if (ref) { ref.disabled = true; ref.textContent = '刷新中…'; }
     fetch(CONFIG.WEB_APP_URL + '?action=refresh&token=' + encodeURIComponent(CONFIG.REFRESH_TOKEN))
-      .then(function () { setTimeout(function () { location.reload(); }, 3000); })
-      .catch(function () { alert('刷新失败'); btn.disabled = false; btn.textContent = '刷新相册'; });
+      .then(function () { setTimeout(function () { location.reload(); }, 2000); })
+      .catch(function () { alert('刷新失败'); if (ref) { ref.disabled = false; ref.textContent = '刷新'; } });
   }
 
   function initGallery() {
@@ -351,6 +427,29 @@
     if (r18Modal) r18Modal.addEventListener('click', function (e) { if (e.target === r18Modal) r18Modal.style.display = 'none'; });
     document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
     document.addEventListener('dragstart', function (e) { e.preventDefault(); });
+
+    var searchEl = document.getElementById('gallery-search');
+    if (searchEl) {
+      function onSearch() { gallerySearchQuery = searchEl.value; renderCurrentFolder(); }
+      searchEl.addEventListener('input', onSearch);
+      searchEl.addEventListener('change', onSearch);
+    }
+    var sortEl = document.getElementById('gallery-sort');
+    if (sortEl) sortEl.addEventListener('change', function () { gallerySortBy = sortEl.value; renderCurrentFolder(); });
+    var pageSizeEl = document.getElementById('gallery-page-size');
+    if (pageSizeEl) pageSizeEl.addEventListener('change', function () { galleryPageSize = parseInt(pageSizeEl.value, 10) || 60; renderCurrentFolder(); });
+    document.querySelectorAll('.gallery-view-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var v = btn.getAttribute('data-view');
+        if (!v) return;
+        galleryViewMode = v;
+        document.querySelectorAll('.gallery-view-btn').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-view') === v); });
+        renderCurrentFolder();
+      });
+    });
+    var refreshBtn = document.getElementById('gallery-refresh-btn');
+    if (refreshBtn) refreshBtn.addEventListener('click', function () { refreshData(refreshBtn); });
+
     loadData();
   }
 

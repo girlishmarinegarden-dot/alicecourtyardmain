@@ -1264,6 +1264,139 @@ a.home-entry-link {
     box-shadow: 0 0 18px var(--hana-glow);
     border-color: var(--hana-glow);
 }
+
+/* Gallery 企业级工具栏 */
+.gallery-enterprise .gallery-header {
+    margin-bottom: 1rem;
+}
+.gallery-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--glass-border);
+}
+.gallery-toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.gallery-toolbar-label {
+    font-size: 0.8rem;
+    color: var(--silver-dim);
+    white-space: nowrap;
+}
+.gallery-search-input {
+    min-width: 160px;
+    padding: 0.45rem 0.75rem;
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    background: rgba(20, 22, 28, 0.8);
+    color: var(--silver);
+    font-size: 0.9rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.gallery-search-input:focus {
+    outline: none;
+    border-color: var(--hana-glow);
+    box-shadow: 0 0 0 2px rgba(200, 180, 120, 0.15);
+}
+.gallery-select {
+    padding: 0.45rem 0.75rem;
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    background: rgba(20, 22, 28, 0.8);
+    color: var(--silver);
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+.gallery-view-toggle {
+    display: flex;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+}
+.gallery-view-btn {
+    padding: 0.45rem 0.75rem;
+    border: none;
+    background: rgba(20, 22, 28, 0.8);
+    color: var(--silver-dim);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.gallery-view-btn:hover { color: var(--silver); background: rgba(40, 42, 50, 0.9); }
+.gallery-view-btn.active { background: var(--hana); color: #0a0a12; }
+.gallery-toolbar-actions { display: flex; gap: 0.5rem; margin-left: auto; }
+.gallery-toolbar-btn {
+    padding: 0.45rem 0.9rem;
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    background: rgba(20, 22, 28, 0.8);
+    color: var(--silver);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.gallery-toolbar-btn:hover { background: rgba(50, 52, 60, 0.9); border-color: var(--hana-glow); color: var(--gold-glow); }
+.gallery-r18-btn { border-color: var(--alice-glow); background: linear-gradient(135deg, rgba(180, 120, 200, 0.3), rgba(200, 180, 120, 0.2)); }
+.gallery-r18-btn:hover { background: linear-gradient(135deg, var(--alice), var(--hana)); color: #0a0a12; }
+.gallery-breadcrumb { margin-bottom: 0.75rem; }
+.gallery-loading { margin: 1rem 0; color: var(--silver-dim); font-size: 0.9rem; }
+.gallery-error, .gallery-empty { padding: 2rem; text-align: center; color: var(--silver-dim); }
+.gallery-empty-state { column-count: 1 !important; }
+.gallery-pagination-wrap { margin-top: 1rem; }
+
+/* NEW 角标（最新图片闪光） */
+.gallery-card { position: relative; }
+.gallery-new-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 2;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #0a0a12;
+    background: linear-gradient(135deg, #fff8e0, var(--hana));
+    border-radius: 4px;
+    box-shadow: 0 0 12px var(--hana-glow), 0 2px 6px rgba(0,0,0,0.4);
+    animation: gallery-new-shine 2s ease-in-out infinite;
+}
+@keyframes gallery-new-shine {
+    0%, 100% { box-shadow: 0 0 12px var(--hana-glow), 0 2px 6px rgba(0,0,0,0.4); opacity: 1; }
+    50% { box-shadow: 0 0 20px var(--hana-glow), 0 0 28px rgba(255, 230, 150, 0.6), 0 2px 6px rgba(0,0,0,0.4); opacity: 1; }
+}
+
+/* 列表视图 */
+.gallery-list-view .card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 0.5rem;
+    break-inside: avoid;
+}
+.gallery-list-view .card img {
+    width: 120px;
+    min-width: 120px;
+    height: 80px;
+    object-fit: cover;
+}
+.gallery-list-view .gallery-card-caption {
+    flex: 1;
+    margin-left: 1rem;
+    font-size: 0.9rem;
+    color: var(--silver);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.gallery-list-view { column-count: 1 !important; }
+
 #gallery {
     column-count: 2;
     column-gap: 0.75rem;
@@ -1396,6 +1529,11 @@ a.home-entry-link {
 #unlockR18Btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 0 32px var(--alice-glow);
+}
+.gallery-toolbar #unlockR18Btn {
+    position: static;
+    bottom: auto;
+    left: auto;
 }
 #unlockR18Btn.unlocked {
     opacity: 0.6;

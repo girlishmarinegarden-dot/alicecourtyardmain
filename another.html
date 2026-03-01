@@ -85,24 +85,62 @@
             </div>
         </section>
 
-        <!-- Section: Gallery（独立图集） -->
+        <!-- Section: Gallery（企业级图集 · 数据源：Google Sheet folder|fileId|fileName|thumbLink|directLink|modifiedTime） -->
         <section class="another-section another-main hidden" id="gallery-section" data-section="gallery">
-            <div class="another-card glass-panel gallery-shell">
-                <h1 class="another-title">爱丽丝庭院 · Gallery</h1>
-                <p class="another-desc">Alice Courtyard · 梦幻相册（防盗版预览模式）</p>
-                <div id="stats" class="gallery-stats">加载中...</div>
-                <div class="tabs" id="level1-tabs"></div>
-                <div class="tabs" id="level2-tabs"></div>
-                <div class="tabs" id="level3-tabs"></div>
-                <div id="gallery"></div>
-                <div id="gallery-pagination"></div>
+            <div class="another-card glass-panel gallery-shell gallery-enterprise">
+                <header class="gallery-header">
+                    <h1 class="another-title">爱丽丝庭院 · Gallery</h1>
+                    <p class="another-desc">图库 · 支持分类、搜索、排序与预览</p>
+                </header>
+                <div class="gallery-toolbar">
+                    <div class="gallery-toolbar-group">
+                        <label class="gallery-toolbar-label" for="gallery-search">搜索</label>
+                        <input type="search" id="gallery-search" class="gallery-search-input" placeholder="文件名或文件夹…" autocomplete="off">
+                    </div>
+                    <div class="gallery-toolbar-group">
+                        <label class="gallery-toolbar-label" for="gallery-sort">排序</label>
+                        <select id="gallery-sort" class="gallery-select">
+                            <option value="time-desc">最新优先</option>
+                            <option value="time-asc">最旧优先</option>
+                            <option value="name-asc">名称 A→Z</option>
+                            <option value="name-desc">名称 Z→A</option>
+                        </select>
+                    </div>
+                    <div class="gallery-toolbar-group">
+                        <span class="gallery-toolbar-label">视图</span>
+                        <div class="gallery-view-toggle" role="group" aria-label="视图切换">
+                            <button type="button" class="gallery-view-btn active" data-view="grid" title="网格">网格</button>
+                            <button type="button" class="gallery-view-btn" data-view="list" title="列表">列表</button>
+                        </div>
+                    </div>
+                    <div class="gallery-toolbar-group">
+                        <label class="gallery-toolbar-label" for="gallery-page-size">每页</label>
+                        <select id="gallery-page-size" class="gallery-select">
+                            <option value="24">24</option>
+                            <option value="60" selected>60</option>
+                            <option value="120">120</option>
+                        </select>
+                    </div>
+                    <div class="gallery-toolbar-actions">
+                        <button type="button" id="gallery-refresh-btn" class="gallery-toolbar-btn" title="刷新图库">刷新</button>
+                        <button type="button" id="unlockR18Btn" class="gallery-toolbar-btn gallery-r18-btn" onclick="openR18Modal()">Unlock R18 🔓</button>
+                    </div>
+                </div>
+                <div id="stats" class="gallery-stats" role="status">加载中...</div>
+                <div class="gallery-breadcrumb">
+                    <div class="tabs" id="level1-tabs"></div>
+                    <div class="tabs" id="level2-tabs"></div>
+                    <div class="tabs" id="level3-tabs"></div>
+                </div>
+                <div id="gallery-loading" class="gallery-loading hidden" aria-live="polite">正在加载图库…</div>
+                <div id="gallery" class="gallery-grid" role="list"></div>
+                <div id="gallery-pagination" class="gallery-pagination-wrap"></div>
             </div>
-            <div id="overlay">
-                <div class="close-btn" onclick="closePreview()">X</div>
-                <iframe id="drivePreview" allow="autoplay"></iframe>
+            <div id="overlay" class="gallery-overlay" aria-hidden="true">
+                <div class="close-btn" onclick="closePreview()" aria-label="关闭预览">×</div>
+                <iframe id="drivePreview" allow="autoplay" title="图片预览"></iframe>
             </div>
-            <button id="unlockR18Btn" type="button" onclick="openR18Modal()">Unlock R18 🔓</button>
-            <div id="r18Modal">
+            <div id="r18Modal" class="gallery-modal">
                 <div class="modal-content">
                     <h3>🔒 R18 内容解锁</h3>
                     <p class="gallery-subtitle">请输入访问密码</p>
