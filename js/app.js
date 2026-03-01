@@ -5,15 +5,34 @@ const App = {
     worldData: null,
 
     showLoading(text) {
+        var isHana = (text || "").indexOf("Hana 前往中") !== -1;
+        var hanaEl = document.getElementById("hana-loading-overlay");
+        var hanaVideo = document.getElementById("hana-loading-video");
         var el = document.getElementById("loading-overlay");
         var txt = document.getElementById("loading-text");
-        if (txt) txt.textContent = text || "请稍候…";
-        if (el) el.classList.remove("hidden");
+        if (isHana && hanaEl && hanaVideo) {
+            if (el) el.classList.add("hidden");
+            hanaEl.classList.remove("hidden");
+            hanaEl.setAttribute("aria-hidden", "false");
+            hanaVideo.src = (ALICE_CONSTANTS.PATHS && ALICE_CONSTANTS.PATHS.HANA_LOADING_VIDEO) || "assets/videos/hanaloading.webm";
+            hanaVideo.play().catch(function() {});
+        } else {
+            if (hanaEl) hanaEl.classList.add("hidden");
+            if (hanaEl) hanaEl.setAttribute("aria-hidden", "true");
+            if (hanaVideo) hanaVideo.pause();
+            if (txt) txt.textContent = text || "请稍候…";
+            if (el) el.classList.remove("hidden");
+        }
     },
 
     hideLoading() {
-        const el = document.getElementById("loading-overlay");
+        var el = document.getElementById("loading-overlay");
+        var hanaEl = document.getElementById("hana-loading-overlay");
+        var hanaVideo = document.getElementById("hana-loading-video");
         if (el) el.classList.add("hidden");
+        if (hanaEl) hanaEl.classList.add("hidden");
+        if (hanaEl) hanaEl.setAttribute("aria-hidden", "true");
+        if (hanaVideo) hanaVideo.pause();
     },
 
     /** 主题风格确认框（无动画低功耗），确认执行 onConfirm，取消执行 onCancel */

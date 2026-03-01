@@ -234,27 +234,70 @@ const Game = {
         }
     },
 
-    /** 生成 galgame 风格结局 HTML，含翻译按钮（Google Translate） */
-    buildEndingHtml(fateText, cardName) {
+    /** 根据结局文本选择背景图路径（白之书 / 黑之书 / 默认；同时出现两者则用 normal） */
+    getEndingBgPath(fateText) {
+        var path = (ALICE_CONSTANTS.PATHS && ALICE_CONSTANTS.PATHS.ENDING_BG_NORMAL) || "ending/normalending.webp";
+        if (typeof fateText !== "string") return path;
+        var hasWhite = fateText.indexOf("白之书") !== -1;
+        var hasBlack = fateText.indexOf("黑之书") !== -1;
+        if (hasWhite && hasBlack) return path;
+        if (hasWhite) return (ALICE_CONSTANTS.PATHS && ALICE_CONSTANTS.PATHS.ENDING_BG_WHITE) || "ending/whiteending.webp";
+        if (hasBlack) return (ALICE_CONSTANTS.PATHS && ALICE_CONSTANTS.PATHS.ENDING_BG_BLACK) || "ending/blackending.webp";
+        return path;
+    },
+
+    /** 将图片 URL 转为 base64 data URL，失败返回空字符串 */
+    async fetchImageAsDataUrl(url) {
+        try {
+            var res = await fetch(url);
+            if (!res.ok) return "";
+            var blob = await res.blob();
+            return new Promise(function(resolve) {
+                var r = new FileReader();
+                r.onload = function() { resolve(r.result || ""); };
+                r.onerror = function() { resolve(""); };
+                r.readAsDataURL(blob);
+            });
+        } catch (e) {
+            return "";
+        }
+    },
+
+    /** 生成 galgame 风格结局 HTML：卡牌号/名/图、背景图、翻译按钮 */
+    buildEndingHtml(fateText, cardName, cardId, cardImageDataUrl, bgImageDataUrl) {
         const text = (fateText != null ? String(fateText) : "").trim() || "（暂无结局文本）";
         const rawTitle = (cardName != null ? cardName : (this.currentDetail && this.currentDetail.name)) || "终局";
+        const rawId = (cardId != null ? String(cardId) : (this.currentDetail && this.currentDetail.id)) || "";
         const escapeHtml = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
         const escaped = escapeHtml(text);
         const titleEsc = escapeHtml(rawTitle);
+        const idEsc = escapeHtml(rawId);
         const encoded = encodeURIComponent(text);
         const gUrl = (tl) => "https://translate.google.com/?sl=auto&tl=" + tl + "&op=translate&text=" + encoded;
+        const bgStyle = (bgImageDataUrl && bgImageDataUrl.length > 0)
+            ? "background-image:url(" + bgImageDataUrl.replace(/"/g, "&quot;") + ");background-size:cover;background-position:center;"
+            : "";
+        const cardImgHtml = (cardImageDataUrl && cardImageDataUrl.length > 0)
+            ? "<img class=\"ending-card-img\" src=\"" + cardImageDataUrl.replace(/"/g, "&quot;") + "\" alt=\"" + idEsc + "\">"
+            : "";
         return "<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<title>" + titleEsc + " - 结局</title>\n<style>\n" +
             "*{box-sizing:border-box;margin:0;padding:0}\nbody{min-height:100vh;background:linear-gradient(180deg,#0a0a14 0%,#1a1528 30%,#0f0e1a 100%);color:rgba(255,255,255,0.92);font-family:\"Noto Serif SC\",\"Source Han Serif CN\",Georgia,serif;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1rem;line-height:2.2}\n" +
             ".ending-wrap{max-width:42rem;width:100%;position:relative}\n" +
             ".ending-wrap::before{content:'';position:absolute;inset:-20px;background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(120,80,160,0.15),transparent 70%);pointer-events:none}\n" +
-            ".ending-title{font-size:1rem;letter-spacing:0.4em;color:rgba(255,235,200,0.85);margin-bottom:2rem;text-align:center}\n" +
-            ".ending-text{font-size:1.05rem;white-space:pre-wrap;word-break:break-word;padding:1.5rem 0;border-top:1px solid rgba(255,255,255,0.12);border-bottom:1px solid rgba(255,255,255,0.12)}\n" +
+            ".ending-card-info{display:flex;align-items:center;gap:1.25rem;margin-bottom:1.5rem;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.15)}\n" +
+            ".ending-card-img{width:80px;height:120px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,0.2);flex-shrink:0}\n" +
+            ".ending-card-meta{flex:1}\n" +
+            ".ending-card-id{font-size:0.85rem;letter-spacing:0.15em;color:rgba(255,235,200,0.7);margin-bottom:0.25rem}\n" +
+            ".ending-card-name{font-size:1.1rem;color:rgba(255,255,255,0.95)}\n" +
+            ".ending-title{font-size:1rem;letter-spacing:0.4em;color:rgba(255,235,200,0.85);margin-bottom:1.25rem;text-align:center}\n" +
+            ".ending-text{font-size:1.05rem;white-space:pre-wrap;word-break:break-word;padding:1.5rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.12);" + bgStyle + "}\n" +
             ".translate-bar{display:flex;flex-wrap:wrap;gap:0.75rem;margin-top:2rem;justify-content:center}\n" +
             ".translate-bar a{display:inline-block;padding:0.5rem 1rem;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.25);border-radius:8px;color:rgba(255,255,255,0.9);text-decoration:none;font-size:0.9rem;transition:background 0.2s,border-color 0.2s}\n" +
             ".translate-bar a:hover{background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.4)}\n" +
-            ".ending-footer{ margin-top:2rem;font-size:0.8rem;color:rgba(255,255,255,0.45)}\n" +
+            ".ending-footer{margin-top:2rem;font-size:0.8rem;color:rgba(255,255,255,0.45)}\n" +
             "</style>\n</head>\n<body>\n<div class=\"ending-wrap\">\n" +
-            "<p class=\"ending-title\">" + titleEsc + "</p>\n" +
+            (rawId || cardImgHtml ? "<div class=\"ending-card-info\">" + cardImgHtml + "<div class=\"ending-card-meta\"><p class=\"ending-card-id\">" + (rawId ? "卡牌号 " + idEsc : "") + "</p><p class=\"ending-card-name\">" + titleEsc + "</p></div></div>\n" : "") +
+            "<p class=\"ending-title\">" + (rawId || cardImgHtml ? "结局" : titleEsc) + "</p>\n" +
             "<div class=\"ending-text\" id=\"ending-text\">" + escaped + "</div>\n" +
             "<div class=\"translate-bar\">\n" +
             "<a href=\"" + gUrl("zh-CN") + "\" target=\"_blank\" rel=\"noopener\">中文</a>\n" +
@@ -263,12 +306,22 @@ const Game = {
             "</div>\n<p class=\"ending-footer\">使用上方按钮可在 Google 翻译中查看中文 / 英文 / 马来文</p>\n</div>\n</body>\n</html>";
     },
 
-    downloadEnding(fateText, cardName) {
+    async downloadEnding(fateText, cardName) {
         const baseName = (cardName != null ? cardName : (this.currentDetail && this.currentDetail.name)) || "终局";
         const safeName = String(baseName).replace(/[/\\?*:"|<>]/g, "_");
         const dateStr = new Date().toISOString().slice(0, 10);
         const name = safeName + "_" + dateStr + ".html";
-        const html = this.buildEndingHtml(fateText, cardName);
+        const cardId = (this.currentDetail && this.currentDetail.id) ? String(this.currentDetail.id) : "";
+        const cardsDir = (ALICE_CONSTANTS.PATHS && ALICE_CONSTANTS.PATHS.CARDS_IMAGES) || "assets/cards/";
+        const cardImageUrl = cardId ? (cardsDir + cardId + ".webp").replace(/\/+/g, "/") : "";
+        const bgPath = this.getEndingBgPath(fateText);
+        let bgDataUrl = "";
+        let cardDataUrl = "";
+        try {
+            bgDataUrl = await this.fetchImageAsDataUrl(bgPath);
+            if (cardImageUrl) cardDataUrl = await this.fetchImageAsDataUrl(cardImageUrl);
+        } catch (e) {}
+        const html = this.buildEndingHtml(fateText, cardName, cardId, cardDataUrl, bgDataUrl);
         const blob = new Blob(["\uFEFF" + html], { type: "text/html;charset=utf-8" });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);

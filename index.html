@@ -80,6 +80,13 @@
         </div>
     </div>
 
+    <!-- Hana 前往中：独立全屏 loading 模块，仅循环视频，不影响通用 loading -->
+    <div id="hana-loading-overlay" class="hana-loading-overlay hidden" aria-hidden="true">
+        <video id="hana-loading-video" class="hana-loading-video" muted playsinline loop preload="auto">
+            <source src="assets/videos/hanaloading.webm" type="video/webm">
+        </video>
+    </div>
+
     <div id="confirm-overlay" class="confirm-overlay hidden" aria-hidden="true">
         <div class="confirm-box glass-panel">
             <p id="confirm-message" class="confirm-message"></p>

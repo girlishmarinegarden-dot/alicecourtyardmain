@@ -715,6 +715,32 @@ body top.skiptranslate { display: none !important; }
 }
 #loading-text { margin-top: 1rem; font-size: 0.9rem; color: var(--silver); }
 
+/* ——— Hana 前往中：独立全屏 loading 模块（仅视频，不影响 #loading-overlay）——— */
+.hana-loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10001;
+    background: #12141c;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.hana-loading-overlay.hidden { display: none !important; }
+.hana-loading-overlay {
+    overflow: hidden;
+}
+.hana-loading-video {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 100%;
+    width: auto;
+    object-fit: cover;
+    object-position: center;
+}
+
 /* 因果值确认框：符合主题，无动画低功耗 */
 .confirm-overlay {
     position: fixed;
