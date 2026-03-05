@@ -253,7 +253,13 @@
             var wrapEl = e.target && e.target.closest ? e.target.closest(".library-cover-wrap") : null;
             if (wrapEl) {
                 var bookId = wrapEl.getAttribute("data-book-id");
-                if (bookId) openLibraryBook(bookId);
+                if (bookId === "manga") {
+                    if (typeof App !== "undefined" && App.navigateTo) {
+                        App.navigateTo("MANGA_GALLERY");
+                    }
+                } else if (bookId) {
+                    openLibraryBook(bookId);
+                }
             }
         };
         var backShelfBtn = document.getElementById("library-back-shelf");

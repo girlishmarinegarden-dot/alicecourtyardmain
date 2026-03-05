@@ -34,7 +34,8 @@ const ALICE_CONSTANTS = {
         DAILYTASK: "scene-dailytask",
         DIVINATION: "scene-divination",
         MEMORY: "scene-memory",
-        ALICE_ENDING: "scene-alice-ending"
+        ALICE_ENDING: "scene-alice-ending",
+        MANGA_GALLERY: "scene-manga-gallery"
     },
 
     ROLES: {

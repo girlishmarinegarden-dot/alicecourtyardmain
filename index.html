@@ -324,6 +324,11 @@
                     <img class="library-cover-img" src="assets/ui/bc5.webp" alt="白之书" draggable="false">
                     <span class="library-cover-title">白之书</span>
                 </div>
+                <!-- 漫画书：点击后进入漫画画廊 Scene -->
+                <div class="library-cover-wrap" data-book-id="manga" title="点击查看漫画画廊">
+                    <img class="library-cover-img" src="assets/ui/bc_manga.webp" alt="漫画集" draggable="false" onerror="this.style.display='none'">
+                    <span class="library-cover-title">漫画集</span>
+                </div>
             </div>
             <div id="library-book-wrap" class="library-book-wrap hidden">
                 <div id="library-book" class="library-book">
@@ -352,6 +357,31 @@
                     <button type="button" class="library-reader-next" id="library-reader-next">下一页</button>
                     <button type="button" class="library-reader-close" id="library-reader-close">关闭</button>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 漫画画廊：缩略图 + NEW 角标 + 简单分页 + 预览 -->
+    <section id="scene-manga-gallery" class="scene">
+        <div class="scene-panel manga-panel">
+            <h2>Mizuki · 漫画画廊</h2>
+            <p class="view-subtitle">点击缩略图查看漫画页</p>
+            <div id="manga-gallery-controls" class="manga-gallery-controls">
+                <div class="manga-page-buttons"></div>
+                <span id="manga-page-indicator" class="manga-page-indicator">第 1 页</span>
+            </div>
+            <div id="manga-gallery-loading" class="manga-gallery-loading hidden">
+                <video id="manga-gallery-loading-video" class="manga-gallery-loading-video" src="assets/videos/hanaloading.webm" muted loop playsinline preload="auto"></video>
+            </div>
+            <div id="manga-gallery-grid" class="manga-gallery-grid"></div>
+            <div class="manga-back-wrap">
+                <button type="button" class="icon-back" onclick="App.navigateTo('LIBRARY')">返回图书馆</button>
+            </div>
+        </div>
+        <div id="manga-preview-overlay" class="manga-preview-overlay hidden" aria-hidden="true">
+            <div class="manga-preview-inner">
+                <iframe id="manga-preview-frame" class="manga-preview-frame" src="" allowfullscreen loading="lazy"></iframe>
+                <button type="button" id="manga-preview-close" class="manga-preview-close">关闭</button>
             </div>
         </div>
     </section>
@@ -518,6 +548,7 @@
     <script src="js/moichan-nav.js"></script>
     <script src="js/sprite-stage.js"></script>
     <script src="js/opendoor-transition.js"></script>
+    <script src="js/manga-gallery.js"></script>
     <script src="js/app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
     <script src="js/memory-studio.js"></script>

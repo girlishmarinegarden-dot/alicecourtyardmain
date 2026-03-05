@@ -121,6 +121,9 @@ const App = {
             if (id === "scene-gallery" && typeof AliceFeatures !== "undefined" && AliceFeatures.renderGalleryCollection) {
                 AliceFeatures.renderGalleryCollection(function () { self.hideLoading(); });
             }
+            if (id === "scene-manga-gallery" && typeof MangaGallery !== "undefined" && MangaGallery.show) {
+                MangaGallery.show();
+            }
             if (id === "scene-divination" && typeof Divination !== "undefined" && Divination.init) {
                 Divination.init();
             }
