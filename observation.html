@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Alice's Garden — Mirror Observation</title>
+    <meta name="description" content="A hidden observation layer beneath Alice's Garden. Core lore, entities, anomalies, and the question of the future you and I choose.">
+    <base href="./">
+    <meta name="theme-color" content="#0a0a14">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/observation.css">
+</head>
+<body>
+    <div id="observation-page" class="observation-page">
+        <div id="observation-data-fallback" class="observation-data-fallback hidden" aria-live="polite">
+            <p class="observation-fallback-title">Mirror data unavailable.</p>
+            <p class="observation-fallback-hint">Please reload the page.</p>
+        </div>
+        <div class="observation-shell">
+            <header class="observation-header" id="observation-header">
+                <a href="index.html?return=mirror" class="observation-back" id="observation-back">← Back to Map</a>
+                <a href="observation.html" class="observation-return-mirror hidden" id="observation-return-mirror">Return to Mirror</a>
+                <div class="observation-header-text">
+                    <p class="observation-kicker" id="observation-kicker">Mirror Interface</p>
+                    <h2 id="observation-title" class="observation-title">你和我所选择的未来？</h2>
+                    <div id="observation-observer" class="obs-observer hidden"></div>
+                    <div id="observation-observer-role" class="obs-observer-role hidden"></div>
+                </div>
+            </header>
+
+            <section class="observation-entry" id="observation-entry">
+                <p class="entry-lead" id="entry-lead"></p>
+                <p class="entry-copy" id="entry-copy"></p>
+                <div id="observation-particle-field" class="observation-particle-field" aria-hidden="true">
+                    <canvas id="observation-particle-canvas" class="observation-particle-canvas"></canvas>
+                    <!-- 数据标记，未来可改为动态（如 visitCount / 观测节点号） -->
+                    <span class="observation-particle-label" aria-hidden="true">OBS NODE 018</span>
+                </div>
+                <div class="entry-card">
+                    <div class="entry-actions">
+                        <button type="button" class="observation-open-btn" id="observation-open-btn">Open Mirror</button>
+                        <a href="index.html?return=mirror" class="observation-return-btn" id="observation-return-btn">Return to Garden</a>
+                    </div>
+                    <p class="entry-note" id="entry-note"></p>
+                </div>
+            </section>
+
+            <p id="observation-trace-hint" class="observation-trace-hint hidden" aria-hidden="true">Direct trace access detected.</p>
+
+            <section class="observation-main hidden" id="observation-body">
+                <nav class="observation-tabs" id="observation-tabs" aria-label="Observation Sections"></nav>
+
+                <div class="observation-panels" id="observation-content">
+                    <section class="observation-panel active" id="observation-panel-core" data-panel="core" role="tabpanel"></section>
+                    <section class="observation-panel" id="observation-panel-entities" data-panel="entities" role="tabpanel">
+                        <div id="observation-entities-content" class="observation-entities-content"></div>
+                        <aside class="entity-detail" id="entity-detail-panel">
+                            <h4>Select an entity</h4>
+                            <p>Click a card to observe more details.</p>
+                        </aside>
+                    </section>
+                    <section class="observation-panel" id="observation-panel-anomalies" data-panel="anomalies" role="tabpanel"></section>
+                    <section class="observation-panel" id="observation-panel-question" data-panel="question" role="tabpanel"></section>
+                    <section class="observation-panel hidden" id="observation-panel-records" data-panel="records" role="tabpanel"></section>
+                    <section class="observation-panel hidden" id="observation-panel-signal" data-panel="signal" role="tabpanel"></section>
+                </div>
+            </section>
+        </div>
+
+        <div id="observation-secret-layer" class="observation-secret-layer" aria-hidden="true">
+            <div id="observation-godkill-overlay" class="observation-godkill-overlay hidden">
+                <span class="observation-godkill-text">Access Denied</span>
+            </div>
+            <div id="observation-moel-flash" class="observation-moel-flash hidden">
+                <img id="observation-moel-img" src="assets/characters/moichan1.webp" alt="" class="observation-moel-img">
+                <p id="observation-moel-line" class="observation-moel-line"></p>
+            </div>
+            <div id="observation-deep-sentence" class="observation-deep-sentence hidden">
+                <p id="observation-deep-sentence-text"></p>
+            </div>
+        </div>
+        <footer class="observation-footer" aria-hidden="true">Mirror Interface / Observation Layer / Alice's Garden</footer>
+    </div>
+
+    <script src="js/observation-data.js"></script>
+    <script src="js/observation.js"></script>
+    <script src="js/observation-particles.js"></script>
+</body>
+</html>

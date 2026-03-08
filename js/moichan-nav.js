@@ -133,6 +133,10 @@
             window.location.href = "another.html";
             return;
         }
+        if (go === "OBSERVATION") {
+            window.location.href = "observation.html";
+            return;
+        }
         if (go && typeof App !== "undefined" && App.navigateTo) App.navigateTo(go);
     }
 
