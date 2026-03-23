@@ -1458,8 +1458,120 @@ body.alice-ending-active #btn-bgm { z-index: 10001; }
 
 /* ——— 剧院 YouTube ——— */
 #scene-theater { padding: 1rem; }
-.theater-wrapper { flex: 1; display: flex; flex-direction: column; max-width: 900px; margin: 0 auto; width: 100%; }
-.theater-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+.theater-wrapper { flex: 1; display: flex; flex-direction: column; max-width: 900px; margin: 0 auto; width: 100%; gap: 1.25rem; }
+.theater-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 0; }
+
+/* 庭院主线故事 · Web VN 主入口 */
+.garden-vn-cta {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    border-radius: 18px;
+    outline-offset: 4px;
+}
+.garden-vn-cta:focus-visible { outline: 2px solid var(--gold-glow); }
+.garden-vn-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 18px;
+    border: 1px solid rgba(180, 140, 255, 0.45);
+    background:
+        linear-gradient(145deg, rgba(26, 28, 36, 0.98) 0%, rgba(18, 14, 28, 0.99) 45%, rgba(12, 18, 22, 1) 100%);
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+        0 12px 40px rgba(0, 0, 0, 0.45),
+        0 0 60px rgba(180, 140, 255, 0.12);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+.garden-vn-cta:hover .garden-vn-card {
+    transform: translateY(-2px);
+    border-color: rgba(160, 255, 200, 0.5);
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+        0 16px 48px rgba(0, 0, 0, 0.5),
+        0 0 80px rgba(160, 255, 200, 0.15),
+        0 0 40px rgba(180, 140, 255, 0.2);
+}
+.garden-vn-card-glow {
+    position: absolute;
+    inset: -40% -20% auto -20%;
+    height: 70%;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(180, 140, 255, 0.35) 0%, transparent 65%);
+    pointer-events: none;
+    opacity: 0.85;
+}
+.garden-vn-card-inner {
+    position: relative;
+    z-index: 1;
+    padding: 1.35rem 1.5rem 1.45rem;
+}
+.garden-vn-kicker {
+    font-size: 0.72rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: rgba(160, 255, 200, 0.85);
+    margin-bottom: 0.5rem;
+}
+.garden-vn-title {
+    font-size: 1.35rem;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    color: var(--silver);
+    margin-bottom: 0.5rem;
+    text-shadow: 0 0 24px rgba(180, 140, 255, 0.35);
+}
+.garden-vn-desc {
+    font-size: 0.88rem;
+    line-height: 1.65;
+    color: var(--silver-dim);
+    max-width: 36em;
+    margin-bottom: 1rem;
+}
+.garden-vn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.88rem;
+    letter-spacing: 0.12em;
+    color: var(--hana);
+    padding: 0.45rem 0;
+}
+.garden-vn-arrow {
+    display: inline-block;
+    transition: transform var(--transition-fast);
+}
+.garden-vn-cta:hover .garden-vn-arrow { transform: translateX(6px); }
+
+@media (prefers-reduced-motion: no-preference) {
+    .garden-vn-card-glow {
+        animation: garden-vn-shimmer 8s ease-in-out infinite;
+    }
+}
+@keyframes garden-vn-shimmer {
+    0%, 100% { opacity: 0.65; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(4px); }
+}
+
+/* 收窄 YouTube 区块 */
+.theater-youtube-compact {
+    max-width: 380px;
+    width: 100%;
+    margin: 0 auto;
+    align-self: center;
+}
+.theater-youtube-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--silver-dim);
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+.channel-promo-compact p { font-size: 0.82rem; }
+.channel-promo-compact a {
+    font-size: 0.82rem;
+    padding: 0.4rem 0.85rem;
+}
+
 .icon-back {
     padding: 0.4rem 0.8rem;
     background: var(--glass);
@@ -1506,6 +1618,7 @@ body.alice-ending-active #btn-bgm { z-index: 10001; }
     transition: border-color 0.2s, background 0.2s;
 }
 .channel-promo a:hover { background: var(--alice-glow); color: #0a0a12; }
+.channel-promo.channel-promo-compact { margin-top: 0.65rem; }
 
 /* ——— Alice 终局（气泡框，不遮挡周围立绘）——— */
 .fate-overlay {
@@ -2605,6 +2718,10 @@ body.mood-dream  { --bg-accent: #18101a; }
     .icon-back, .logout-btn, .checkin-btn { min-height: var(--touch-min); padding: 0.5rem 0.9rem; }
     .theater-header { flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; }
     .theater-header h2 { font-size: 0.9rem; }
+    .garden-vn-card-inner { padding: 1.1rem 1.15rem 1.2rem; }
+    .garden-vn-title { font-size: 1.15rem; letter-spacing: 0.16em; }
+    .garden-vn-kicker { letter-spacing: 0.2em; }
+    .theater-youtube-compact { max-width: 100%; }
     .fate-bubble { max-width: 96%; padding: 1rem 1.25rem; max-height: 70vh; }
     .fate-scroll { max-height: 40vh; }
     .reset-btn, .download-btn { min-height: var(--touch-min); padding: 0.5rem 0.9rem; }
