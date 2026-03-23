@@ -1475,13 +1475,39 @@ body.alice-ending-active #btn-bgm { z-index: 10001; }
     overflow: hidden;
     border-radius: 18px;
     border: 1px solid rgba(180, 140, 255, 0.45);
-    background:
-        linear-gradient(145deg, rgba(26, 28, 36, 0.98) 0%, rgba(18, 14, 28, 0.99) 45%, rgba(12, 18, 22, 1) 100%);
+    background: #000;
     box-shadow:
         0 0 0 1px rgba(255, 255, 255, 0.06) inset,
         0 12px 40px rgba(0, 0, 0, 0.45),
         0 0 60px rgba(180, 140, 255, 0.12);
     transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+.garden-vn-card-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity 0.45s ease;
+}
+.garden-vn-card.is-bg-done .garden-vn-card-bg {
+    opacity: 0;
+    visibility: hidden;
+}
+.garden-vn-card-black {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: #000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.45s ease;
+}
+.garden-vn-card.is-bg-done .garden-vn-card-black {
+    opacity: 1;
 }
 .garden-vn-cta:hover .garden-vn-card {
     transform: translateY(-2px);
@@ -1499,11 +1525,24 @@ body.alice-ending-active #btn-bgm { z-index: 10001; }
     background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(180, 140, 255, 0.35) 0%, transparent 65%);
     pointer-events: none;
     opacity: 0.85;
+    z-index: 2;
 }
 .garden-vn-card-inner {
     position: relative;
-    z-index: 1;
+    z-index: 3;
     padding: 1.35rem 1.5rem 1.45rem;
+}
+.garden-vn-card-inner::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    background: linear-gradient(165deg, rgba(6, 8, 14, 0.78) 0%, rgba(6, 8, 14, 0.4) 52%, rgba(6, 8, 14, 0.12) 100%);
+    z-index: -1;
+    pointer-events: none;
+}
+.garden-vn-card.is-bg-done .garden-vn-card-inner::after {
+    background: linear-gradient(165deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.35) 100%);
 }
 .garden-vn-kicker {
     font-size: 0.72rem;
