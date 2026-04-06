@@ -1581,8 +1581,57 @@ body.alice-ending-active #btn-bgm { z-index: 10001; }
 }
 .garden-vn-cta:hover .garden-vn-arrow { transform: translateX(6px); }
 
+.theater-vn-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+}
+
+/* 第二行：小说番外（蓝色系文案与描边） */
+.garden-vn-card--extra {
+    border-color: rgba(110, 180, 255, 0.52);
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+        0 12px 40px rgba(0, 0, 0, 0.45),
+        0 0 60px rgba(90, 160, 255, 0.14);
+}
+.garden-vn-cta-extra:hover .garden-vn-card--extra {
+    border-color: rgba(150, 210, 255, 0.62);
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+        0 16px 48px rgba(0, 0, 0, 0.5),
+        0 0 80px rgba(100, 180, 255, 0.22),
+        0 0 40px rgba(130, 200, 255, 0.18);
+}
+.garden-vn-card-glow--extra {
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(100, 180, 255, 0.4) 0%, transparent 65%);
+}
+.garden-vn-kicker-extra {
+    color: rgba(140, 200, 255, 0.95);
+}
+.garden-vn-title-extra {
+    color: #a8d8ff;
+    text-shadow: 0 0 26px rgba(120, 190, 255, 0.48);
+}
+.garden-vn-desc-extra {
+    color: rgba(165, 215, 255, 0.9);
+}
+.garden-vn-action-extra {
+    color: #7ec8ff;
+}
+.garden-vn-card--extra .garden-vn-card-inner::after {
+    background: linear-gradient(165deg, rgba(8, 22, 44, 0.82) 0%, rgba(6, 18, 40, 0.45) 52%, rgba(2, 10, 28, 0.14) 100%);
+}
+.garden-vn-card--extra.is-bg-done .garden-vn-card-inner::after {
+    background: linear-gradient(165deg, rgba(0, 10, 28, 0.55) 0%, rgba(0, 0, 0, 0.38) 100%);
+}
+
 @media (prefers-reduced-motion: no-preference) {
     .garden-vn-card-glow {
+        animation: garden-vn-shimmer 8s ease-in-out infinite;
+    }
+    .garden-vn-card-glow--extra {
         animation: garden-vn-shimmer 8s ease-in-out infinite;
     }
 }
@@ -2759,6 +2808,7 @@ body.mood-dream  { --bg-accent: #18101a; }
     .theater-header h2 { font-size: 0.9rem; }
     .garden-vn-card-inner { padding: 1.1rem 1.15rem 1.2rem; }
     .garden-vn-title { font-size: 1.15rem; letter-spacing: 0.16em; }
+    .garden-vn-title-extra { font-size: 1.12rem; letter-spacing: 0.14em; }
     .garden-vn-kicker { letter-spacing: 0.2em; }
     .theater-youtube-compact { max-width: 100%; }
     .fate-bubble { max-width: 96%; padding: 1rem 1.25rem; max-height: 70vh; }
