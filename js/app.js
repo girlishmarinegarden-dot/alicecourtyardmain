@@ -223,54 +223,63 @@ const App = {
         this.hideLoading();
     },
 
-    /** 庭院主线故事卡片：背景 WebM 每次进入歌剧播一次，结束后叠黑（不循环） */
+    /** 歌剧页 VN 卡片（主线 + 番外）：各背景 WebM 每次进入播一次，结束后叠黑（不循环） */
     initGardenVnTheaterBg() {
-        var card = document.querySelector("#scene-theater .garden-vn-card");
-        var video = document.getElementById("garden-vn-bg-video");
-        if (!video || !card || video._gardenVnBound) return;
-        video._gardenVnBound = true;
-        video.loop = false;
-        video.addEventListener("ended", function () {
-            card.classList.add("is-bg-done");
-        });
-        video.addEventListener("error", function () {
-            card.classList.add("is-bg-done");
+        var root = document.getElementById("scene-theater");
+        if (!root || root._gardenVnTheaterBgInited) return;
+        root._gardenVnTheaterBgInited = true;
+        root.querySelectorAll(".garden-vn-card").forEach(function (card) {
+            var video = card.querySelector("video.garden-vn-card-bg");
+            if (!video) return;
+            video.loop = false;
+            video.addEventListener("ended", function () {
+                card.classList.add("is-bg-done");
+            });
+            video.addEventListener("error", function () {
+                card.classList.add("is-bg-done");
+            });
         });
     },
 
     playGardenVnTheaterBg() {
-        var card = document.querySelector("#scene-theater .garden-vn-card");
-        var video = document.getElementById("garden-vn-bg-video");
-        if (!video || !card) return;
-        card.classList.remove("is-bg-done");
-        video.loop = false;
-        video.muted = true;
-        video.pause();
-        try {
-            video.currentTime = 0;
-        } catch (e) {}
-        var tryPlay = function () {
-            var p = video.play();
-            if (p && typeof p.catch === "function") {
-                p.catch(function () {
-                    card.classList.add("is-bg-done");
-                });
-            }
-        };
-        if (video.readyState >= 2) {
-            tryPlay();
-        } else {
-            var once = function () {
-                video.removeEventListener("canplay", once);
-                tryPlay();
+        var root = document.getElementById("scene-theater");
+        if (!root) return;
+        root.querySelectorAll(".garden-vn-card").forEach(function (card) {
+            var video = card.querySelector("video.garden-vn-card-bg");
+            if (!video) return;
+            card.classList.remove("is-bg-done");
+            video.loop = false;
+            video.muted = true;
+            video.pause();
+            try {
+                video.currentTime = 0;
+            } catch (e) {}
+            var tryPlay = function () {
+                var p = video.play();
+                if (p && typeof p.catch === "function") {
+                    p.catch(function () {
+                        card.classList.add("is-bg-done");
+                    });
+                }
             };
-            video.addEventListener("canplay", once);
-        }
+            if (video.readyState >= 2) {
+                tryPlay();
+            } else {
+                var once = function () {
+                    video.removeEventListener("canplay", once);
+                    tryPlay();
+                };
+                video.addEventListener("canplay", once);
+            }
+        });
     },
 
     resetGardenVnTheaterBg() {
-        var video = document.getElementById("garden-vn-bg-video");
-        if (video) video.pause();
+        var root = document.getElementById("scene-theater");
+        if (!root) return;
+        root.querySelectorAll("video.garden-vn-card-bg").forEach(function (video) {
+            video.pause();
+        });
     },
 
     /** 歌剧页：点击封面再加载 iframe，降低未进入时的解码/功耗 */
