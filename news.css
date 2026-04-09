@@ -74,43 +74,125 @@
   background-size: 120px 120px, 180px 180px, 90px 90px;
 }
 
-.gal-sprite {
+/* 立绘：与 index.html #stage-area + .stage-area-draggable 同尺寸/布局/拖动光标；z-index 次于 #gal-boot */
+#gal-sprite.gal-sprite {
   position: fixed;
-  right: -2%;
+  right: 0;
   bottom: 0;
-  z-index: 4;
+  z-index: 9999;
   margin: 0;
-  height: min(78vh, 720px);
-  max-width: min(48vw, 420px);
-  pointer-events: none;
+  box-sizing: border-box;
+  width: 42%;
+  max-width: min(380px, 100vw);
+  height: 82%;
+  max-height: 100vh;
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: flex-end;
+  align-items: flex-end;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  pointer-events: auto;
+  cursor: move;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+#gal-sprite.stage-area-draggable .gal-sprite-hide-btn {
+  cursor: pointer;
+}
+.gal-sprite-hide-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 2;
+  padding: 0.35rem 0.65rem;
+  font-family: Quicksand, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  background: rgba(26, 28, 36, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.gal-sprite-hide-btn:hover {
+  border-color: rgba(232, 197, 71, 0.65);
+  color: var(--gold);
+}
+.gal-sprite-hide-btn:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+/* 与 #stage-area.stage-area-hidden 一致 */
+.gal-sprite.gal-sprite-hidden {
+  width: auto !important;
+  height: auto !important;
+  min-width: 60px;
+  min-height: 36px;
+  max-width: none;
+  cursor: default;
+}
+.gal-sprite.gal-sprite-hidden .gal-sprite-img,
+.gal-sprite.gal-sprite-hidden .gal-sprite-placeholder {
+  display: none !important;
+}
+.gal-sprite.gal-sprite-hidden .gal-sprite-hide-btn {
+  top: 0;
+  right: 0;
 }
 
+/* 与 #stage-area img 呼吸与缩放一致（style.css spriteBreathYumeOpacity） */
 .gal-sprite-img {
-  height: 100%;
+  max-height: 100%;
   width: auto;
   max-width: 100%;
   object-fit: contain;
   object-position: bottom center;
   transform-origin: bottom center;
-  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.45));
+  filter: drop-shadow(0 0 25px rgba(180, 140, 255, 0.35)) drop-shadow(0 0 45px rgba(212, 175, 55, 0.25));
   animation: galSpriteBreath 5.5s ease-in-out infinite;
 }
 @keyframes galSpriteBreath {
   0%,
   100% {
-    opacity: 0.94;
+    opacity: 0.92;
     transform: scale(1) translateY(0);
   }
   50% {
     opacity: 1;
-    transform: scale(1.026) translateY(-5px);
+    transform: scale(1.028) translateY(-6px);
   }
 }
 
+@media (max-width: 1024px) {
+  #gal-sprite.gal-sprite:not(.gal-sprite-hidden) {
+    width: 38%;
+    max-width: 280px;
+    height: 70%;
+  }
+}
+@media (max-width: 768px) {
+  #gal-sprite.gal-sprite:not(.gal-sprite-hidden) {
+    width: 35%;
+    max-width: 200px;
+    height: 60%;
+  }
+}
+@media (max-width: 480px) {
+  #gal-sprite.gal-sprite:not(.gal-sprite-hidden) {
+    width: 32%;
+    max-width: 160px;
+    height: 55%;
+  }
+}
+
+/* 无图占位时：居中（有图时与 #stage-area 一致为右下） */
+.gal-sprite.is-empty:not(.gal-sprite-hidden) {
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
 .gal-sprite:not(.is-empty) .gal-sprite-img {
   display: block;
 }
@@ -150,15 +232,6 @@
 
 .gal-sprite-placeholder__hint {
   opacity: 0.85;
-}
-
-@media (max-width: 720px) {
-  .gal-sprite {
-    height: min(42vh, 320px);
-    max-width: 55vw;
-    right: -4%;
-    opacity: 0.92;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

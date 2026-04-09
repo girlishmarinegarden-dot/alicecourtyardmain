@@ -37,15 +37,6 @@
     <div class="gal-vignette" aria-hidden="true"></div>
     <div class="gal-sakura" aria-hidden="true"></div>
 
-    <!-- Character art: assets/alicecore.webp -->
-    <figure class="gal-sprite" id="gal-sprite" aria-hidden="true">
-      <img class="gal-sprite-img" src="assets/alicecore.webp" alt="" decoding="async" width="800" height="1200" />
-      <figcaption class="gal-sprite-placeholder">
-        <span class="gal-sprite-placeholder__line">assets / alicecore.webp</span>
-        <span class="gal-sprite-placeholder__hint">Drop your standee here</span>
-      </figcaption>
-    </figure>
-
     <div class="gal-content">
       <a href="index.html" class="gal-back-home">← 返回庭院</a>
       <header class="gal-header">
@@ -85,6 +76,16 @@
       </nav>
     </div>
   </div>
+
+  <!-- 立绘：z-index 仅次于 #gal-boot；可拖动、可隐藏（body 末子，保证叠在最前） -->
+  <figure class="gal-sprite gal-sprite-draggable stage-area-draggable" id="gal-sprite">
+    <button type="button" id="gal-sprite-hide-btn" class="gal-sprite-hide-btn" aria-label="隐藏立绘">隐藏</button>
+    <img class="gal-sprite-img" src="assets/alicecore.webp" alt="" decoding="async" width="800" height="1200" />
+    <figcaption class="gal-sprite-placeholder">
+      <span class="gal-sprite-placeholder__line">assets / alicecore.webp</span>
+      <span class="gal-sprite-placeholder__hint">Drop your standee here</span>
+    </figcaption>
+  </figure>
 
   <script src="news.js"></script>
 </body>

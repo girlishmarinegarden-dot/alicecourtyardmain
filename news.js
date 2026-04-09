@@ -590,7 +590,192 @@
     }
   }
 
+  /** 立绘：可拖动、可隐藏；位置/隐藏状态持久化（localStorage） */
+  var SPRITE_POS_KEY = 'NewsGalSprite_Pos';
+  var SPRITE_HIDDEN_KEY = 'NewsGalSprite_Hidden';
+
+  function initGalSpriteStage_() {
+    var el = document.getElementById('gal-sprite');
+    var hideBtn = document.getElementById('gal-sprite-hide-btn');
+    if (!el) return;
+
+    var drag = { active: false, startX: 0, startY: 0, startLeft: 0, startTop: 0 };
+    var ticking = false;
+    var resizeTimer = null;
+
+    /** 将立绘限制在视口内（换屏、存盘坐标、图片加载后尺寸变化时） */
+    function clampSpriteToViewport_() {
+      if (!el || el.classList.contains('gal-sprite-hidden')) return;
+      var r = el.getBoundingClientRect();
+      var w = r.width;
+      var h = r.height;
+      if (w < 2 || h < 2) return;
+      var vw = window.innerWidth;
+      var vh = window.innerHeight;
+      var maxL = Math.max(0, vw - w);
+      var maxT = Math.max(0, vh - h);
+      var left = r.left;
+      var top = r.top;
+      var nl = Math.min(Math.max(0, left), maxL);
+      var nt = Math.min(Math.max(0, top), maxT);
+      if (Math.abs(nl - left) > 0.5 || Math.abs(nt - top) > 0.5) {
+        el.style.left = nl + 'px';
+        el.style.top = nt + 'px';
+        el.style.right = 'auto';
+        el.style.bottom = 'auto';
+      }
+    }
+
+    function loadPosition_() {
+      try {
+        var raw = localStorage.getItem(SPRITE_POS_KEY);
+        if (raw) {
+          var o = JSON.parse(raw);
+          if (o && typeof o.left === 'number' && typeof o.top === 'number') {
+            el.style.left = o.left + 'px';
+            el.style.top = o.top + 'px';
+            el.style.right = 'auto';
+            el.style.bottom = 'auto';
+            requestAnimationFrame(function () {
+              requestAnimationFrame(clampSpriteToViewport_);
+            });
+            return;
+          }
+        }
+      } catch (e) {}
+      el.style.left = '';
+      el.style.top = '';
+      el.style.right = '0';
+      el.style.bottom = '0';
+      requestAnimationFrame(function () {
+        requestAnimationFrame(clampSpriteToViewport_);
+      });
+    }
+
+    function savePosition_() {
+      try {
+        var rect = el.getBoundingClientRect();
+        localStorage.setItem(SPRITE_POS_KEY, JSON.stringify({ left: Math.round(rect.left), top: Math.round(rect.top) }));
+      } catch (e) {}
+    }
+
+    function isHidden_() {
+      try {
+        return localStorage.getItem(SPRITE_HIDDEN_KEY) === 'true';
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function setHidden_(hide) {
+      try {
+        localStorage.setItem(SPRITE_HIDDEN_KEY, hide ? 'true' : 'false');
+      } catch (e) {}
+    }
+
+    function applyHidden_() {
+      var hide = isHidden_();
+      el.classList.toggle('gal-sprite-hidden', hide);
+      if (hideBtn) {
+        hideBtn.textContent = hide ? '显示' : '隐藏';
+        hideBtn.setAttribute('aria-label', hide ? '显示立绘' : '隐藏立绘');
+      }
+      if (!hide) {
+        requestAnimationFrame(function () {
+          requestAnimationFrame(clampSpriteToViewport_);
+        });
+      }
+    }
+
+    function isInsideHideBtn_(target) {
+      return hideBtn && (target === hideBtn || hideBtn.contains(target));
+    }
+
+    function onDown_(e) {
+      if (isInsideHideBtn_(e.target)) return;
+      var x = e.clientX != null ? e.clientX : e.touches && e.touches[0] ? e.touches[0].clientX : 0;
+      var y = e.clientY != null ? e.clientY : e.touches && e.touches[0] ? e.touches[0].clientY : 0;
+      var rect = el.getBoundingClientRect();
+      drag = { active: true, startX: x, startY: y, startLeft: rect.left, startTop: rect.top };
+    }
+
+    function onMove_(e) {
+      if (!drag.active) return;
+      e.preventDefault();
+      if (ticking) return;
+      ticking = true;
+      var x = e.clientX != null ? e.clientX : e.touches && e.touches[0] ? e.touches[0].clientX : 0;
+      var y = e.clientY != null ? e.clientY : e.touches && e.touches[0] ? e.touches[0].clientY : 0;
+      var dx = x - drag.startX;
+      var dy = y - drag.startY;
+      var newLeft = drag.startLeft + dx;
+      var newTop = drag.startTop + dy;
+      requestAnimationFrame(function () {
+        if (!drag.active || !el) {
+          ticking = false;
+          return;
+        }
+        var box = el.getBoundingClientRect();
+        var ew = box.width;
+        var eh = box.height;
+        var vw = window.innerWidth;
+        var vh = window.innerHeight;
+        var maxL = Math.max(0, vw - ew);
+        var maxT = Math.max(0, vh - eh);
+        el.style.left = Math.min(Math.max(0, newLeft), maxL) + 'px';
+        el.style.top = Math.min(Math.max(0, newTop), maxT) + 'px';
+        el.style.right = 'auto';
+        el.style.bottom = 'auto';
+        ticking = false;
+      });
+    }
+
+    function onUp_() {
+      if (!drag.active) return;
+      drag.active = false;
+      savePosition_();
+    }
+
+    loadPosition_();
+    applyHidden_();
+
+    var sprImg = el.querySelector('.gal-sprite-img');
+    if (sprImg) {
+      sprImg.addEventListener('load', function () {
+        requestAnimationFrame(function () {
+          requestAnimationFrame(clampSpriteToViewport_);
+        });
+      });
+    }
+    window.addEventListener('resize', function () {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () {
+        clampSpriteToViewport_();
+      }, 100);
+    });
+    window.addEventListener('orientationchange', function () {
+      setTimeout(clampSpriteToViewport_, 200);
+    });
+
+    el.addEventListener('mousedown', onDown_);
+    el.addEventListener('touchstart', onDown_, { passive: false });
+    document.addEventListener('mousemove', onMove_);
+    document.addEventListener('touchmove', onMove_, { passive: false });
+    document.addEventListener('mouseup', onUp_);
+    document.addEventListener('touchend', onUp_);
+
+    if (hideBtn) {
+      hideBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        setHidden_(!isHidden_());
+        applyHidden_();
+      });
+    }
+  }
+
   initGalStage_();
+  initGalSpriteStage_();
   bindUnlockUi_();
   bindPagination_();
   bindFindBar_();
