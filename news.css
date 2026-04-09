@@ -165,25 +165,27 @@
   }
 }
 
+/* 平板：略放大，仍给正文留空 */
 @media (max-width: 1024px) {
   #gal-sprite.gal-sprite:not(.gal-sprite-hidden) {
-    width: 38%;
-    max-width: 280px;
-    height: 70%;
+    width: 46%;
+    max-width: min(340px, 92vw);
+    height: 76%;
   }
 }
+/* 手机：立绘显著加大（原 35%/200px 过小） */
 @media (max-width: 768px) {
   #gal-sprite.gal-sprite:not(.gal-sprite-hidden) {
-    width: 35%;
-    max-width: 200px;
-    height: 60%;
+    width: 54%;
+    max-width: min(300px, 94vw);
+    height: 74%;
   }
 }
 @media (max-width: 480px) {
   #gal-sprite.gal-sprite:not(.gal-sprite-hidden) {
-    width: 32%;
-    max-width: 160px;
-    height: 55%;
+    width: 62%;
+    max-width: min(280px, 96vw);
+    height: 72%;
   }
 }
 
