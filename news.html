@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>News board</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="news.css" />
+</head>
+<body class="gal-body">
+  <div class="gal-stage" id="gal-stage">
+    <!-- Put looped background video as assets/bg.webm (optional assets/bg.mp4 for Safari). Poster: assets/bg-poster.webp -->
+    <video
+      class="gal-bg-video"
+      autoplay
+      muted
+      loop
+      playsinline
+      poster="assets/bg-poster.webp"
+      aria-hidden="true"
+    >
+      <source src="assets/bg.webm" type="video/webm" />
+      <source src="assets/bg.mp4" type="video/mp4" />
+    </video>
+    <div class="gal-bg-fallback" aria-hidden="true"></div>
+    <div class="gal-vignette" aria-hidden="true"></div>
+    <div class="gal-sakura" aria-hidden="true"></div>
+
+    <!-- Put character art as assets/立绘.webp (same folder as this HTML) -->
+    <figure class="gal-sprite" id="gal-sprite" aria-hidden="true">
+      <img class="gal-sprite-img" src="assets/立绘.webp" alt="" decoding="async" width="800" height="1200" />
+      <figcaption class="gal-sprite-placeholder">
+        <span class="gal-sprite-placeholder__line">assets / 立绘.webp</span>
+        <span class="gal-sprite-placeholder__hint">Drop your standee here</span>
+      </figcaption>
+    </figure>
+
+    <div class="gal-content">
+      <header class="gal-header">
+        <div class="gal-header__ornament gal-header__ornament--tl" aria-hidden="true"></div>
+        <div class="gal-header__ornament gal-header__ornament--tr" aria-hidden="true"></div>
+        <h1 class="gal-title">News board</h1>
+        <p class="gal-subtitle" id="status">Loading…</p>
+      </header>
+
+      <div class="ticker-wrap gal-panel">
+        <div class="ticker-label">LIVE NEWS</div>
+        <div class="ticker" id="ticker" aria-live="polite"></div>
+      </div>
+
+      <div id="unlock-panel" class="unlock-panel gal-panel" hidden>
+        <span class="unlock-hint">Some rows are hidden (no on-image text). Enter the password to view:</span>
+        <input type="password" id="unlock-pw" class="unlock-input" maxlength="64" autocomplete="off" placeholder="Password" />
+        <button type="button" id="unlock-btn" class="unlock-btn">Unlock</button>
+        <span id="unlock-err" class="unlock-err" aria-live="polite"></span>
+      </div>
+
+      <div id="error" class="err gal-panel" hidden></div>
+
+      <div class="find-bar gal-panel" id="find-bar">
+        <label for="find-input" class="find-label">Find text</label>
+        <input type="search" id="find-input" class="find-input" placeholder="Filter by caption…" autocomplete="off" />
+        <button type="button" id="find-clear" class="find-btn">Clear</button>
+        <span id="find-count" class="find-count" aria-live="polite"></span>
+      </div>
+
+      <div class="feed gal-panel" id="feed"></div>
+
+      <nav class="pagination gal-panel" id="pagination" aria-label="News pages" hidden>
+        <button type="button" id="page-prev" class="page-btn">Previous</button>
+        <span id="page-info" class="page-info"></span>
+        <button type="button" id="page-next" class="page-btn">Next</button>
+      </nav>
+    </div>
+  </div>
+
+  <script src="news.js"></script>
+</body>
+</html>
