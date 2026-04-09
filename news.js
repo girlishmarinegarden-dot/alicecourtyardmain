@@ -518,21 +518,63 @@
       });
   }
 
-  /** Gal stage: show video when file exists; standee placeholder when 立绘 missing */
+  /** Gal stage: preload bg.webm; reveal page only after canplaythrough (or error / timeout). */
   function initGalStage_() {
     var stage = document.getElementById('gal-stage');
     var vid = document.querySelector('.gal-bg-video');
-    if (vid && stage) {
-      vid.addEventListener('loadeddata', function () {
-        stage.classList.add('gal-video-ready');
-      });
-      vid.addEventListener('error', function () {
-        stage.classList.add('gal-video-missing');
-      });
-      if (vid.readyState >= 2) {
-        stage.classList.add('gal-video-ready');
+    var boot = document.getElementById('gal-boot');
+    var settled = false;
+
+    function revealPage_() {
+      if (settled) return;
+      settled = true;
+      document.body.classList.add('gal-ready');
+      if (boot) {
+        boot.setAttribute('aria-busy', 'false');
+        boot.setAttribute('aria-hidden', 'true');
       }
     }
+
+    function onVideoReady_() {
+      if (settled) return;
+      if (stage) stage.classList.add('gal-video-ready');
+      revealPage_();
+    }
+
+    function onVideoMissing_() {
+      if (settled) return;
+      if (stage) stage.classList.add('gal-video-missing');
+      revealPage_();
+    }
+
+    if (!vid || !stage) {
+      revealPage_();
+    } else {
+      vid.preload = 'auto';
+
+      vid.addEventListener('canplaythrough', onVideoReady_);
+      vid.addEventListener('error', onVideoMissing_);
+      vid.addEventListener('progress', function () {
+        if (vid.readyState >= 4) onVideoReady_();
+      });
+
+      if (vid.readyState >= 4) {
+        onVideoReady_();
+      } else {
+        setTimeout(function () {
+          if (settled) return;
+          if (vid.error) {
+            onVideoMissing_();
+          } else if (vid.readyState >= 2) {
+            if (stage) stage.classList.add('gal-video-ready');
+            revealPage_();
+          } else {
+            onVideoMissing_();
+          }
+        }, 18000);
+      }
+    }
+
     var sprSlot = document.getElementById('gal-sprite');
     var sprImg = document.querySelector('.gal-sprite-img');
     if (sprSlot && sprImg) {

@@ -978,6 +978,7 @@ body top.skiptranslate { display: none !important; }
 .node-icon.icon-gallery { border-color: var(--hana-glow); }
 .node-icon.icon-daily { border-color: var(--hana); }
 .node-icon.icon-theater { border-color: var(--alice); }
+.node-icon.icon-news { border-color: rgba(232, 197, 71, 0.75); box-shadow: 0 0 12px rgba(232, 197, 71, 0.35); }
 .node-icon.icon-divination { border-color: var(--gold-glow); box-shadow: 0 0 12px rgba(212,175,55,0.5); }
 .node-item span { font-size: 0.85rem; color: var(--silver); }
 
@@ -1067,12 +1068,19 @@ body.alice-ending-active #btn-bgm { z-index: 10001; }
 #stage-area.stage-area-hidden .stage-area-hide-btn { top: 0; right: 0; }
 #stage-area img {
     max-height: 100%; object-fit: contain;
+    transform-origin: bottom center;
     filter: drop-shadow(0 0 25px var(--yume-purple)) drop-shadow(0 0 45px var(--gold-glow));
-    animation: spriteBreathYumeOpacity 4s ease-in-out infinite;
+    animation: spriteBreathYumeOpacity 5.5s ease-in-out infinite;
 }
 @keyframes spriteBreathYumeOpacity {
-    0%, 100% { opacity: 0.98; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.02); }
+    0%, 100% {
+        opacity: 0.92;
+        transform: scale(1) translateY(0);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.028) translateY(-6px);
+    }
 }
 .sprite-glow-yume {
     position: absolute; right: 5%; bottom: 8%;
@@ -1081,11 +1089,12 @@ body.alice-ending-active #btn-bgm { z-index: 10001; }
     border-radius: 50%;
     filter: blur(28px);
     opacity: 0.65;
-    animation: glowBreathYumeOpacity 4s ease-in-out infinite;
+    transform-origin: center center;
+    animation: glowBreathYumeOpacity 5.5s ease-in-out infinite;
 }
 @keyframes glowBreathYumeOpacity {
-    0%, 100% { opacity: 0.5; }
-    50% { opacity: 0.8; }
+    0%, 100% { opacity: 0.45; transform: scale(1); }
+    50% { opacity: 0.88; transform: scale(1.08); }
 }
 .ear-sync-hana {
     position: absolute; bottom: 10%; width: 60px; height: 80px;
@@ -1173,8 +1182,15 @@ body.alice-ending-active #btn-bgm { z-index: 10001; }
     max-width: 45vw;
     object-fit: contain;
     object-position: right bottom;
+    transform-origin: right bottom;
     filter: drop-shadow(0 0 30px rgba(160,255,200,0.2));
     pointer-events: none;
+    animation: spriteBreathYumeOpacity 5.5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+    #stage-area img { animation: none; opacity: 1; transform: none; }
+    .sprite-glow-yume { animation: none; opacity: 0.65; transform: none; }
+    .galgame-character-wrap img { animation: none; transform: none; }
 }
 .galgame-character-hide-btn {
     position: absolute;

@@ -95,7 +95,20 @@
   max-width: 100%;
   object-fit: contain;
   object-position: bottom center;
+  transform-origin: bottom center;
   filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.45));
+  animation: galSpriteBreath 5.5s ease-in-out infinite;
+}
+@keyframes galSpriteBreath {
+  0%,
+  100% {
+    opacity: 0.94;
+    transform: scale(1) translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.026) translateY(-5px);
+  }
 }
 
 .gal-sprite:not(.is-empty) .gal-sprite-img {
@@ -152,6 +165,11 @@
   .gal-bg-video {
     transition: none;
   }
+  .gal-sprite-img {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .gal-content {
@@ -160,6 +178,39 @@
   padding: 0.75rem 1rem 1.75rem;
   max-width: min(1140px, 100%);
   margin: 0 auto;
+}
+
+/* 返回主站 index.html */
+.gal-back-home {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 0.85rem;
+  padding: 0.5rem 0.95rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--gold);
+  text-decoration: none;
+  border: 1px solid rgba(232, 197, 71, 0.45);
+  border-radius: 8px;
+  background: rgba(24, 16, 40, 0.88);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+.gal-back-home:hover {
+  color: #fff8e8;
+  border-color: rgba(232, 197, 71, 0.75);
+  background: rgba(36, 24, 56, 0.95);
+}
+.gal-back-home:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+@media (max-width: 720px) {
+  .gal-back-home {
+    font-size: 0.82rem;
+    padding: 0.45rem 0.8rem;
+  }
 }
 
 @media (min-width: 960px) {
@@ -174,6 +225,62 @@
   color: var(--text);
   font-family: Quicksand, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   font-weight: 500;
+}
+
+/* Boot: hide page until bg.webm is ready (see news.js) */
+.gal-boot {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse 120% 80% at 20% 0%, rgba(107, 77, 138, 0.55) 0%, transparent 55%),
+    radial-gradient(ellipse 90% 70% at 100% 30%, rgba(232, 155, 181, 0.22) 0%, transparent 50%),
+    linear-gradient(165deg, #1a0a24 0%, #0d0614 45%, #12081c 100%);
+  transition: opacity 0.5s ease, visibility 0s linear;
+}
+.gal-boot-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: var(--text);
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+}
+.gal-boot-text {
+  font-family: Quicksand, "Segoe UI", sans-serif;
+  opacity: 0.92;
+}
+.gal-boot-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(232, 197, 71, 0.25);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: gal-boot-spin 0.85s linear infinite;
+}
+@keyframes gal-boot-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.gal-body.gal-ready .gal-boot {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 0.5s ease, visibility 0s linear 0.5s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gal-boot-spinner {
+    animation: none;
+    border-top-color: rgba(232, 197, 71, 0.55);
+  }
+  .gal-body.gal-ready .gal-boot {
+    transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+  }
 }
 
 /* Ornate header */
