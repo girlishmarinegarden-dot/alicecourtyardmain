@@ -51,6 +51,11 @@
         window.location.href = "showcase.html";
     }
 
+    function openChat() {
+        close();
+        window.location.href = "chat.html";
+    }
+
     function init() {
         root = document.getElementById("map-hub-root");
         titleEl = document.getElementById("map-hub-title");
@@ -75,6 +80,7 @@
         goAnother: goAnother,
         openIndividualShop: openIndividualShop,
         openShowcase: openShowcase,
+        openChat: openChat,
         init: init
     };
 
