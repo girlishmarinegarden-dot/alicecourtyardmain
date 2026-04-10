@@ -155,8 +155,8 @@
         img.className = 'chat-sticker__img';
         img.src = st.src;
         img.alt = st.alt || '';
-        img.width = 48;
-        img.height = 48;
+        img.width = 200;
+        img.height = 200;
         img.decoding = 'async';
         img.draggable = false;
         img.loading = 'lazy';
