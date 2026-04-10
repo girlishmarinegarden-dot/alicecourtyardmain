@@ -1070,6 +1070,10 @@ body top.skiptranslate { display: none !important; }
 }
 .map-hub-opt:active { transform: scale(0.98); }
 .map-hub-opt:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--gold-glow); }
+a.map-hub-opt.map-hub-opt--link {
+    text-decoration: none;
+    box-sizing: border-box;
+}
 .map-hub-opt-icon {
     width: 36px;
     height: 36px;

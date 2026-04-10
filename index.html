@@ -228,13 +228,18 @@
                             </span>
                             <span>晒图区</span>
                         </button>
-                        <button type="button" class="map-hub-opt" onclick="MapHub.openChat()">
+                        <a
+                            href="chat.html"
+                            class="map-hub-opt map-hub-opt--link"
+                            role="button"
+                            onclick="try { if (window.MapHub &amp;&amp; MapHub.close) MapHub.close(); } catch (e) {}"
+                        >
                             <span class="map-hub-opt-icon">
                                 <img src="assets/icons/icon_chat.svg" alt="" draggable="false" onerror="this.style.display='none';this.nextElementSibling.removeAttribute('hidden');">
                                 <span class="map-hub-opt-icon--text" aria-hidden="true" hidden>聊</span>
                             </span>
                             <span>频道聊天</span>
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
