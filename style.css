@@ -1,6 +1,8 @@
 /* ALICE'S GARDEN - 极简赛博 × 空灵幻想 */
 
 :root {
+    /* 与 .pwa-install-banner 可视高度一致（含安全区下的内容区），供 .scene 偏移 */
+    --pwa-banner-total: calc(env(safe-area-inset-top, 0px) + 2.65rem);
     --void: #0a0a12;
     --void-deep: #050508;
     --bg-primary: #0a0a14;
@@ -168,6 +170,13 @@ html, body {
     z-index: 10;
 }
 .scene.active { display: flex; flex-direction: column; opacity: 1; }
+
+/* 顶部安装横幅显示时，场景整体上移，避免被固定横幅遮挡 */
+body.pwa-banner-visible .scene {
+    top: var(--pwa-banner-total);
+    height: calc(100% - var(--pwa-banner-total));
+    min-height: calc(100vh - var(--pwa-banner-total));
+}
 
 /* 记忆 · 拍照场地：stage 全屏可点，容器区、UI 栏、右键菜单 */
 .scene-memory {
@@ -535,26 +544,60 @@ body.memory-active #stage-area {
 }
 .hidden { display: none !important; pointer-events: none; }
 
-/* index.html：右上角「安装」入口（未 PWA / 未标记已安装时由 install-gate 去掉 .hidden） */
-.pwa-install-entry {
+/* index.html：顶部实色横幅 + 左侧「安装」按钮（.alice-pwa-install-link 由 install-gate 控制显隐） */
+.pwa-install-banner {
     position: fixed;
-    top: calc(0.5rem + var(--safe-top));
-    right: calc(0.5rem + var(--safe-right));
-    z-index: 10010;
-    padding: 0.35rem 0.65rem;
-    font-size: 0.75rem;
-    letter-spacing: 0.06em;
-    text-decoration: none;
-    color: var(--silver-dim);
-    background: var(--glass);
-    border: 1px solid var(--glass-border);
-    border-radius: 999px;
-    transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10030;
+    padding-top: env(safe-area-inset-top, 0);
+    background: #0c1814;
+    border-bottom: 1px solid rgba(160, 255, 200, 0.4);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+    box-sizing: border-box;
 }
-.pwa-install-entry:hover {
-    color: var(--silver);
-    border-color: var(--hana-glow);
-    background: rgba(160, 255, 200, 0.08);
+.pwa-install-banner-inner {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-height: 2.65rem;
+    padding: 0.35rem 0.75rem 0.4rem max(0.65rem, env(safe-area-inset-left, 0));
+    padding-right: max(0.65rem, env(safe-area-inset-right, 0));
+    box-sizing: border-box;
+}
+.pwa-install-banner-btn {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 1.85rem;
+    padding: 0.2rem 0.7rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    color: #061210;
+    background: rgba(160, 255, 200, 0.92);
+    border-radius: 6px;
+    border: 1px solid rgba(120, 220, 170, 0.9);
+    transition: filter var(--transition-fast), transform var(--transition-fast);
+}
+.pwa-install-banner-btn:hover {
+    filter: brightness(1.06);
+    color: #04100c;
+}
+.pwa-install-banner-btn:active {
+    transform: scale(0.97);
+}
+.pwa-install-banner-msg {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 0.03em;
 }
 
 /* install.html：独立安装页背景 */
@@ -564,6 +607,16 @@ body.install-standalone-body {
 }
 
 /* ——— 安装 App 页（install.html 全屏引导）——— */
+/*
+ * index 已移除内嵌 #install-page；若浏览器仍缓存旧版 index，全屏安装层会误显示。
+ * 默认按 id 隐藏，仅在 install.html（body.install-standalone-body）显示。
+ */
+#install-page {
+    display: none !important;
+}
+body.install-standalone-body #install-page {
+    display: flex !important;
+}
 .install-page {
     position: fixed; inset: 0;
     z-index: 500;

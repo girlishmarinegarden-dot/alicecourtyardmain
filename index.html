@@ -40,8 +40,6 @@
 
     <div id="google_translate_element" class="google-translate-hidden" aria-hidden="true"></div>
 
-    <a href="install.html" id="pwa-install-entry" class="pwa-install-entry hidden" title="安装为 App">安装</a>
-
     <div id="app-shell" class="app-shell">
     <div id="loading-overlay" class="overlay loading-overlay hidden">
         <div class="loading-content">
@@ -593,6 +591,12 @@
 
     <div id="bg-gradient" class="bg-gradient" aria-hidden="true"></div>
     <div class="stars-bg" aria-hidden="true"></div>
+    <div id="pwa-install-banner" class="pwa-install-banner alice-pwa-install-link hidden" role="region" aria-label="安装应用">
+        <div class="pwa-install-banner-inner">
+            <a href="install.html" id="pwa-install-entry" class="pwa-install-banner-btn" title="打开安装说明">安装</a>
+            <p class="pwa-install-banner-msg">安装到主屏幕 / 添加为 App，获得图标与更流畅体验</p>
+        </div>
+    </div>
     </div>
 
     <script src="constants.js"></script>
@@ -630,8 +634,15 @@
             if (el) el.style.backgroundImage = "url(" + path + file + ")";
             var bgm = document.getElementById("bgm-audio");
             if (bgm) BGM.audio = bgm;
+            (function runInstallBootstrap() {
+                if (typeof InstallGate === "undefined" || !InstallGate.bootstrapIndex) return;
+                if (document.readyState === "loading") {
+                    document.addEventListener("DOMContentLoaded", runInstallBootstrap);
+                    return;
+                }
+                InstallGate.bootstrapIndex();
+            })();
             window.onload = function() {
-                if (typeof InstallGate !== "undefined" && InstallGate.bootstrapIndex) InstallGate.bootstrapIndex();
                 if (typeof App !== "undefined" && App.init) App.init();
             };
         })();

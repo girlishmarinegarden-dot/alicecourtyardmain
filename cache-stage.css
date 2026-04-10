@@ -523,6 +523,13 @@ body.memory-active #stage-area {
 }
 .hidden { display: none !important; pointer-events: none; }
 
+/* 缓存旧版 index 时勿显示内嵌 #install-page；仅 install.html 展示 */
+#install-page {
+    display: none !important;
+}
+body.install-standalone-body #install-page {
+    display: flex !important;
+}
 /* 鈥斺€斺€?瀹夎 App 椤碉紙鏈畨瑁呮椂浠呮樉绀烘椤碉紝涓嶆樉绀虹櫥鍏ワ級鈥斺€斺€?*/
 .install-page {
     position: fixed; inset: 0;
