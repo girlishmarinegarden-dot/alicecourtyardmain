@@ -68,7 +68,6 @@ const ALICE_CONSTANTS = {
         BGM_ENABLED: "AliceGarden_BGM_Enabled",
         CHARACTER_FAVOR: "AliceGarden_Character_Favor",
         HANA_WELCOME_CACHE: "AliceGarden_HanaWelcome",
-        INSTALLED: "AliceGarden_Installed",
         LANG: "AliceGarden_Lang"
     },
 

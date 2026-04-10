@@ -1,8 +1,6 @@
 /* ALICE'S GARDEN - 极简赛博 × 空灵幻想 */
 
 :root {
-    /* 与 .pwa-install-banner 可视高度一致（含安全区下的内容区），供 .scene 偏移 */
-    --pwa-banner-total: calc(env(safe-area-inset-top, 0px) + 2.65rem);
     --void: #0a0a12;
     --void-deep: #050508;
     --bg-primary: #0a0a14;
@@ -170,13 +168,6 @@ html, body {
     z-index: 10;
 }
 .scene.active { display: flex; flex-direction: column; opacity: 1; }
-
-/* 顶部安装横幅显示时，场景整体上移，避免被固定横幅遮挡 */
-body.pwa-banner-visible .scene {
-    top: var(--pwa-banner-total);
-    height: calc(100% - var(--pwa-banner-total));
-    min-height: calc(100vh - var(--pwa-banner-total));
-}
 
 /* 记忆 · 拍照场地：stage 全屏可点，容器区、UI 栏、右键菜单 */
 .scene-memory {
@@ -544,18 +535,24 @@ body.memory-active #stage-area {
 }
 .hidden { display: none !important; pointer-events: none; }
 
-/* index.html：顶部实色横幅 + 左侧「安装」按钮（.alice-pwa-install-link 由 install-gate 控制显隐） */
+/* index.html：实色横幅 + 左侧「安装」；地图页在 status-bar（昵称/因果值）下方，非 fixed，避免遮挡与重排卡顿 */
 .pwa-install-banner {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 10030;
-    padding-top: env(safe-area-inset-top, 0);
+    width: 100%;
+    flex-shrink: 0;
     background: #0c1814;
     border-bottom: 1px solid rgba(160, 255, 200, 0.4);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
     box-sizing: border-box;
+}
+.pwa-install-banner--map {
+    border-left: none;
+    border-right: none;
+}
+.pwa-install-banner--login {
+    margin: 0.85rem 0 0.5rem;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(160, 255, 200, 0.35);
 }
 .pwa-install-banner-inner {
     display: flex;
