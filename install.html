@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>安装 App | 爱丽丝庭院</title>
+    <base href="./">
+    <meta name="theme-color" content="#1a1c24">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        window.ASSET_PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='200' viewBox='0 0 160 200'%3E%3Crect fill='%23333' width='160' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23666' font-size='14' font-family='sans-serif'%3E图%3C/text%3E%3C/svg%3E";
+        (function() {
+            var LANG_KEY = "AliceGarden_Lang";
+            try {
+                var lang = localStorage.getItem(LANG_KEY);
+                if (lang === "en" || lang === "ms") {
+                    document.cookie = "googtrans=/zh-CN/" + lang + "; path=/";
+                    window.onGoogleTranslateReady = function() {
+                        if (typeof google !== "undefined" && google.translate && google.translate.TranslateElement) {
+                            new google.translate.TranslateElement({
+                                pageLanguage: "zh-CN",
+                                includedLanguages: "zh-CN,en,ms",
+                                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+                            }, "google_translate_element");
+                        }
+                    };
+                    var s = document.createElement("script");
+                    s.src = "https://translate.google.com/translate_a/element.js?cb=onGoogleTranslateReady";
+                    s.async = true;
+                    document.head.appendChild(s);
+                }
+            } catch (e) {}
+        })();
+    </script>
+</head>
+<body class="install-standalone-body">
+    <div id="google_translate_element" class="google-translate-hidden" aria-hidden="true"></div>
+
+    <section id="install-page" class="install-page">
+        <div class="install-card glass-panel">
+            <p class="install-back-wrap"><a href="index.html" class="install-back-link">← 返回庭院</a></p>
+            <h1 class="install-title">爱丽丝庭院</h1>
+            <p class="install-lang-label">选择语言 / Choose language / Pilih bahasa</p>
+            <div class="install-lang-options">
+                <button type="button" class="install-lang-btn" data-lang="zh-CN">中文</button>
+                <button type="button" class="install-lang-btn" data-lang="en">English</button>
+                <button type="button" class="install-lang-btn" data-lang="ms">Bahasa Melayu</button>
+            </div>
+            <p class="install-desc">请先安装为 App，安装后可获得图标与更好体验。本应用为在线版，更新代码后自动生效。</p>
+            <button type="button" id="install-app-btn" class="install-btn glow-btn">安装 App</button>
+            <div id="install-ios-tutorial" class="install-ios-tutorial hidden">
+                <p class="install-ios-tutorial-title">iPhone / iPad：添加到主屏幕</p>
+                <ol class="install-ios-steps">
+                    <li>点击 Safari 底部的 <strong>分享</strong> 按钮</li>
+                    <li>选择「<strong>添加到主屏幕</strong>」</li>
+                    <li>点击右上角「<strong>添加</strong>」</li>
+                </ol>
+                <p class="install-ios-tutorial-done">完成后点击下方按钮进入。</p>
+            </div>
+            <p id="install-ios-hint" class="install-ios-hint hidden">请点击浏览器菜单「<strong>添加到主屏幕</strong>」后，再点击下方按钮进入。</p>
+            <button type="button" id="install-done-btn" class="install-done-btn hidden">已安装，进入</button>
+        </div>
+    </section>
+
+    <script src="constants.js"></script>
+    <script src="js/install-gate.js"></script>
+    <script>
+        if (typeof InstallGate !== "undefined" && InstallGate.runInstallWizard) {
+            InstallGate.runInstallWizard();
+        }
+    </script>
+</body>
+</html>

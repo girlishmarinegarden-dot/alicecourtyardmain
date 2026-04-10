@@ -535,7 +535,35 @@ body.memory-active #stage-area {
 }
 .hidden { display: none !important; pointer-events: none; }
 
-/* ——— 安装 App 页（未安装时仅显示此页，不显示登入）——— */
+/* index.html：右上角「安装」入口（未 PWA / 未标记已安装时由 install-gate 去掉 .hidden） */
+.pwa-install-entry {
+    position: fixed;
+    top: calc(0.5rem + var(--safe-top));
+    right: calc(0.5rem + var(--safe-right));
+    z-index: 10010;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    color: var(--silver-dim);
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 999px;
+    transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+}
+.pwa-install-entry:hover {
+    color: var(--silver);
+    border-color: var(--hana-glow);
+    background: rgba(160, 255, 200, 0.08);
+}
+
+/* install.html：独立安装页背景 */
+body.install-standalone-body {
+    background: var(--void-deep);
+    overflow: auto;
+}
+
+/* ——— 安装 App 页（install.html 全屏引导）——— */
 .install-page {
     position: fixed; inset: 0;
     z-index: 500;
@@ -549,6 +577,17 @@ body.memory-active #stage-area {
     padding: 2rem;
     text-align: center;
 }
+.install-back-wrap {
+    text-align: left;
+    margin: 0 0 1rem;
+}
+.install-back-link {
+    font-size: 0.85rem;
+    color: var(--silver-dim);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+.install-back-link:hover { color: var(--hana); }
 .install-title {
     font-size: 1.25rem; font-weight: 300;
     color: var(--silver);
