@@ -37,7 +37,8 @@
     { id: 'star', src: 'assets/chat-stickers/star.svg', alt: 'star', randomFx: false, className: 'chat-sticker--star' },
     { id: 'heart', src: 'assets/chat-stickers/heart.svg', alt: 'heart', randomFx: false, className: 'chat-sticker--heart' },
     { id: 'fire', src: 'assets/chat-stickers/fire.svg', alt: 'fire', randomFx: false, className: 'chat-sticker--fire' },
-    { id: 'moon', src: 'assets/chat-stickers/moon.svg', alt: 'moon', randomFx: false, className: 'chat-sticker--moon' }
+    { id: 'moon', src: 'assets/chat-stickers/moon.svg', alt: 'moon', randomFx: false, className: 'chat-sticker--moon' },
+    { id: '001', src: 'assets/chat-stickers/001.webp', alt: '001', randomFx: true }
     // 示例（放入同名 webp 后取消注释）：
     // ,{ id: 'my1', src: 'assets/chat-stickers/my1.webp', alt: '我的1', randomFx: true }
   ];
