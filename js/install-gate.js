@@ -1,7 +1,5 @@
 /**
- * 安装门控：未安装时仅显示安装页，不显示登入；安装后或以 App 打开时不再显示安装页。
- * 支持安装前选择语言（中文 / English / Bahasa Melayu），使用 Google Translate 自动翻译。
- * iOS 显示「添加到主屏幕」教程。无离线缓存。
+ * PWA 安装：install.html 上完整引导；index.html 仅显示右上角「安装」入口（未安装时）。
  */
 var InstallGate = (function () {
     "use strict";
@@ -53,19 +51,12 @@ var InstallGate = (function () {
         return true;
     }
 
-    function showApp() {
-        var installPage = document.getElementById("install-page");
-        var appShell = document.getElementById("app-shell");
-        if (installPage) installPage.classList.add("hidden");
-        if (appShell) appShell.classList.remove("hidden");
-        if (typeof App !== "undefined" && App.init) App.init();
-    }
-
-    function showInstall() {
-        var installPage = document.getElementById("install-page");
-        var appShell = document.getElementById("app-shell");
-        if (installPage) installPage.classList.remove("hidden");
-        if (appShell) appShell.classList.add("hidden");
+    function redirectToIndex() {
+        try {
+            window.location.replace("index.html");
+        } catch (e) {
+            window.location.href = "index.html";
+        }
     }
 
     function applyLanguage(lang) {
@@ -82,9 +73,7 @@ var InstallGate = (function () {
 
     var deferredPrompt = null;
 
-    function setup() {
-        showInstall();
-
+    function setupInstallWizard() {
         if (isIOS()) {
             var iosTutorial = document.getElementById("install-ios-tutorial");
             var doneBtn = document.getElementById("install-done-btn");
@@ -102,7 +91,7 @@ var InstallGate = (function () {
         window.addEventListener("appinstalled", function () {
             deferredPrompt = null;
             markInstalled();
-            showApp();
+            redirectToIndex();
         });
 
         document.querySelectorAll(".install-lang-btn").forEach(function (btn) {
@@ -134,24 +123,51 @@ var InstallGate = (function () {
         if (doneBtn) {
             doneBtn.addEventListener("click", function () {
                 markInstalled();
-                showApp();
+                redirectToIndex();
             });
         }
     }
 
-    function run() {
-        if (shouldShowInstallPage()) {
-            setup();
-        } else {
+    /** install.html：已安装则立刻回首页；否则挂载安装 UI */
+    function runInstallWizard() {
+        if (!shouldShowInstallPage()) {
             if (isStandalone()) markInstalled();
-            showApp();
+            redirectToIndex();
+            return;
+        }
+        setupInstallWizard();
+    }
+
+    function setInstallEntryVisible(show) {
+        document.querySelectorAll(".alice-pwa-install-link").forEach(function (el) {
+            if (show) el.classList.remove("hidden");
+            else el.classList.add("hidden");
+        });
+        try {
+            if (show) document.body.classList.add("pwa-banner-visible");
+            else document.body.classList.remove("pwa-banner-visible");
+        } catch (e) {}
+    }
+
+    /** index.html：所有 .alice-pwa-install-link（右上角 + 登录页等）同步显隐，不阻塞 App.init */
+    function bootstrapIndex() {
+        if (isStandalone()) markInstalled();
+        setInstallEntryVisible(shouldShowInstallPage());
+        if (!window._aliceAppInstalledBound) {
+            window._aliceAppInstalledBound = true;
+            window.addEventListener("appinstalled", function () {
+                markInstalled();
+                setInstallEntryVisible(false);
+            });
         }
     }
 
     return {
         shouldShowInstallPage: shouldShowInstallPage,
-        run: run,
+        runInstallWizard: runInstallWizard,
+        bootstrapIndex: bootstrapIndex,
         isStandalone: isStandalone,
-        isIOS: isIOS
+        isIOS: isIOS,
+        markInstalled: markInstalled
     };
 })();
