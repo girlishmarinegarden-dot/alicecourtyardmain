@@ -41,6 +41,16 @@
         window.location.href = "another.html";
     }
 
+    function openIndividualShop() {
+        close();
+        window.location.href = "individualshop.html";
+    }
+
+    function openShowcase() {
+        close();
+        window.location.href = "showcase.html";
+    }
+
     function init() {
         root = document.getElementById("map-hub-root");
         titleEl = document.getElementById("map-hub-title");
@@ -63,6 +73,8 @@
         openNews: openNews,
         openSocial: openSocial,
         goAnother: goAnother,
+        openIndividualShop: openIndividualShop,
+        openShowcase: openShowcase,
         init: init
     };
 
