@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>私人摊位 · Individual Shop | 爱丽丝庭院 TCG</title>
+  <meta name="description" content="访客私人交易区：刊登与联络均由投稿者自行负责，本站不担保、不中介。" />
+  <link rel="preload" href="assets/bg.webm" as="video" type="video/webm" />
+  <link rel="preload" href="assets/bg-poster.webp" as="image" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="news.css" />
+  <link rel="stylesheet" href="individualshop.css" />
+</head>
+<body class="gal-body">
+  <div id="gal-boot" class="gal-boot" aria-busy="true" aria-live="polite">
+    <div class="gal-boot-inner">
+      <span class="gal-boot-spinner" aria-hidden="true"></span>
+      <span class="gal-boot-text">Loading…</span>
+    </div>
+  </div>
+  <div class="gal-stage" id="gal-stage">
+    <video
+      class="gal-bg-video"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="auto"
+      poster="assets/bg-poster.webp"
+      aria-hidden="true"
+    >
+      <source src="assets/bg.webm" type="video/webm" />
+      <source src="assets/bg.mp4" type="video/mp4" />
+    </video>
+    <div class="gal-bg-fallback" aria-hidden="true"></div>
+    <div class="gal-vignette" aria-hidden="true"></div>
+    <div class="gal-sakura" aria-hidden="true"></div>
+
+    <div class="gal-content">
+      <a href="index.html" class="gal-back-home">← 返回庭院</a>
+
+      <header class="gal-header">
+        <div class="gal-header__ornament gal-header__ornament--tl" aria-hidden="true"></div>
+        <div class="gal-header__ornament gal-header__ornament--tr" aria-hidden="true"></div>
+        <h1 class="gal-title">私人摊位</h1>
+        <p class="gal-subtitle" id="status">Loading…</p>
+      </header>
+
+      <section id="legal-disclaimer" class="shop-legal gal-panel" aria-labelledby="legal-title">
+        <h2 id="legal-title" class="shop-legal__title">法律声明与风险提示</h2>
+        <div class="shop-legal__body">
+          <p>本页面为<strong>访客私人交易区</strong>。所有商品/服务说明、图片、链接与联系方式均由投稿者自行提供，属用户生成内容（UGC）。</p>
+          <p><strong>本网站与爱丽丝庭院不提供交易中介、不验证商品真伪、不担保任何一方履约，亦不就您与第三方之间的沟通或交易承担任何责任。</strong>是否联系对方、如何付款与交割、是否信任对方信息，均由您<strong>自行评估风险</strong>后决定。建议在合法合规前提下，优先使用您熟悉的正规渠道完成交易。</p>
+          <p class="shop-legal__en" lang="en">This area is a visitor-run marketplace. This site does not broker deals, verify listings, or assume liability for private transactions. You use this information at your own risk.</p>
+        </div>
+      </section>
+
+      <div id="error" class="err gal-panel" hidden></div>
+
+      <div class="shop-submit gal-panel" id="shop-submit-panel">
+        <p class="shop-submit__lead">刊登新摊位请使用下方 Google 表单（可上传多张图片）。打开前请确认已阅读上述声明。</p>
+        <label class="shop-consent">
+          <input type="checkbox" id="consent-checkbox" />
+          <span>我已阅读并同意上述法律声明与风险提示</span>
+        </label>
+        <div class="shop-submit__actions">
+          <button type="button" class="shop-form-btn" id="open-form-btn" disabled>前往 Google 表单刊登</button>
+          <a href="#legal-disclaimer" class="shop-anchor-legal">查看声明</a>
+        </div>
+      </div>
+
+      <div class="find-bar gal-panel" id="find-bar">
+        <label for="find-input" class="find-label">搜索</label>
+        <input type="search" id="find-input" class="find-input" placeholder="按说明或联系方式筛选…" autocomplete="off" />
+        <button type="button" id="find-clear" class="find-btn">清除</button>
+        <span id="find-count" class="find-count" aria-live="polite"></span>
+      </div>
+
+      <div class="shop-col-head gal-panel" id="shop-col-head" hidden>
+        <div class="shop-col-head__scroll">
+          <div class="shop-col-head__grid" aria-hidden="true">
+            <span class="shop-col-head__cell">图片</span>
+            <span class="shop-col-head__cell">链接</span>
+            <span class="shop-col-head__cell">说明</span>
+            <span class="shop-col-head__cell">联系</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="feed gal-panel feed--shop" id="feed"></div>
+
+      <nav class="pagination gal-panel" id="pagination" aria-label="分页" hidden>
+        <button type="button" id="page-prev" class="page-btn">上一页</button>
+        <span id="page-info" class="page-info"></span>
+        <button type="button" id="page-next" class="page-btn">下一页</button>
+      </nav>
+    </div>
+  </div>
+
+  <script src="individualshop.js"></script>
+</body>
+</html>
