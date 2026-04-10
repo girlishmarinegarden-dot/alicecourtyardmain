@@ -208,15 +208,24 @@
                             <span>社群</span>
                         </button>
                         <button type="button" class="map-hub-opt" onclick="MapHub.goAnother()">
-                            <span class="map-hub-opt-icon map-hub-opt-icon--text" aria-hidden="true">异</span>
+                            <span class="map-hub-opt-icon">
+                                <img src="assets/icons/icon_another.svg" alt="" draggable="false" onerror="this.style.display='none';this.nextElementSibling.removeAttribute('hidden');">
+                                <span class="map-hub-opt-icon--text" aria-hidden="true" hidden>异</span>
+                            </span>
                             <span>不规则异世界</span>
                         </button>
                         <button type="button" class="map-hub-opt" onclick="MapHub.openIndividualShop()">
-                            <span class="map-hub-opt-icon map-hub-opt-icon--text" aria-hidden="true">摊</span>
+                            <span class="map-hub-opt-icon">
+                                <img src="assets/icons/icon_stall.svg" alt="" draggable="false" onerror="this.style.display='none';this.nextElementSibling.removeAttribute('hidden');">
+                                <span class="map-hub-opt-icon--text" aria-hidden="true" hidden>摊</span>
+                            </span>
                             <span>私人摊位</span>
                         </button>
                         <button type="button" class="map-hub-opt" onclick="MapHub.openShowcase()">
-                            <span class="map-hub-opt-icon map-hub-opt-icon--text" aria-hidden="true">卡</span>
+                            <span class="map-hub-opt-icon">
+                                <img src="assets/icons/icon_showcase.svg" alt="" draggable="false" onerror="this.style.display='none';this.nextElementSibling.removeAttribute('hidden');">
+                                <span class="map-hub-opt-icon--text" aria-hidden="true" hidden>卡</span>
+                            </span>
                             <span>晒图区</span>
                         </button>
                     </div>
