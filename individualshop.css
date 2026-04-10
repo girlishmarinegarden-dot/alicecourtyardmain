@@ -1,0 +1,271 @@
+/* 私人摊位 — 在 news.css 之上的增量样式 */
+
+#error.err {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.shop-legal {
+  text-align: left;
+  max-width: 52rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.shop-legal__title {
+  font-family: Cinzel, "Times New Roman", serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gold);
+  margin: 0 0 0.75rem;
+  letter-spacing: 0.04em;
+}
+
+.shop-legal__body {
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--text);
+}
+
+.shop-legal__body p {
+  margin: 0 0 0.65rem;
+}
+
+.shop-legal__body p:last-child {
+  margin-bottom: 0;
+}
+
+.shop-legal__en {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.shop-submit__lead {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.shop-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.88rem;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+
+.shop-consent input {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+  accent-color: var(--gold);
+}
+
+.shop-submit__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+
+.shop-form-btn {
+  padding: 0.55rem 1.25rem;
+  font-family: Quicksand, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #12081c;
+  background: linear-gradient(135deg, var(--gold) 0%, #c9a43a 100%);
+  border: 1px solid rgba(232, 197, 71, 0.85);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s;
+}
+
+.shop-form-btn:hover:not(:disabled) {
+  box-shadow: 0 0 20px rgba(232, 197, 71, 0.45);
+  transform: translateY(-1px);
+}
+
+.shop-form-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.shop-anchor-legal {
+  font-size: 0.85rem;
+  color: var(--rose);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.shop-anchor-legal:hover {
+  color: var(--gold);
+}
+
+/* 摊位卡片：时间 + 四列 图片 | 链接 | 说明 | 联系（竖线分隔） */
+.shop-card {
+  margin-bottom: 0.5rem;
+  background: rgba(24, 16, 40, 0.65);
+  border: 1px solid var(--frame);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.shop-card:last-child {
+  margin-bottom: 0;
+}
+
+.shop-card__time {
+  font-size: 0.68rem;
+  color: var(--muted);
+  padding: 0.3rem 0.45rem;
+  border-bottom: 1px solid rgba(232, 197, 71, 0.28);
+  letter-spacing: 0.02em;
+}
+
+.shop-card__grid-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.shop-card__grid {
+  display: grid;
+  grid-template-columns: 76px 5.5rem minmax(6rem, 1.35fr) minmax(5rem, 1fr);
+  gap: 0;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.shop-card__cell {
+  padding: 0.4rem 0.45rem;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--text);
+  border-right: 1px solid rgba(232, 197, 71, 0.32);
+  min-width: 0;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.shop-card__cell:last-child {
+  border-right: none;
+}
+
+.shop-card__cell--img {
+  padding: 0.35rem;
+}
+
+.shop-card__thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  justify-content: flex-start;
+  align-content: flex-start;
+}
+
+.shop-card__thumb {
+  display: block;
+  width: 52px;
+  height: 52px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(232, 197, 71, 0.35);
+  flex-shrink: 0;
+}
+
+.shop-card__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.shop-card__thumb:hover {
+  box-shadow: 0 0 8px rgba(232, 197, 71, 0.35);
+}
+
+.shop-card__link-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-start;
+}
+
+.shop-card__link-pill {
+  display: inline-block;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #12081c;
+  background: rgba(232, 197, 71, 0.88);
+  border-radius: 4px;
+  text-decoration: none;
+  border: 1px solid rgba(232, 197, 71, 0.45);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shop-card__link-pill:hover {
+  background: var(--gold);
+}
+
+.shop-card__dash {
+  color: var(--muted);
+  opacity: 0.65;
+}
+
+.shop-card__cell--text,
+.shop-card__cell--contact {
+  max-height: 6.5rem;
+  overflow-y: auto;
+}
+
+.feed-empty.shop-empty {
+  text-align: center;
+  padding: 1.5rem;
+  color: var(--muted);
+}
+
+.feed--shop {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+/* 与 .shop-card__grid 同宽列，表头竖线对齐 */
+.shop-col-head {
+  padding: 0;
+  margin-bottom: 0.25rem;
+  overflow: hidden;
+}
+
+.shop-col-head__scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.shop-col-head__grid {
+  display: grid;
+  grid-template-columns: 76px 5.5rem minmax(6rem, 1.35fr) minmax(5rem, 1fr);
+  gap: 0;
+  border-bottom: 1px solid rgba(232, 197, 71, 0.4);
+}
+
+.shop-col-head__cell {
+  padding: 0.35rem 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border-right: 1px solid rgba(232, 197, 71, 0.32);
+}
+
+.shop-col-head__cell:last-child {
+  border-right: none;
+}

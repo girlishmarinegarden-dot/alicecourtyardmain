@@ -1044,7 +1044,10 @@ body top.skiptranslate { display: none !important; }
     grid-template-columns: repeat(2, 1fr);
     gap: 0.65rem;
 }
-.map-hub-grid--tcg { grid-template-columns: 1fr; }
+.map-hub-grid--tcg { grid-template-columns: repeat(3, 1fr); max-width: 28rem; margin: 0 auto; }
+@media (max-width: 380px) {
+    .map-hub-grid--tcg { grid-template-columns: repeat(2, 1fr); max-width: 20rem; }
+}
 .map-hub-opt {
     display: flex;
     flex-direction: column;

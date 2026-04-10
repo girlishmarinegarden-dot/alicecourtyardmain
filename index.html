@@ -201,12 +201,23 @@
                             <span>公告栏</span>
                         </button>
                         <button type="button" class="map-hub-opt" onclick="MapHub.openSocial()">
-                            <span class="map-hub-opt-icon"><img src="assets/icons/icon_social.png" alt="" draggable="false" onerror="this.style.display='none'"></span>
+                            <span class="map-hub-opt-icon">
+                                <img src="assets/icons/icon_social.svg" alt="" draggable="false" onerror="this.style.display='none';this.nextElementSibling.removeAttribute('hidden');">
+                                <span class="map-hub-opt-icon--text" aria-hidden="true" hidden>社</span>
+                            </span>
                             <span>社群</span>
                         </button>
                         <button type="button" class="map-hub-opt" onclick="MapHub.goAnother()">
                             <span class="map-hub-opt-icon map-hub-opt-icon--text" aria-hidden="true">异</span>
                             <span>不规则异世界</span>
+                        </button>
+                        <button type="button" class="map-hub-opt" onclick="MapHub.openIndividualShop()">
+                            <span class="map-hub-opt-icon map-hub-opt-icon--text" aria-hidden="true">摊</span>
+                            <span>私人摊位</span>
+                        </button>
+                        <button type="button" class="map-hub-opt" onclick="MapHub.openShowcase()">
+                            <span class="map-hub-opt-icon map-hub-opt-icon--text" aria-hidden="true">卡</span>
+                            <span>晒图区</span>
                         </button>
                     </div>
                 </div>

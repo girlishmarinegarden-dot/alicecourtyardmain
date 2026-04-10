@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>晒卡光荣墙 · Showcase | 爱丽丝庭院 TCG</title>
+  <meta name="description" content="访客晒图：展示你最光荣的卡牌收藏。投稿内容为 UGC，本站不验证真伪。" />
+  <link rel="preload" href="assets/bg.webm" as="video" type="video/webm" />
+  <link rel="preload" href="assets/bg-poster.webp" as="image" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="news.css" />
+  <link rel="stylesheet" href="showcase.css" />
+</head>
+<body class="gal-body">
+  <div id="gal-boot" class="gal-boot" aria-busy="true" aria-live="polite">
+    <div class="gal-boot-inner">
+      <span class="gal-boot-spinner" aria-hidden="true"></span>
+      <span class="gal-boot-text">Loading…</span>
+    </div>
+  </div>
+  <div class="gal-stage" id="gal-stage">
+    <video
+      class="gal-bg-video"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="auto"
+      poster="assets/bg-poster.webp"
+      aria-hidden="true"
+    >
+      <source src="assets/bg.webm" type="video/webm" />
+      <source src="assets/bg.mp4" type="video/mp4" />
+    </video>
+    <div class="gal-bg-fallback" aria-hidden="true"></div>
+    <div class="gal-vignette" aria-hidden="true"></div>
+    <div class="gal-sakura" aria-hidden="true"></div>
+
+    <div class="gal-content">
+      <a href="index.html" class="gal-back-home">← 返回庭院</a>
+
+      <header class="gal-header">
+        <div class="gal-header__ornament gal-header__ornament--tl" aria-hidden="true"></div>
+        <div class="gal-header__ornament gal-header__ornament--tr" aria-hidden="true"></div>
+        <h1 class="gal-title showcase-hero-title">晒卡光荣墙</h1>
+        <p class="gal-subtitle showcase-hero-kicker">Showcase · 最强、最光荣的收藏</p>
+        <p class="showcase-status-line" id="status">Loading…</p>
+      </header>
+
+      <section class="showcase-notice gal-panel" aria-labelledby="notice-title">
+        <h2 id="notice-title" class="showcase-notice__title">投稿说明</h2>
+        <div class="showcase-notice__body">
+          <p>本页为访客 <strong>晒图展示</strong>。照片与文字均由投稿者自行提供。本站<strong>不验证</strong>卡牌真伪、来源或归属，亦<strong>不对</strong>侵权、误导或不当内容承担责任；若你认为某条内容侵权，请通过合法渠道联系处理。</p>
+          <p class="showcase-notice__en" lang="en">User-submitted card photos only. This site does not verify authenticity or ownership and assumes no liability for UGC.</p>
+        </div>
+      </section>
+
+      <div id="error" class="err gal-panel" hidden></div>
+
+      <div class="showcase-submit gal-panel" id="showcase-submit-panel">
+        <p class="showcase-submit__lead">上传你的「光荣之卡」请使用 Google 表单（可多张图）。打开前请确认已阅读上述说明。</p>
+        <label class="showcase-consent">
+          <input type="checkbox" id="consent-checkbox" />
+          <span>我已阅读并同意上述说明</span>
+        </label>
+        <div class="showcase-submit__actions">
+          <button type="button" class="showcase-form-btn" id="open-form-btn" disabled>前往 Google 表单晒卡</button>
+          <a href="#notice-title" class="showcase-anchor-notice">查看说明</a>
+        </div>
+      </div>
+
+      <div class="find-bar gal-panel" id="find-bar">
+        <label for="find-input" class="find-label">搜索</label>
+        <input type="search" id="find-input" class="find-input" placeholder="按卡牌名或宣言筛选…" autocomplete="off" />
+        <button type="button" id="find-clear" class="find-btn">清除</button>
+        <span id="find-count" class="find-count" aria-live="polite"></span>
+      </div>
+
+      <div class="showcase-grid gal-panel" id="showcase-grid"></div>
+
+      <nav class="pagination gal-panel" id="pagination" aria-label="分页" hidden>
+        <button type="button" id="page-prev" class="page-btn">上一页</button>
+        <span id="page-info" class="page-info"></span>
+        <button type="button" id="page-next" class="page-btn">下一页</button>
+      </nav>
+    </div>
+  </div>
+
+  <script src="showcase.js"></script>
+</body>
+</html>
