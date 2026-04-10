@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#12081c" />
+  <title>聊天 | 爱丽丝庭院</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="news.css" />
+  <link rel="stylesheet" href="chat.css" />
+</head>
+<body class="gal-body">
+  <div class="gal-stage gal-stage--chat" id="gal-stage">
+    <div class="gal-bg-fallback" aria-hidden="true"></div>
+    <div class="gal-vignette" aria-hidden="true"></div>
+    <div class="gal-sakura" aria-hidden="true"></div>
+
+    <div class="gal-content gal-content--chat">
+      <a href="index.html" class="gal-back-home">← 返回庭院</a>
+
+      <section class="chat-panel gal-panel" aria-label="状态">
+        <p class="chat-status-line" id="chat-status">连接中…</p>
+        <p class="chat-name-preview">当前昵称：<span id="chat-name-preview">访客</span></p>
+      </section>
+
+      <section class="chat-panel gal-panel" aria-label="消息列表">
+        <div class="chat-list" id="chat-list" role="log" aria-live="polite"></div>
+      </section>
+
+      <section class="chat-panel gal-panel chat-compose" aria-label="发送">
+        <div class="chat-compose-dock">
+          <div class="chat-input-shell">
+            <label class="chat-input-label" for="chat-input">说点什么</label>
+            <div class="chat-input-row">
+              <textarea
+                id="chat-input"
+                rows="3"
+                maxlength="500"
+                placeholder="输入消息… Enter 发送 · Shift+Enter 换行"
+                autocomplete="off"
+              ></textarea>
+              <button type="button" class="chat-send" id="chat-send">
+                <span class="chat-send__text">发送</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="chat-compose-bottom">
+            <div class="chat-emoji-anchor">
+              <button
+                type="button"
+                class="chat-emoji-toggle"
+                id="chat-emoji-toggle"
+                aria-expanded="false"
+                aria-haspopup="dialog"
+                aria-controls="chat-emoji-popover"
+                title="贴纸"
+              >
+                <span class="chat-emoji-toggle__icon" aria-hidden="true">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.5" />
+                    <circle cx="9" cy="10" r="1.2" fill="currentColor" />
+                    <circle cx="15" cy="10" r="1.2" fill="currentColor" />
+                    <path d="M8.5 14.5c.8 1.6 2.2 2.5 3.5 2.5s2.7-.9 3.5-2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                  </svg>
+                </span>
+                <span class="chat-emoji-toggle__label">表情贴纸</span>
+              </button>
+
+              <div
+                class="chat-emoji-popover"
+                id="chat-emoji-popover"
+                hidden
+                role="dialog"
+                aria-label="选择贴纸"
+              >
+                <p class="chat-emoji-popover__title">点选一个贴纸发送</p>
+                <div class="chat-stickers" id="chat-stickers"></div>
+              </div>
+            </div>
+          </div>
+
+          <p class="chat-hint">数据完全公开，请勿输入隐私。显示名来自庭院登录态（localStorage）。支持 file:// 打开时需能访问外网加载 Firebase。</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- compat 脚本：非 module，避免 file:// 下 ES 模块与相对 import 限制 -->
+  <script src="https://www.gstatic.com/firebasejs/12.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore-compat.js"></script>
+  <script src="chat-firebase-config.js"></script>
+  <script src="chat.js"></script>
+</body>
+</html>
