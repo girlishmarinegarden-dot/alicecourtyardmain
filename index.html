@@ -146,45 +146,69 @@
 
         <main class="map-container">
             <div class="location-nodes">
-                <div class="node-item" role="link" title="公告栏（新标签页打开）" onclick="window.open('news.html','_blank','noopener,noreferrer')">
-                    <div class="node-icon icon-news"><img src="assets/icons/icon_news.png" alt="公告栏" draggable="false" onerror="this.style.display='none'"></div>
-                    <span>公告栏</span>
+                <div class="node-item" role="button" tabindex="0" title="庭院、市集、图书馆等" onclick="MapHub.open('alice')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();MapHub.open('alice');}">
+                    <div class="node-icon icon-alice-hub"><img src="assets/icons/icon_alice_garden.svg" alt="" draggable="false"></div>
+                    <span>爱丽丝庭院</span>
                 </div>
-                <div class="node-item" data-node="GARDEN" onclick="App.navigateTo('GARDEN')">
-                    <div class="node-icon icon-garden"><img src="assets/icons/icon_garden.png" alt="庭院" draggable="false" onerror="this.style.display='none'"></div>
-                    <span>庭院</span>
+                <div class="node-item" role="button" tabindex="0" title="公告栏、社群、不规则异世界" onclick="MapHub.open('tcg')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();MapHub.open('tcg');}">
+                    <div class="node-icon icon-tcg-hub"><img src="assets/icons/icon_tcg.svg" alt="" draggable="false"></div>
+                    <span>TCG</span>
                 </div>
-                <div class="node-item" data-node="MARKET" onclick="App.navigateTo('MARKET')">
-                    <div class="node-icon icon-market"><img src="assets/icons/icon_market.png" alt="市集" draggable="false" onerror="this.style.display='none'"></div>
-                    <span>市集</span>
-                </div>
-                <div class="node-item" onclick="App.navigateTo('LIBRARY')">
-                    <div class="node-icon icon-library"><img src="assets/icons/icon_library.png" alt="图书馆" draggable="false" onerror="this.style.display='none'"></div>
-                    <span>图书馆</span>
-                </div>
-                <div class="node-item" role="link" title="社群与社交链接（新标签页打开）" onclick="window.open('social.html','_blank','noopener,noreferrer')">
-                    <div class="node-icon icon-social"><img src="assets/icons/icon_social.png" alt="社群" draggable="false" onerror="this.style.display='none'"></div>
-                    <span>社群</span>
-                </div>
-                <div class="node-item" onclick="App.navigateTo('GALLERY')">
-                    <div class="node-icon icon-gallery"><img src="assets/icons/icon_gallery.png" alt="画廊" draggable="false" onerror="this.style.display='none'"></div>
-                    <span>画廊</span>
-                </div>
-                <div class="node-item" onclick="App.navigateTo('DAILYTASK')">
-                    <div class="node-icon icon-daily"><img src="assets/icons/icon_daily.png" alt="每日任务" draggable="false" onerror="this.style.display='none'"></div>
-                    <span>每日任务</span>
-                </div>
-                <div class="node-item" onclick="App.navigateTo('THEATER')">
-                    <div class="node-icon icon-theater"><img src="assets/icons/icon_theater.png" alt="歌剧" draggable="false" onerror="this.style.display='none'"></div>
-                    <span>歌剧</span>
-                </div>
-                <div class="node-item" onclick="App.navigateTo('DIVINATION')">
-                    <div class="node-icon icon-divination"><img src="assets/icons/icon_divination.png" alt="占卜" draggable="false" onerror="this.style.display='none'"></div>
-                    <span>占卜</span>
-                </div>
-                <div class="node-item" onclick="App.navigateTo('MEMORY')">
-                    <div class="node-icon icon-memory"><img src="assets/icons/icon_memory.png" alt="记忆" draggable="false" onerror="this.style.display='none'"></div>
-                    <span>记忆</span>
+            </div>
+
+            <div id="map-hub-root" class="map-hub-root hidden" aria-hidden="true">
+                <div class="map-hub-backdrop" id="map-hub-backdrop" aria-hidden="true"></div>
+                <div class="map-hub-panel glass-panel" role="dialog" aria-labelledby="map-hub-title" aria-modal="true">
+                    <button type="button" class="map-hub-close" aria-label="关闭">×</button>
+                    <h3 id="map-hub-title" class="map-hub-title">爱丽丝庭院</h3>
+                    <div id="map-hub-body-alice" class="map-hub-grid hidden">
+                        <button type="button" class="map-hub-opt" onclick="MapHub.goScene('GARDEN')">
+                            <span class="map-hub-opt-icon"><img src="assets/icons/icon_garden.png" alt="" draggable="false" onerror="this.style.display='none'"></span>
+                            <span>庭院</span>
+                        </button>
+                        <button type="button" class="map-hub-opt" onclick="MapHub.goScene('MARKET')">
+                            <span class="map-hub-opt-icon"><img src="assets/icons/icon_market.png" alt="" draggable="false" onerror="this.style.display='none'"></span>
+                            <span>市集</span>
+                        </button>
+                        <button type="button" class="map-hub-opt" onclick="MapHub.goScene('LIBRARY')">
+                            <span class="map-hub-opt-icon"><img src="assets/icons/icon_library.png" alt="" draggable="false" onerror="this.style.display='none'"></span>
+                            <span>图书馆</span>
+                        </button>
+                        <button type="button" class="map-hub-opt" onclick="MapHub.goScene('GALLERY')">
+                            <span class="map-hub-opt-icon"><img src="assets/icons/icon_gallery.png" alt="" draggable="false" onerror="this.style.display='none'"></span>
+                            <span>画廊</span>
+                        </button>
+                        <button type="button" class="map-hub-opt" onclick="MapHub.goScene('DAILYTASK')">
+                            <span class="map-hub-opt-icon"><img src="assets/icons/icon_daily.png" alt="" draggable="false" onerror="this.style.display='none'"></span>
+                            <span>每日任务</span>
+                        </button>
+                        <button type="button" class="map-hub-opt" onclick="MapHub.goScene('THEATER')">
+                            <span class="map-hub-opt-icon"><img src="assets/icons/icon_theater.png" alt="" draggable="false" onerror="this.style.display='none'"></span>
+                            <span>歌剧</span>
+                        </button>
+                        <button type="button" class="map-hub-opt" onclick="MapHub.goScene('DIVINATION')">
+                            <span class="map-hub-opt-icon"><img src="assets/icons/icon_divination.png" alt="" draggable="false" onerror="this.style.display='none'"></span>
+                            <span>占卜</span>
+                        </button>
+                        <button type="button" class="map-hub-opt" onclick="MapHub.goScene('MEMORY')">
+                            <span class="map-hub-opt-icon"><img src="assets/icons/icon_memory.png" alt="" draggable="false" onerror="this.style.display='none'"></span>
+                            <span>记忆</span>
+                        </button>
+                    </div>
+                    <div id="map-hub-body-tcg" class="map-hub-grid map-hub-grid--tcg hidden">
+                        <button type="button" class="map-hub-opt" onclick="MapHub.openNews()">
+                            <span class="map-hub-opt-icon"><img src="assets/icons/icon_news.png" alt="" draggable="false" onerror="this.style.display='none'"></span>
+                            <span>公告栏</span>
+                        </button>
+                        <button type="button" class="map-hub-opt" onclick="MapHub.openSocial()">
+                            <span class="map-hub-opt-icon"><img src="assets/icons/icon_social.png" alt="" draggable="false" onerror="this.style.display='none'"></span>
+                            <span>社群</span>
+                        </button>
+                        <button type="button" class="map-hub-opt" onclick="MapHub.goAnother()">
+                            <span class="map-hub-opt-icon map-hub-opt-icon--text" aria-hidden="true">异</span>
+                            <span>不规则异世界</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -582,6 +606,7 @@
     <script src="js/opendoor-transition.js"></script>
     <script src="js/manga-gallery.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/map-hub.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
     <script src="js/memory-studio.js"></script>
     <script>
