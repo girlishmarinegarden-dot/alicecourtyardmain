@@ -1,0 +1,179 @@
+/* 社群页：在 news.css 基础上追加 */
+
+.gal-stage--social {
+  min-height: 100vh;
+}
+
+.gal-content--social {
+  padding-bottom: 2.5rem;
+}
+
+.social-intro {
+  margin-bottom: 1rem;
+}
+.social-intro__text {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+.social-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.social-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.15rem;
+  text-decoration: none;
+  color: var(--text);
+  border: 2px solid rgba(232, 197, 71, 0.25);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(36, 22, 52, 0.55) 0%, rgba(20, 12, 32, 0.5) 100%);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+.social-card:hover {
+  border-color: rgba(232, 197, 71, 0.55);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  transform: translateY(-2px);
+}
+.social-card:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.social-card__icon {
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.social-card__icon--discord {
+  background: linear-gradient(145deg, #5865f2 0%, #4752c4 100%);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 1.05rem;
+}
+
+.social-card__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.social-card__title {
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+}
+.social-card__desc {
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.social-card__arrow {
+  flex-shrink: 0;
+  opacity: 0.65;
+  font-size: 1.1rem;
+  transition: transform 0.2s ease;
+}
+.social-card:hover .social-card__arrow {
+  transform: translateX(4px);
+}
+
+.social-card--youtube .social-card__icon {
+  color: #ff0033;
+  background: rgba(255, 0, 51, 0.12);
+  border-color: rgba(255, 0, 51, 0.35);
+}
+.social-card--whatsapp .social-card__icon {
+  background: rgba(37, 211, 102, 0.15);
+  border-color: rgba(37, 211, 102, 0.4);
+}
+.social-card--facebook .social-card__icon {
+  font-family: Georgia, serif;
+  color: #1877f2;
+  background: rgba(24, 119, 242, 0.12);
+  border-color: rgba(24, 119, 242, 0.35);
+}
+.social-card--x .social-card__icon {
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.08);
+}
+.social-card--instagram .social-card__icon {
+  background: linear-gradient(145deg, #f58529 0%, #dd2a7b 50%, #8134af 100%);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.social-more {
+  margin-bottom: 1rem;
+}
+.social-more__title {
+  margin: 0 0 0.65rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+.social-more__list {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--text);
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+.social-more__list a {
+  color: var(--rose);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.social-more__list a:hover {
+  color: var(--gold);
+}
+
+.social-footnote {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--muted);
+  line-height: 1.5;
+  opacity: 0.9;
+}
+.social-footnote code {
+  font-size: 0.7rem;
+  padding: 0.1rem 0.35rem;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 4px;
+}
+
+@media (min-width: 720px) {
+  .social-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .social-card {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .social-card:hover {
+    transform: none;
+  }
+}

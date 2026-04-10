@@ -35,17 +35,12 @@
     </script>
 </head>
 <body>
-    <!-- 时段背景图：最底层，仅刷新时按时间选 T1/T2/T3/T4，无纯色遮挡 -->
     <div id="time-bg" class="time-bg" aria-hidden="true"></div>
-    <!-- 全局噪点层 -->
     <div class="grain-layer" aria-hidden="true"></div>
-    <!-- 场景转场遮罩 -->
     <div id="scene-transition" class="scene-transition" aria-hidden="true"></div>
 
-    <!-- Google Translate 挂载点（隐藏，仅用于自动翻译） -->
     <div id="google_translate_element" class="google-translate-hidden" aria-hidden="true"></div>
 
-    <!-- 安装 App 页：未安装时仅显示此页，不显示登入；安装后或已安装不再显示 -->
     <section id="install-page" class="install-page">
         <div class="install-card glass-panel">
             <h1 class="install-title">爱丽丝庭院</h1>
@@ -71,7 +66,6 @@
         </div>
     </section>
 
-    <!-- 以下为正式应用内容，未安装时隐藏 -->
     <div id="app-shell" class="app-shell hidden">
     <div id="loading-overlay" class="overlay loading-overlay hidden">
         <div class="loading-content">
@@ -80,14 +74,12 @@
         </div>
     </div>
 
-    <!-- Hana 前往中：独立全屏 loading 模块，仅循环视频，不影响通用 loading -->
     <div id="hana-loading-overlay" class="hana-loading-overlay hidden" aria-hidden="true">
         <video id="hana-loading-video" class="hana-loading-video" muted playsinline loop preload="auto">
             <source src="assets/videos/hanaloading.webm" type="video/webm">
         </video>
     </div>
 
-    <!-- 🗝️ Alice Courtyard 开门过渡：动画钥匙(掉落/弹跳/90°) → 结束后隐藏，idle 钥匙出现并可拖动 → 接触锁孔触发视频 -->
     <div id="opendoor-overlay" class="opendoor-overlay hidden" aria-hidden="true">
         <div class="opendoor-bg" aria-hidden="true"></div>
         <video id="opendoor-video" class="opendoor-video" muted playsinline preload="auto" aria-hidden="true"></video>
@@ -108,7 +100,6 @@
 
     <button type="button" id="btn-bgm" class="muted" aria-label="BGM">♫</button>
 
-    <!-- moichan 浮游导航：可拖动，点击切换开眼/闭眼并弹出「去哪里？」气泡 -->
     <div id="moichan-nav" class="moichan-nav" aria-label="moichan导航">
         <img id="moichan-nav-img" class="moichan-nav-img" src="assets/characters/moichan1.webp" alt="moichan导航" width="300" height="300" draggable="false">
         <div id="moichan-nav-bubble" class="moichan-nav-bubble hidden">
@@ -171,6 +162,10 @@
                     <div class="node-icon icon-library"><img src="assets/icons/icon_library.png" alt="图书馆" draggable="false" onerror="this.style.display='none'"></div>
                     <span>图书馆</span>
                 </div>
+                <div class="node-item" role="link" title="社群与社交链接（新标签页打开）" onclick="window.open('social.html','_blank','noopener,noreferrer')">
+                    <div class="node-icon icon-social"><img src="assets/icons/icon_social.png" alt="社群" draggable="false" onerror="this.style.display='none'"></div>
+                    <span>社群</span>
+                </div>
                 <div class="node-item" onclick="App.navigateTo('GALLERY')">
                     <div class="node-icon icon-gallery"><img src="assets/icons/icon_gallery.png" alt="画廊" draggable="false" onerror="this.style.display='none'"></div>
                     <span>画廊</span>
@@ -222,7 +217,6 @@
         </div>
     </div>
 
-    <!-- Galgame 卡牌故事：开场过场 + 问题对白 -->
     <div id="card-story-overlay" class="galgame-overlay overlay hidden">
         <div id="galgame-bg" class="galgame-bg" aria-hidden="true"></div>
         <div id="galgame-card-img-wrap" class="galgame-card-img-wrap">
@@ -329,7 +323,6 @@
                     <img class="library-cover-img" src="assets/ui/bc5.webp" alt="白之书" draggable="false">
                     <span class="library-cover-title">白之书</span>
                 </div>
-                <!-- 漫画书：点击后进入漫画画廊 Scene -->
                 <div class="library-cover-wrap" data-book-id="manga" title="点击查看漫画画廊">
                     <img class="library-cover-img" src="assets/ui/bc_manga.webp" alt="漫画集" draggable="false" onerror="this.style.display='none'">
                     <span class="library-cover-title">漫画集</span>
@@ -366,7 +359,6 @@
         </div>
     </section>
 
-    <!-- 漫画画廊：缩略图 + NEW 角标 + 简单分页 + 预览 -->
     <section id="scene-manga-gallery" class="scene">
         <div class="scene-panel manga-panel">
             <h2>Mizuki · 漫画画廊</h2>
@@ -472,7 +464,6 @@
     </section>
 
     <section id="scene-alice-ending" class="scene scene-alice-ending">
-        <!-- 全屏 loading 过场（GAS 请求中）：webm 或 cut-in 特效 -->
         <div id="alice-ending-loading" class="alice-ending-loading hidden">
             <video id="alice-ending-loading-video" class="alice-ending-loading-video" muted playsinline preload="auto" loop aria-hidden="true">
                 <source src="assets/videos/ending_loading.webm" type="video/webm">
@@ -483,7 +474,6 @@
                 <div class="loader"></div>
             </div>
         </div>
-        <!-- 结局舞台：webm 背景 + 歌词滚动 + 效果层 + 最终两按钮 -->
         <div id="alice-ending-stage" class="alice-ending-stage hidden">
             <video id="alice-ending-video" class="alice-ending-video" muted playsinline preload="auto" loop aria-hidden="true">
                 <source src="assets/videos/alice_ending.webm" type="video/webm">
@@ -503,14 +493,12 @@
                 </div>
             </div>
         </div>
-        <!-- 兼容旧逻辑的占位（由 JS 控制显隐） -->
         <div id="alice-ending-wait" class="alice-ending-wait hidden"></div>
         <div id="alice-ending-bubble-wrap" class="alice-ending-bubble-wrap hidden">
             <div id="alice-ending-content" class="fate-scroll"></div>
         </div>
     </section>
 
-    <!-- 记忆：拍照场地，最多 10 个 container，可加 assets 内 .webp 或本地上传 -->
     <section id="scene-memory" class="scene scene-memory">
         <div id="memory-stage" class="memory-stage" tabindex="0">
             <div id="memory-containers" class="memory-containers"></div>
@@ -569,13 +557,11 @@
     </div>
 
     <audio id="bgm-audio" loop preload="metadata">
-        <!-- 将 src 设为你的 BGM 地址，例如：src="assets/bgm/theme.mp3" -->
     </audio>
 
-    <!-- 渐变层已改为透明，不遮挡时段背景；星光在最底层之上 -->
     <div id="bg-gradient" class="bg-gradient" aria-hidden="true"></div>
     <div class="stars-bg" aria-hidden="true"></div>
-    </div><!-- /#app-shell -->
+    </div>
 
     <script src="constants.js"></script>
     <script src="js/install-gate.js"></script>

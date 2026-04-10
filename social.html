@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#12081c" />
+  <title>社群 · Social | 爱丽丝庭院</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="news.css" />
+  <link rel="stylesheet" href="social.css" />
+</head>
+<body class="gal-body">
+  <div class="gal-stage gal-stage--social" id="gal-stage">
+    <div class="gal-bg-fallback" aria-hidden="true"></div>
+    <div class="gal-vignette" aria-hidden="true"></div>
+    <div class="gal-sakura" aria-hidden="true"></div>
+
+    <div class="gal-content gal-content--social">
+      <a href="index.html" class="gal-back-home">← 返回庭院</a>
+
+      <header class="gal-header">
+        <div class="gal-header__ornament gal-header__ornament--tl" aria-hidden="true"></div>
+        <div class="gal-header__ornament gal-header__ornament--tr" aria-hidden="true"></div>
+        <h1 class="gal-title">社群 · Social</h1>
+        <p class="gal-subtitle">关注爱丽丝庭院的官方与玩家渠道</p>
+      </header>
+
+      <section class="social-intro gal-panel" aria-label="说明">
+        <p class="social-intro__text">
+          欢迎加入讨论、获取更新与与同好交流。点击下方卡片将在新标签页打开对应平台。
+        </p>
+      </section>
+
+      <div class="social-grid" role="list">
+        <a
+          class="social-card social-card--youtube gal-panel"
+          role="listitem"
+          href="https://www.youtube.com/@girlishmarinehana.channel7104"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span class="social-card__icon" aria-hidden="true">▶</span>
+          <span class="social-card__body">
+            <span class="social-card__title">YouTube</span>
+            <span class="social-card__desc">专使频道 · 影像与音乐</span>
+          </span>
+          <span class="social-card__arrow" aria-hidden="true">→</span>
+        </a>
+
+        <a
+          class="social-card social-card--discord gal-panel"
+          role="listitem"
+          href="https://discord.com/invite/YOUR_INVITE"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span class="social-card__icon social-card__icon--discord" aria-hidden="true">D</span>
+          <span class="social-card__body">
+            <span class="social-card__title">Discord</span>
+            <span class="social-card__desc">服务器邀请（请把 YOUR_INVITE 换成真实邀请码）</span>
+          </span>
+          <span class="social-card__arrow" aria-hidden="true">→</span>
+        </a>
+
+        <a
+          class="social-card social-card--whatsapp gal-panel"
+          role="listitem"
+          href="https://wa.me/000000000000"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span class="social-card__icon" aria-hidden="true">💬</span>
+          <span class="social-card__body">
+            <span class="social-card__title">WhatsApp</span>
+            <span class="social-card__desc">联系 / 群组（请替换 wa.me 后数字为国际区号+号码，无 + 号）</span>
+          </span>
+          <span class="social-card__arrow" aria-hidden="true">→</span>
+        </a>
+
+        <a
+          class="social-card social-card--facebook gal-panel"
+          role="listitem"
+          href="https://www.facebook.com/YOUR_PAGE_OR_GROUP"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span class="social-card__icon" aria-hidden="true">f</span>
+          <span class="social-card__body">
+            <span class="social-card__title">Facebook</span>
+            <span class="social-card__desc">专页或社团链接</span>
+          </span>
+          <span class="social-card__arrow" aria-hidden="true">→</span>
+        </a>
+
+        <a
+          class="social-card social-card--x gal-panel"
+          role="listitem"
+          href="https://x.com/YOUR_HANDLE"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span class="social-card__icon" aria-hidden="true">𝕏</span>
+          <span class="social-card__body">
+            <span class="social-card__title">X（Twitter）</span>
+            <span class="social-card__desc">动态与公告</span>
+          </span>
+          <span class="social-card__arrow" aria-hidden="true">→</span>
+        </a>
+
+        <a
+          class="social-card social-card--instagram gal-panel"
+          role="listitem"
+          href="https://www.instagram.com/YOUR_HANDLE"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span class="social-card__icon" aria-hidden="true">◎</span>
+          <span class="social-card__body">
+            <span class="social-card__title">Instagram</span>
+            <span class="social-card__desc">视觉与幕后</span>
+          </span>
+          <span class="social-card__arrow" aria-hidden="true">→</span>
+        </a>
+      </div>
+
+      <section class="social-more gal-panel">
+        <h2 class="social-more__title">站内相关</h2>
+        <ul class="social-more__list">
+          <li><a href="news.html">公告栏 · News board</a> — 表格同步资讯</li>
+          <li><a href="index.html">返回主应用</a> — 地图与各模块</li>
+        </ul>
+      </section>
+
+      <p class="social-footnote">
+        编辑本页 <code>social.html</code> 内各 <code>href</code> 即可更新链接；样式见 <code>social.css</code>。
+      </p>
+    </div>
+  </div>
+</body>
+</html>

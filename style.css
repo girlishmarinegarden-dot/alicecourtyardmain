@@ -979,6 +979,7 @@ body top.skiptranslate { display: none !important; }
 .node-icon.icon-daily { border-color: var(--hana); }
 .node-icon.icon-theater { border-color: var(--alice); }
 .node-icon.icon-news { border-color: rgba(232, 197, 71, 0.75); box-shadow: 0 0 12px rgba(232, 197, 71, 0.35); }
+.node-icon.icon-social { border-color: rgba(88, 101, 242, 0.65); box-shadow: 0 0 12px rgba(88, 101, 242, 0.3); }
 .node-icon.icon-divination { border-color: var(--gold-glow); box-shadow: 0 0 12px rgba(212,175,55,0.5); }
 .node-item span { font-size: 0.85rem; color: var(--silver); }
 
