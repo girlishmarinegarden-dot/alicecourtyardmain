@@ -58,13 +58,12 @@
         if (bubbleEl) bubbleEl.classList.add("hidden");
     }
 
-    /** 登出或 Guest 时隐藏，已登录且非 Guest 时显示 */
+    /** 未进入（无 state）时隐藏，进入后（市民或游客）均显示 */
     function updateVisibility() {
         if (!navEl) return;
         var state = typeof Auth !== "undefined" ? Auth.getState() : null;
-        var role = state && state.role ? state.role : (typeof ALICE_CONSTANTS !== "undefined" ? ALICE_CONSTANTS.ROLES.GUEST : "GUEST");
-        var isGuest = !state || !state.uid || role === "GUEST";
-        if (isGuest) {
+        var hasEntered = !!(state && state.uid);
+        if (!hasEntered) {
             navEl.classList.add("moichan-nav-hidden");
         } else {
             navEl.classList.remove("moichan-nav-hidden");
@@ -129,6 +128,10 @@
     function runOptionAction(btn) {
         var go = btn && btn.getAttribute("data-go");
         closeBubble();
+        if (go === "WALLPAPER") {
+            window.open("https://girlishmarinewallpaper-crypto.github.io/wallpaper/", "_blank", "noopener,noreferrer");
+            return;
+        }
         if (go === "ANOTHER") {
             window.location.href = "another.html";
             return;

@@ -6,6 +6,9 @@
     <title>Alice's Garden | 爱丽丝庭院</title>
     <base href="./">
     <meta name="theme-color" content="#1a1c24">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script>
         window.ASSET_PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='200' viewBox='0 0 160 200'%3E%3Crect fill='%23333' width='160' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23666' font-size='14' font-family='sans-serif'%3E图%3C/text%3E%3C/svg%3E";
@@ -34,6 +37,7 @@
     </script>
 </head>
 <body>
+    <canvas id="celestial-particles-canvas" class="celestial-particles-canvas" aria-hidden="true"></canvas>
     <div id="time-bg" class="time-bg" aria-hidden="true"></div>
     <div class="grain-layer" aria-hidden="true"></div>
     <div id="scene-transition" class="scene-transition" aria-hidden="true"></div>
@@ -83,6 +87,7 @@
                 <button type="button" class="moichan-nav-opt" data-go="MARKET">市集</button>
                 <button type="button" class="moichan-nav-opt" data-go="LIBRARY">图书馆</button>
                 <button type="button" class="moichan-nav-opt" data-go="GALLERY">画廊</button>
+                <button type="button" class="moichan-nav-opt moichan-nav-opt-wallpaper" data-go="WALLPAPER">🌸 同人壁纸</button>
                 <button type="button" class="moichan-nav-opt" data-go="DAILYTASK">每日任务</button>
                 <button type="button" class="moichan-nav-opt" data-go="DIVINATION">占卜</button>
                 <button type="button" class="moichan-nav-opt" data-go="MEMORY">记忆</button>
@@ -107,7 +112,15 @@
                 <input type="text" id="input-uid" placeholder="UID (灵魂编号)" autocomplete="username">
                 <input type="password" id="input-pwd" placeholder="Password (契约密码)" autocomplete="current-password">
             </div>
-            <button type="button" class="glow-btn" onclick="App.handleLogin()">开始认证</button>
+            <div class="login-actions">
+                <button type="button" class="glow-btn" onclick="App.handleLogin()">开始灵魂认证</button>
+                <button type="button" class="guest-btn" onclick="App.handleGuestLogin()">✦ 游客漫游进入 (Guest Mode)</button>
+            </div>
+            <div class="login-wallpaper-link-wrap">
+                <a href="https://girlishmarinewallpaper-crypto.github.io/wallpaper/" target="_blank" rel="noopener noreferrer" class="login-wallpaper-link">
+                    🌸 探索同人壁纸花园 (Fan Art Wallpaper Garden) ↗
+                </a>
+            </div>
         </div>
     </section>
 
@@ -164,6 +177,10 @@
                         <button type="button" class="map-hub-opt" onclick="MapHub.goScene('GALLERY')">
                             <span class="map-hub-opt-icon"><img src="assets/icons/icon_gallery.png" alt="" draggable="false" onerror="this.style.display='none'"></span>
                             <span>画廊</span>
+                        </button>
+                        <button type="button" class="map-hub-opt map-hub-opt--wallpaper" onclick="MapHub.openWallpaper()">
+                            <span class="map-hub-opt-icon"><img src="assets/icons/icon_gallery.png" alt="" draggable="false" onerror="this.style.display='none'"></span>
+                            <span>🌸 同人壁纸</span>
                         </button>
                         <button type="button" class="map-hub-opt" onclick="MapHub.goScene('DAILYTASK')">
                             <span class="map-hub-opt-icon"><img src="assets/icons/icon_daily.png" alt="" draggable="false" onerror="this.style.display='none'"></span>
@@ -626,6 +643,7 @@
     <script src="js/manga-gallery.js"></script>
     <script src="js/app.js"></script>
     <script src="js/map-hub.js"></script>
+    <script src="js/celestial-particles.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
     <script src="js/memory-studio.js"></script>
     <script>

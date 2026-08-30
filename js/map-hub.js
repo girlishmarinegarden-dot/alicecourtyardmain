@@ -56,6 +56,11 @@
         window.location.href = "chat.html";
     }
 
+    function openWallpaper() {
+        close();
+        window.open("https://girlishmarinewallpaper-crypto.github.io/wallpaper/", "_blank", "noopener,noreferrer");
+    }
+
     function init() {
         root = document.getElementById("map-hub-root");
         titleEl = document.getElementById("map-hub-title");
@@ -81,6 +86,7 @@
         openIndividualShop: openIndividualShop,
         openShowcase: openShowcase,
         openChat: openChat,
+        openWallpaper: openWallpaper,
         init: init
     };
 

@@ -29,6 +29,27 @@ const Auth = {
         return s && s.role === ALICE_CONSTANTS.ROLES.CITIZEN;
     },
 
+    isGuest() {
+        const s = this.getState();
+        return !s || s.role === ALICE_CONSTANTS.ROLES.GUEST || s.isGuest === true;
+    },
+
+    loginAsGuest() {
+        this.token = "GUEST_SESSION";
+        this.state = {
+            uid: "GUEST_" + Math.random().toString(36).substring(2, 7).toUpperCase(),
+            name: "漫游访客",
+            role: ALICE_CONSTANTS.ROLES.GUEST,
+            points: 0,
+            memory: "漫游于爱丽丝庭院边界的观测者",
+            cards: [],
+            isGuest: true
+        };
+        localStorage.setItem(ALICE_CONSTANTS.STORAGE.TOKEN, this.token);
+        localStorage.setItem(ALICE_CONSTANTS.STORAGE.USER_STATE, JSON.stringify(this.state));
+        return this.state;
+    },
+
     canEnterGarden() { return this.isCitizen(); },
     canEnterMarket() { return this.isCitizen(); },
 
@@ -90,6 +111,9 @@ const Auth = {
         var token = this.getToken();
         var state = this.getState();
         if (!token && !state) return null;
+        if (state && (state.isGuest || token === "GUEST_SESSION")) {
+            return { world: {}, state: state };
+        }
         var uid = state ? state.uid : "";
         var url = ALICE_CONSTANTS.GAS_URL + "?action=fetch_core&uid=" + encodeURIComponent(uid) + "&token=" + encodeURIComponent(token || "");
         var res = await fetch(url);

@@ -3084,3 +3084,148 @@ body.mood-dream  { --bg-accent: #18101a; }
     .fate-bubble { padding: 0.9rem 1rem; }
     .alice-ending-bubble-wrap { max-width: 100%; }
 }
+
+/* ==========================================================================
+   ALICE COURTYARD × FAN ART GARDEN UNIFIED AESTHETICS & INTEGRATION
+   ========================================================================== */
+
+/* 1. Dynamic Celestial Particles Layer */
+.celestial-particles-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* 2. Login Page Wallpaper Link */
+.login-wallpaper-link-wrap {
+    margin-top: 1.25rem;
+    text-align: center;
+    width: 100%;
+}
+
+.login-wallpaper-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    font-family: var(--font);
+    color: rgba(216, 180, 254, 0.9);
+    text-decoration: none;
+    padding: 0.55rem 1.1rem;
+    border-radius: 9999px;
+    background: rgba(192, 132, 252, 0.08);
+    border: 1px solid rgba(192, 132, 252, 0.3);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+}
+
+.login-wallpaper-link:hover {
+    color: #ffffff;
+    background: rgba(192, 132, 252, 0.22);
+    border-color: rgba(192, 132, 252, 0.7);
+    box-shadow: 0 0 20px rgba(192, 132, 252, 0.45);
+    transform: translateY(-1px);
+}
+
+/* 3. Map Hub & Moichan Wallpaper Nodes */
+.map-hub-opt--wallpaper {
+    background: rgba(236, 72, 153, 0.12) !important;
+    border: 1px solid rgba(244, 114, 182, 0.4) !important;
+    color: #fbcfe8 !important;
+    transition: all 0.3s ease !important;
+}
+
+.map-hub-opt--wallpaper:hover {
+    background: rgba(236, 72, 153, 0.25) !important;
+    border-color: rgba(244, 114, 182, 0.8) !important;
+    box-shadow: 0 0 20px rgba(244, 114, 182, 0.4) !important;
+    transform: translateY(-2px) scale(1.02);
+}
+
+.moichan-nav-opt-wallpaper {
+    background: rgba(244, 114, 182, 0.15) !important;
+    border: 1px solid rgba(244, 114, 182, 0.4) !important;
+    color: #fce7f3 !important;
+    font-weight: 500 !important;
+}
+
+.moichan-nav-opt-wallpaper:hover {
+    background: rgba(244, 114, 182, 0.3) !important;
+    border-color: rgba(244, 114, 182, 0.8) !important;
+}
+
+/* 4. Enhanced Glassmorphism & High-end Glow */
+.glass-panel {
+    background: rgba(18, 16, 28, 0.82) !important;
+    border: 1px solid rgba(192, 132, 252, 0.2) !important;
+    backdrop-filter: blur(16px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45), 0 0 25px rgba(192, 132, 252, 0.08) !important;
+}
+
+.login-card {
+    background: rgba(18, 15, 28, 0.88) !important;
+    border: 1px solid rgba(192, 132, 252, 0.25) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(192, 132, 252, 0.15) !important;
+}
+
+.glow-btn {
+    background: linear-gradient(135deg, rgba(147, 51, 234, 0.8), rgba(219, 39, 119, 0.8)) !important;
+    border: 1px solid rgba(216, 180, 254, 0.4) !important;
+    box-shadow: 0 4px 20px rgba(147, 51, 234, 0.35) !important;
+    transition: all 0.3s ease !important;
+}
+
+.glow-btn:hover {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.95), rgba(236, 72, 153, 0.95)) !important;
+    border-color: rgba(255, 255, 255, 0.7) !important;
+    box-shadow: 0 0 28px rgba(192, 132, 252, 0.6) !important;
+    transform: translateY(-1px);
+}
+
+/* 5. Guest Login Action Styles */
+.login-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+.guest-btn {
+    width: 100%;
+    padding: 0.75rem 1.25rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #e2e8f0;
+    font-family: var(--font);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.guest-btn:hover {
+    background: rgba(192, 132, 252, 0.15);
+    border-color: rgba(192, 132, 252, 0.5);
+    color: #ffffff;
+    box-shadow: 0 0 16px rgba(192, 132, 252, 0.25);
+    transform: translateY(-1px);
+}
+
+

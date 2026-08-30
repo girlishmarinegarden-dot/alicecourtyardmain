@@ -482,6 +482,24 @@ const App = {
         }
     },
 
+    handleGuestLogin() {
+        this.showLoading("正在开启游客漫游模式…");
+        Auth.loginAsGuest();
+        this.updateUI();
+        this.hideLoading();
+        if (typeof OpenDoorTransition !== "undefined" && OpenDoorTransition.run) {
+            OpenDoorTransition.run(function () {
+                this.showScene(ALICE_CONSTANTS.SCENES.MAP);
+                this.initYumeWall();
+                this.tryBgmWelcomePulse();
+            }.bind(this));
+        } else {
+            this.showScene(ALICE_CONSTANTS.SCENES.MAP);
+            this.initYumeWall();
+            this.tryBgmWelcomePulse();
+        }
+    },
+
     /** 是否以 file 协议打开（易导致 Failed to fetch） */
     isFileProtocol() {
         return /^file:\/\//i.test(location.href);
@@ -512,6 +530,10 @@ const App = {
     },
 
     async handleWallPost() {
+        if (Auth.isGuest()) {
+            alert("留言同步需要灵魂认证（市民身份）。请在登录界面完成认证契约~");
+            return;
+        }
         var input = document.getElementById("wall-input");
         var msg = input ? input.value.trim() : "";
         if (!msg) return;
@@ -549,6 +571,10 @@ const App = {
     },
 
     async handleCheckin() {
+        if (Auth.isGuest()) {
+            alert("每日祈愿与因果值累积需要灵魂认证。欢迎漫游探索庭院与壁纸花园~");
+            return;
+        }
         const state = Auth.getState();
         if (!state) return;
         const last = localStorage.getItem(ALICE_CONSTANTS.STORAGE.LAST_CHECKIN);
