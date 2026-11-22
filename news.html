@@ -1,89 +1,263 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN" data-theme="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>News board</title>
-  <link rel="preload" href="assets/bg.webm" as="video" type="video/webm" />
-  <link rel="preload" href="assets/bg-poster.webp" as="image" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>货品图录 · Product Catalog</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="news.css" />
 </head>
-<body class="gal-body">
-  <div id="gal-boot" class="gal-boot" aria-busy="true" aria-live="polite">
-    <div class="gal-boot-inner">
-      <span class="gal-boot-spinner" aria-hidden="true"></span>
-      <span class="gal-boot-text">Loading background…</span>
+<body>
+  <!-- 顶部粘性导航栏 -->
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand">
+        <div class="brand__mark" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+          </svg>
+        </div>
+        <div class="brand__text">
+          <h1 class="brand__title">货品图录 <span class="brand__en">CATALOG</span></h1>
+          <p class="brand__status" id="status" aria-live="polite">正在同步最新货品数据…</p>
+        </div>
+      </div>
+
+      <div class="topbar__actions">
+        <button type="button" id="unlock-toggle-btn" class="btn btn--ghost btn--lock" hidden>
+          <span class="btn__icon" aria-hidden="true">🔒</span>
+          <span id="unlock-toggle-label">加密专区</span>
+        </button>
+
+        <button type="button" id="refresh-btn" class="btn btn--ghost" title="刷新最新货品" aria-label="刷新数据">
+          <svg class="icon-refresh" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
+            <path d="M16 16h5v5"></path>
+          </svg>
+          <span class="btn__text-sm">刷新</span>
+        </button>
+
+        <button type="button" id="theme-toggle-btn" class="btn btn--icon" title="切换亮色 / 暗色模式" aria-label="切换主题">
+          <svg class="icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+          </svg>
+          <svg class="icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 可展开密码解锁栏 -->
+    <div id="unlock-panel" class="unlock-drawer" hidden>
+      <div class="container unlock-drawer__inner">
+        <div class="unlock-drawer__info">
+          <span class="unlock-drawer__badge">密码专区</span>
+          <span class="unlock-drawer__hint" id="unlock-hint">部分货品需验证密码后查看（仅本次浏览有效，刷新后自动重新锁定）</span>
+        </div>
+        <div class="unlock-drawer__form">
+          <input
+            type="password"
+            id="unlock-pw"
+            class="input unlock-input"
+            maxlength="64"
+            autocomplete="off"
+            placeholder="请输入访问密码…"
+            aria-label="输入访问密码"
+          />
+          <button type="button" id="unlock-btn" class="btn btn--primary">解锁查看</button>
+          <button type="button" id="unlock-close-btn" class="btn btn--ghost">收起</button>
+        </div>
+        <span id="unlock-err" class="unlock-err" role="alert" aria-live="polite"></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container main-content">
+    <!-- 错误提示横幅 -->
+    <div id="error" class="alert-error" role="alert" hidden></div>
+
+    <!-- 最新上架精选横向速览 -->
+    <section class="latest-section" id="latest-section" hidden aria-label="最新上架货品">
+      <div class="section-head">
+        <div class="section-head__title">
+          <span class="live-dot" aria-hidden="true"></span>
+          <h2>最新上架</h2>
+          <span class="section-head__sub">NEW ARRIVALS · 点击直接看大图</span>
+        </div>
+        <div class="section-head__nav">
+          <button type="button" id="latest-prev" class="circle-btn" aria-label="向左滚动">‹</button>
+          <button type="button" id="latest-next" class="circle-btn" aria-label="向右滚动">›</button>
+        </div>
+      </div>
+      <div class="latest-track" id="latest-track"></div>
+    </section>
+
+    <!-- 搜索、快捷标签、排序与视图工具栏 -->
+    <section class="toolbar" aria-label="筛选与视图控制">
+      <div class="toolbar__row">
+        <div class="search-box">
+          <svg class="search-box__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.3-4.3"></path>
+          </svg>
+          <input
+            type="search"
+            id="find-input"
+            class="search-box__input"
+            placeholder="搜索货品名称、系列或批号…"
+            autocomplete="off"
+            aria-label="搜索货品"
+          />
+          <button type="button" id="find-clear" class="search-box__clear" hidden aria-label="清空搜索">✕</button>
+        </div>
+
+        <div class="toolbar__controls">
+          <label class="toggle-chip" id="hide-locked-wrap" hidden title="隐藏未解锁的加密占位卡片">
+            <input type="checkbox" id="hide-locked-toggle" checked />
+            <span>仅看公开货品</span>
+          </label>
+
+          <select id="sort-select" class="select" aria-label="排序方式">
+            <option value="newest">最新上架</option>
+            <option value="oldest">最早优先</option>
+          </select>
+
+          <select id="pagesize-select" class="select" aria-label="每页数量">
+            <option value="20" selected>20 件/页</option>
+            <option value="40">40 件/页</option>
+            <option value="9999">显示全部</option>
+          </select>
+
+          <div class="view-switch" role="group" aria-label="切换展示视图">
+            <button type="button" id="view-grid-btn" class="view-switch__btn is-active" title="大图网格视图" aria-pressed="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+              </svg>
+            </button>
+            <button type="button" id="view-list-btn" class="view-switch__btn" title="列表视图" aria-pressed="false">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 自动生成的快捷分类标签与计数 -->
+      <div class="toolbar__sub">
+        <div class="tag-bar" id="tag-bar" role="group" aria-label="快捷分类筛选"></div>
+        <div class="result-meta" id="find-count" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- 货品展示主区域（默认网格，可切列表） -->
+    <section id="feed" class="catalog catalog--grid" aria-label="货品列表"></section>
+
+    <!-- 分页导航 -->
+    <nav class="pagination" id="pagination" aria-label="分页导航" hidden>
+      <div class="pagination__info" id="page-range"></div>
+      <div class="pagination__controls">
+        <button type="button" id="page-prev" class="btn btn--ghost">上一页</button>
+        <div class="pagination__pages" id="page-numbers"></div>
+        <button type="button" id="page-next" class="btn btn--ghost">下一页</button>
+      </div>
+    </nav>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container site-footer__inner">
+      <span>点击任意货品图片可放大查看高清细节 · 右上角勾选可整理选货清单</span>
+    </div>
+  </footer>
+
+  <!-- 客户选货意向浮动底栏 -->
+  <aside id="selection-bar" class="selection-bar" hidden aria-label="已选货品清单">
+    <div class="selection-bar__inner">
+      <div class="selection-bar__left">
+        <span class="selection-bar__count" id="selection-count">已选 0 件</span>
+        <div class="selection-bar__thumbs" id="selection-thumbs"></div>
+      </div>
+      <div class="selection-bar__actions">
+        <button type="button" id="selection-view-btn" class="btn btn--ghost btn--sm">查看清单</button>
+        <button type="button" id="selection-copy-btn" class="btn btn--primary btn--sm">一键复制询价</button>
+        <button type="button" id="selection-clear-btn" class="btn btn--ghost btn--sm">清空</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 高清大图灯箱 -->
+  <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="高清看图" hidden>
+    <div class="lightbox__backdrop" data-lb-close></div>
+    <div class="lightbox__container">
+      <div class="lightbox__top">
+        <span class="lightbox__counter" id="lb-counter"></span>
+        <div class="lightbox__top-actions">
+          <button type="button" id="lb-zoom-btn" class="lb-icon-btn" title="放大/还原 (点击图片也可切换)">🔍 放大</button>
+          <button type="button" id="lb-close-btn" class="lb-icon-btn lb-icon-btn--close" aria-label="关闭灯箱">✕</button>
+        </div>
+      </div>
+
+      <div class="lightbox__stage" id="lb-stage">
+        <button type="button" id="lb-prev-btn" class="lb-nav lb-nav--prev" aria-label="上一件">‹</button>
+        <div class="lightbox__media" id="lb-media">
+          <div class="lightbox__spinner" id="lb-spinner" aria-hidden="true"></div>
+          <img id="lb-img" class="lightbox__img" src="" alt="" referrerpolicy="no-referrer" />
+        </div>
+        <button type="button" id="lb-next-btn" class="lb-nav lb-nav--next" aria-label="下一件">›</button>
+      </div>
+
+      <div class="lightbox__bottom">
+        <div class="lightbox__meta">
+          <div class="lightbox__title-row">
+            <span id="lb-new-badge" class="badge-new" hidden>NEW</span>
+            <h3 class="lightbox__title" id="lb-title"></h3>
+          </div>
+          <p class="lightbox__time" id="lb-time"></p>
+        </div>
+        <div class="lightbox__actions">
+          <button type="button" id="lb-select-btn" class="btn btn--ghost btn--sm">＋ 加入选货</button>
+          <button type="button" id="lb-copy-btn" class="btn btn--ghost btn--sm">复制信息</button>
+          <a id="lb-drive-link" class="btn btn--primary btn--sm" href="#" target="_blank" rel="noopener">查看原图 ↗</a>
+        </div>
+      </div>
     </div>
   </div>
-  <div class="gal-stage" id="gal-stage">
-    <video
-      class="gal-bg-video"
-      autoplay
-      muted
-      loop
-      playsinline
-      preload="auto"
-      poster="assets/bg-poster.webp"
-      aria-hidden="true"
-    >
-      <source src="assets/bg.webm" type="video/webm" />
-      <source src="assets/bg.mp4" type="video/mp4" />
-    </video>
-    <div class="gal-bg-fallback" aria-hidden="true"></div>
-    <div class="gal-vignette" aria-hidden="true"></div>
-    <div class="gal-sakura" aria-hidden="true"></div>
 
-    <div class="gal-content">
-      <a href="index.html" class="gal-back-home">← 返回庭院</a>
-      <header class="gal-header">
-        <div class="gal-header__ornament gal-header__ornament--tl" aria-hidden="true"></div>
-        <div class="gal-header__ornament gal-header__ornament--tr" aria-hidden="true"></div>
-        <h1 class="gal-title">News board</h1>
-        <p class="gal-subtitle" id="status">Loading…</p>
-      </header>
-
-      <div class="ticker-wrap gal-panel">
-        <div class="ticker-label">LIVE NEWS</div>
-        <div class="ticker" id="ticker" aria-live="polite"></div>
+  <!-- 已选货品清单弹窗 -->
+  <div id="selection-modal" class="modal" role="dialog" aria-modal="true" aria-label="已选货品清单" hidden>
+    <div class="modal__backdrop" data-modal-close></div>
+    <div class="modal__dialog">
+      <div class="modal__header">
+        <h2 class="modal__title">已选货品清单 <span id="modal-sel-count" class="modal__badge">0</span></h2>
+        <button type="button" class="lb-icon-btn lb-icon-btn--close" data-modal-close aria-label="关闭弹窗">✕</button>
       </div>
-
-      <div id="unlock-panel" class="unlock-panel gal-panel" hidden>
-        <span class="unlock-hint">Some rows are hidden (no on-image text). Enter the password to view:</span>
-        <input type="password" id="unlock-pw" class="unlock-input" maxlength="64" autocomplete="off" placeholder="Password" />
-        <button type="button" id="unlock-btn" class="unlock-btn">Unlock</button>
-        <span id="unlock-err" class="unlock-err" aria-live="polite"></span>
+      <div class="modal__body" id="selection-modal-list"></div>
+      <div class="modal__footer">
+        <button type="button" id="modal-clear-btn" class="btn btn--ghost">清空全部</button>
+        <button type="button" id="modal-copy-btn" class="btn btn--primary">一键复制清单发客服</button>
       </div>
-
-      <div id="error" class="err gal-panel" hidden></div>
-
-      <div class="find-bar gal-panel" id="find-bar">
-        <label for="find-input" class="find-label">Find text</label>
-        <input type="search" id="find-input" class="find-input" placeholder="Filter by caption…" autocomplete="off" />
-        <button type="button" id="find-clear" class="find-btn">Clear</button>
-        <span id="find-count" class="find-count" aria-live="polite"></span>
-      </div>
-
-      <div class="feed gal-panel" id="feed"></div>
-
-      <nav class="pagination gal-panel" id="pagination" aria-label="News pages" hidden>
-        <button type="button" id="page-prev" class="page-btn">Previous</button>
-        <span id="page-info" class="page-info"></span>
-        <button type="button" id="page-next" class="page-btn">Next</button>
-      </nav>
     </div>
   </div>
 
-  <figure class="gal-sprite gal-sprite-draggable stage-area-draggable" id="gal-sprite">
-    <button type="button" id="gal-sprite-hide-btn" class="gal-sprite-hide-btn" aria-label="隐藏立绘">隐藏</button>
-    <img class="gal-sprite-img" src="assets/alicecore.webp" alt="" decoding="async" width="800" height="1200" />
-    <figcaption class="gal-sprite-placeholder">
-      <span class="gal-sprite-placeholder__line">assets / alicecore.webp</span>
-      <span class="gal-sprite-placeholder__hint">Drop your standee here</span>
-    </figcaption>
-  </figure>
+  <!-- 轻提示 Toast -->
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
   <script src="news.js"></script>
 </body>
