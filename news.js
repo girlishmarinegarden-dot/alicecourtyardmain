@@ -1,7 +1,7 @@
 /**
- * 货品图录 · Product Catalog
- * 数据源：保留原有 Google Sheets Visualization API (gviz/tq) JSONP 连接，
- * 支持本地 file:// 直接双击打开及静态网站部署（无 CORS 限制）。
+ * Product Catalog — Mobile-First & English Default
+ * Keeps the original Google Sheets Visualization API (gviz/tq) JSONP connection
+ * so it works directly via file:// or any static hosting with zero CORS issues.
  */
 (function () {
   'use strict';
@@ -9,29 +9,241 @@
   var CONFIG = {
     SPREADSHEET_ID: '1WFuFX7jVCV0ZVm5HBsHbMB8qOew2wVhnL8tNzWsjss4',
     GID: '0',
-    /** 最新 N 条显示 NEW 徽标 */
+    /** Show NEW badge on the newest N items */
     NEW_BADGE_COUNT: 3,
-    /** 默认每页显示件数 */
+    /** Default items per page */
     DEFAULT_PAGE_SIZE: 20,
-    /** hasText=false 加密区解锁密码（仅本次页面浏览有效，刷新后自动恢复锁定） */
-    UNLOCK_PASS: 'alicecourtyardr18'
+    /** Password for hasText=false private rows (session-only, resets on reload) */
+    UNLOCK_PASS: 'alicecourtyardr18',
+    /** Default UI language: 'en' | 'zh' */
+    DEFAULT_LANG: 'en'
   };
 
   var THEME_STORAGE_KEY = 'CatalogTheme_Pref';
+  var LANG_STORAGE_KEY = 'CatalogLang_Pref';
 
-  /* ==================== 应用状态 ==================== */
+  /* ==================== i18n Dictionary (English Default) ==================== */
+  var I18N = {
+    en: {
+      docTitle: 'Product Catalog',
+      brandTitle: 'Catalog',
+      langSwitch: '中文',
+      loading: 'Loading catalog…',
+      noItems: 'No items yet',
+      statusPublicAndLocked: function (pub, locked) {
+        return pub + ' public · ' + locked + ' VIP';
+      },
+      statusAllUnlocked: function (total, locked) {
+        return total + ' items · ' + locked + ' VIP unlocked';
+      },
+      statusTotal: function (total) {
+        return total + (total === 1 ? ' item' : ' items') + ' · live';
+      },
+      vipBtn: function (locked) {
+        return 'VIP (' + locked + ')';
+      },
+      vipUnlocked: 'Unlocked',
+      unlockBadge: 'VIP Area',
+      unlockHint: 'Enter password to view private items (this session only).',
+      unlockPlaceholder: 'Enter password…',
+      unlockAction: 'Unlock',
+      close: 'Close',
+      wrongPass: 'Wrong password. Please try again.',
+      unlockedToast: 'All VIP items unlocked',
+      latestHeading: 'New Arrivals',
+      latestSub: 'Tap to zoom',
+      searchPlaceholder: 'Search items, series, or date…',
+      publicOnly: 'Public only',
+      sortNewest: 'Newest',
+      sortOldest: 'Oldest',
+      perPage20: '20 / page',
+      perPage40: '40 / page',
+      showAll: 'Show all',
+      allSeries: 'All',
+      showingCount: function (n) {
+        return n + (n === 1 ? ' item' : ' items');
+      },
+      searchTag: function (q) {
+        return '“' + q + '”';
+      },
+      seriesFiltered: 'Filtered',
+      privateBadge: 'VIP',
+      lockedCardText: 'VIP item · Tap to unlock',
+      lockedCardTitle: 'Private item (password required)',
+      lockedTime: 'Date: --',
+      unlockCardBtn: '🔑 Unlock',
+      zoomHint: '🔍 Tap to zoom',
+      zoomBtn: '🔍 Zoom',
+      zoomOutBtn: '🔍 Reset',
+      originalLink: 'Original ↗',
+      driveFallback: 'Tap "Original" to view',
+      noPreview: 'No preview',
+      untitled: 'Untitled item',
+      selectAdd: '＋ Select',
+      selectAdded: '✓ Selected',
+      selectShortAdd: '＋ Pick',
+      selectShortAdded: '✓ Picked',
+      addTitle: 'Add to inquiry list',
+      removeTitle: 'Remove from inquiry list',
+      emptyTitle: 'No matching items',
+      emptyDesc: 'Try another keyword, switch category, or reset filters.',
+      resetFilters: 'Reset filters',
+      pageRange: function (s, e, total) {
+        return 'Showing ' + s + '–' + e + ' of ' + total;
+      },
+      prev: '‹ Prev',
+      next: 'Next ›',
+      footerTip: 'Tap any photo for HD zoom · Tap ＋ to build an inquiry list',
+      selectedCount: function (n) {
+        return n + ' selected';
+      },
+      viewList: 'View',
+      copyList: 'Copy List',
+      modalTitle: 'Selected Items',
+      modalEmpty: 'No items selected yet.',
+      clearAll: 'Clear All',
+      copyInquiryBtn: 'Copy Inquiry List',
+      removeBtn: 'Remove',
+      clearedToast: 'Selection cleared',
+      pickFirstToast: 'Select items first',
+      copiedListToast: function (n) {
+        return 'Copied ' + n + (n === 1 ? ' item' : ' items') + ' to clipboard';
+      },
+      copiedItemToast: 'Item info copied',
+      copyFailedToast: 'Copy failed — open "View" to copy manually',
+      copyBtn: 'Copy',
+      lbPosted: function (t) {
+        return 'Added: ' + t;
+      },
+      syncedToast: function (total) {
+        return 'Synced ' + total + ' items';
+      },
+      syncFailed: 'Failed to load',
+      timeoutErr: 'Request timed out. Check your connection and tap Refresh.',
+      loadErr: 'Failed to load sheet. Ensure sharing is set to "Anyone with the link can view" and verify SPREADSHEET_ID / GID.',
+      configErr: 'Spreadsheet not configured: set CONFIG.SPREADSHEET_ID and GID in news.js.',
+      inquiryHeader: function (n) {
+        return '[Inquiry List · ' + n + (n === 1 ? ' item' : ' items') + ']';
+      }
+    },
+    zh: {
+      docTitle: '货品图录 · Catalog',
+      brandTitle: '货品图录',
+      langSwitch: 'EN',
+      loading: '正在同步最新货品…',
+      noItems: '暂无货品数据',
+      statusPublicAndLocked: function (pub, locked) {
+        return '公开 ' + pub + ' 件 · 密码区 ' + locked + ' 件';
+      },
+      statusAllUnlocked: function (total, locked) {
+        return '共 ' + total + ' 件 · 已解锁 ' + locked + ' 件密码区';
+      },
+      statusTotal: function (total) {
+        return '共 ' + total + ' 件货品 · 实时同步';
+      },
+      vipBtn: function (locked) {
+        return '密码区 (' + locked + ')';
+      },
+      vipUnlocked: '已解锁',
+      unlockBadge: '密码专区',
+      unlockHint: '输入密码查看私密货品（仅本次浏览有效，刷新后重新锁定）。',
+      unlockPlaceholder: '请输入访问密码…',
+      unlockAction: '解锁',
+      close: '收起',
+      wrongPass: '密码不正确，请重新输入',
+      unlockedToast: '已解锁全部密码专区货品',
+      latestHeading: '最新上架',
+      latestSub: '点击放大',
+      searchPlaceholder: '搜索货品名称、系列或日期…',
+      publicOnly: '仅公开',
+      sortNewest: '最新上架',
+      sortOldest: '最早优先',
+      perPage20: '20 件/页',
+      perPage40: '40 件/页',
+      showAll: '显示全部',
+      allSeries: '全部',
+      showingCount: function (n) {
+        return '展示 ' + n + ' 件';
+      },
+      searchTag: function (q) {
+        return '“' + q + '”';
+      },
+      seriesFiltered: '已筛选',
+      privateBadge: '密码区',
+      lockedCardText: '加密货品 · 点击解锁',
+      lockedCardTitle: '已隐藏货品（需输入密码）',
+      lockedTime: '时间：--',
+      unlockCardBtn: '🔑 解锁',
+      zoomHint: '🔍 点击看大图',
+      zoomBtn: '🔍 放大',
+      zoomOutBtn: '🔍 还原',
+      originalLink: '原图 ↗',
+      driveFallback: '点击“原图”查看',
+      noPreview: '暂无预览图',
+      untitled: '未命名货品',
+      selectAdd: '＋ 加入选货',
+      selectAdded: '✓ 已加入清单',
+      selectShortAdd: '＋ 选货',
+      selectShortAdded: '✓ 已选',
+      addTitle: '加入选货清单',
+      removeTitle: '移出选货清单',
+      emptyTitle: '没有找到匹配的货品',
+      emptyDesc: '可以更换关键词、切换系列标签或重置筛选。',
+      resetFilters: '重置筛选',
+      pageRange: function (s, e, total) {
+        return '第 ' + s + '–' + e + ' 件，共 ' + total + ' 件';
+      },
+      prev: '‹ 上一页',
+      next: '下一页 ›',
+      footerTip: '点击图片高清放大 · 点右上角 ＋ 整理询价清单',
+      selectedCount: function (n) {
+        return '已选 ' + n + ' 件';
+      },
+      viewList: '查看',
+      copyList: '复制清单',
+      modalTitle: '已选货品清单',
+      modalEmpty: '暂未勾选任何货品',
+      clearAll: '清空全部',
+      copyInquiryBtn: '一键复制发客服',
+      removeBtn: '移除',
+      clearedToast: '已清空选货清单',
+      pickFirstToast: '请先勾选货品',
+      copiedListToast: function (n) {
+        return '已复制 ' + n + ' 件货品清单，可直接发给客服';
+      },
+      copiedItemToast: '已复制该货品信息',
+      copyFailedToast: '复制失败，请点“查看”手动复制',
+      copyBtn: '复制',
+      lbPosted: function (t) {
+        return '上架时间：' + t;
+      },
+      syncedToast: function (total) {
+        return '已同步最新 ' + total + ' 件货品';
+      },
+      syncFailed: '加载失败',
+      timeoutErr: '加载表格超时，请检查网络后点击刷新重试。',
+      loadErr: '数据源加载失败：请确认表格已开启“知道链接的任何人均可查看”并核对 SPREADSHEET_ID / GID。',
+      configErr: '未配置数据源：请在 news.js 顶部填写 CONFIG.SPREADSHEET_ID 与 GID。',
+      inquiryHeader: function (n) {
+        return '【看货询价清单 · 共 ' + n + ' 件】';
+      }
+    }
+  };
+
+  /* ==================== App State ==================== */
   var state = {
-    allItems: [],        // 原始已按最新排序后的全部货品对象
-    unlocked: false,     // 本次页面加载是否已解锁密码区
-    hideLocked: true,    // 未解锁时是否默认隐藏加密占位卡
-    searchQuery: '',     // 搜索词
-    activeTag: '',       // 当前选中的快捷分类标签（小写归一值）
-    sortOrder: 'newest', // newest | oldest
+    lang: CONFIG.DEFAULT_LANG,
+    allItems: [],
+    unlocked: false,
+    hideLocked: true,
+    searchQuery: '',
+    activeTag: '',
+    sortOrder: 'newest',
     pageSize: CONFIG.DEFAULT_PAGE_SIZE,
     currentPage: 0,
-    viewMode: 'grid',    // grid | list
-    selectedKeys: {},    // 客户勾选的货品 key -> true
-    lightboxList: [],    // 当前灯箱可浏览队列
+    viewMode: 'grid', // 'grid' | 'large' | 'list'
+    selectedKeys: {},
+    lightboxList: [],
     lightboxIndex: -1,
     lightboxZoomed: false
   };
@@ -40,7 +252,12 @@
   var gvizTimer_ = null;
   var toastTimer_ = null;
 
-  /* ==================== 数据连接（保留原 gviz JSONP） ==================== */
+  function t_(key) {
+    var dict = I18N[state.lang] || I18N.en;
+    return dict[key] !== undefined ? dict[key] : I18N.en[key];
+  }
+
+  /* ==================== Data Connection (Original gviz JSONP) ==================== */
   function gvizUrl_() {
     return (
       'https://docs.google.com/spreadsheets/d/' +
@@ -50,7 +267,6 @@
     );
   }
 
-  /** 动态 <script> 加载 gviz，绕过 file:// / 静态站的 CORS 限制 */
   function loadGvizViaScript_(url) {
     return new Promise(function (resolve, reject) {
       if (gvizTimer_) {
@@ -72,7 +288,7 @@
       }
 
       gvizTimer_ = setTimeout(function () {
-        done(new Error('加载表格超时，请检查网络连接后点击右上角“刷新”重试。'));
+        done(new Error(t_('timeoutErr')));
       }, 25000);
 
       window.google = window.google || {};
@@ -85,7 +301,7 @@
           if (resp && resp.status === 'error') {
             var msg =
               (resp.errors && resp.errors[0] && resp.errors[0].detailed_message) ||
-              '表格查询出错';
+              'Sheet query error';
             done(new Error(msg));
             return;
           }
@@ -99,11 +315,7 @@
       scriptEl.src = url + sep + '_=' + Date.now();
       scriptEl.async = true;
       scriptEl.onerror = function () {
-        done(
-          new Error(
-            '数据源加载失败：请确认表格已开启“知道链接的任何人均可查看”，并核对 news.js 中的 SPREADSHEET_ID / GID。'
-          )
-        );
+        done(new Error(t_('loadErr')));
       };
       document.head.appendChild(scriptEl);
     });
@@ -129,7 +341,6 @@
     return false;
   }
 
-  /** 健壮的时间解析，兼容 gviz Date(...)、Date 对象及美式日期字符串 */
   function parseTimestamp_(cell, displayStr) {
     if (cell && cell.v != null) {
       if (typeof cell.v === 'object' && typeof cell.v.getTime === 'function') {
@@ -156,7 +367,6 @@
     var s = String(displayStr || '').trim();
     if (!s) return 0;
 
-    // 显式匹配 M/D/YYYY H:mm:ss（Safari 稳妥解析）
     var us = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
     if (us) {
       return new Date(
@@ -235,14 +445,13 @@
         timeFormatted: formatDisplayTime_(ts, rawTime),
         timeShort: formatShortDate_(ts, rawTime),
         timestamp: ts,
-        text: cleanText || '未命名货品',
+        text: cleanText,
         link: cleanLink,
         isPublic: isPublic,
         newestRank: 0
       });
     });
 
-    // 按最新优先排序并打上全局最新名次（用于 NEW 徽标）
     items.sort(function (a, b) {
       return b.timestamp - a.timestamp;
     });
@@ -253,7 +462,7 @@
     return items;
   }
 
-  /* ==================== 图片 URL 工具 ==================== */
+  /* ==================== Image URL Helpers ==================== */
   function extractDriveId_(link) {
     if (!link) return '';
     var m1 = link.match(/\/file\/d\/([^/?#]+)/);
@@ -276,11 +485,14 @@
     return !item.isPublic && !state.unlocked;
   }
 
-  /* ==================== 筛选与动态标签 ==================== */
+  function getItemTitle_(item) {
+    return item.text || t_('untitled');
+  }
+
+  /* ==================== Filtering & Dynamic Series Pills ==================== */
   function getTagCandidates_() {
     var map = {};
     state.allItems.forEach(function (item) {
-      // 未解锁时绝对不统计加密项文案，避免泄露隐私信息
       if (isItemMasked_(item)) return;
       var raw = item.text.trim();
       if (!raw) return;
@@ -291,7 +503,7 @@
       map[norm].count++;
     });
 
-    var list = Object.keys(map)
+    return Object.keys(map)
       .map(function (k) {
         return map[k];
       })
@@ -300,9 +512,8 @@
       })
       .sort(function (a, b) {
         return b.count - a.count || a.label.localeCompare(b.label);
-      });
-
-    return list.slice(0, 10);
+      })
+      .slice(0, 10);
   }
 
   function getFilteredItems_() {
@@ -311,16 +522,13 @@
     var list = state.allItems.filter(function (item) {
       var masked = isItemMasked_(item);
 
-      // 未解锁且开启“仅看公开货品”时过滤掉加密项
       if (masked && state.hideLocked) return false;
 
-      // 标签筛选（加密项不可按真实文案命中）
       if (tag) {
         if (masked) return false;
         if (item.text.trim().toLowerCase() !== tag) return false;
       }
 
-      // 关键词搜索（防止未解锁时匹配隐藏项真实文案）
       if (q) {
         if (masked) return false;
         var haystack = (item.text + ' ' + item.timeFormatted + ' ' + item.timeRaw).toLowerCase();
@@ -336,7 +544,65 @@
     return list;
   }
 
-  /* ==================== UI 渲染辅助 ==================== */
+  /* ==================== Static Language Application ==================== */
+  function applyStaticTranslations_() {
+    document.documentElement.lang = state.lang === 'zh' ? 'zh-CN' : 'en';
+    document.title = t_('docTitle');
+
+    setText_('brand-title', t_('brandTitle'));
+    setText_('lang-toggle-btn', t_('langSwitch'));
+    setText_('unlock-badge', t_('unlockBadge'));
+    setText_('unlock-hint', t_('unlockHint'));
+    setText_('unlock-btn', t_('unlockAction'));
+    setText_('unlock-close-btn', t_('close'));
+    setText_('latest-heading', t_('latestHeading'));
+    setText_('latest-sub', t_('latestSub'));
+    setText_('hide-locked-label', t_('publicOnly'));
+    setText_('page-prev', t_('prev'));
+    setText_('page-next', t_('next'));
+    setText_('footer-tip', t_('footerTip'));
+    setText_('selection-view-btn', t_('viewList'));
+    setText_('selection-copy-btn', t_('copyList'));
+    setText_('modal-title-text', t_('modalTitle'));
+    setText_('modal-clear-btn', t_('clearAll'));
+    setText_('modal-copy-btn', t_('copyInquiryBtn'));
+    setText_('lb-copy-btn', t_('copyBtn'));
+    setText_('lb-drive-link', t_('originalLink'));
+
+    var unlockPw = document.getElementById('unlock-pw');
+    if (unlockPw) unlockPw.placeholder = t_('unlockPlaceholder');
+
+    var findInput = document.getElementById('find-input');
+    if (findInput) findInput.placeholder = t_('searchPlaceholder');
+
+    var sortSelect = document.getElementById('sort-select');
+    if (sortSelect && sortSelect.options.length >= 2) {
+      sortSelect.options[0].textContent = t_('sortNewest');
+      sortSelect.options[1].textContent = t_('sortOldest');
+    }
+
+    var pageSizeSelect = document.getElementById('pagesize-select');
+    if (pageSizeSelect && pageSizeSelect.options.length >= 3) {
+      pageSizeSelect.options[0].textContent = t_('perPage20');
+      pageSizeSelect.options[1].textContent = t_('perPage40');
+      pageSizeSelect.options[2].textContent = t_('showAll');
+    }
+
+    setLightboxZoom_(state.lightboxZoomed);
+  }
+
+  function setText_(id, text) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = text;
+  }
+
+  /* ==================== Utilities ==================== */
+  function escapeHtml_(str) {
+    var d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
   function showToast_(msg) {
     var el = document.getElementById('toast');
     if (!el) return;
@@ -404,7 +670,7 @@
       if (mediaWrap) {
         var ph = document.createElement('div');
         ph.className = 'product-card__placeholder';
-        ph.innerHTML = '<span>🖼️</span><span>点击“原图”查看</span>';
+        ph.innerHTML = '<span>🖼️</span><span>' + escapeHtml_(t_('driveFallback')) + '</span>';
         mediaWrap.appendChild(ph);
       }
     };
@@ -412,14 +678,14 @@
     imgEl.src = primaryUrl;
   }
 
-  /* ==================== 骨架屏 ==================== */
+  /* ==================== Skeletons ==================== */
   function renderSkeletons_() {
     var feed = document.getElementById('feed');
     if (!feed) return;
     feed.className = 'catalog catalog--grid';
     feed.innerHTML = '';
     var frag = document.createDocumentFragment();
-    for (var i = 0; i < 8; i++) {
+    for (var i = 0; i < 6; i++) {
       var card = document.createElement('div');
       card.className = 'skeleton-card';
       card.innerHTML =
@@ -433,7 +699,7 @@
     feed.appendChild(frag);
   }
 
-  /* ==================== 顶部状态与解锁控件更新 ==================== */
+  /* ==================== Header & Lock Status ==================== */
   function updateHeaderAndLockUi_() {
     var total = state.allItems.length;
     var publicCount = 0;
@@ -446,14 +712,13 @@
     var statusEl = document.getElementById('status');
     if (statusEl) {
       if (total === 0) {
-        statusEl.textContent = '暂无货品数据';
+        statusEl.textContent = t_('noItems');
       } else if (lockedCount > 0 && !state.unlocked) {
-        statusEl.textContent =
-          '共 ' + total + ' 件货品 · 公开 ' + publicCount + ' 件 · 密码区 ' + lockedCount + ' 件';
+        statusEl.textContent = t_('statusPublicAndLocked')(publicCount, lockedCount);
       } else if (lockedCount > 0 && state.unlocked) {
-        statusEl.textContent = '共 ' + total + ' 件货品 · 已解锁全部（含密码区 ' + lockedCount + ' 件）';
+        statusEl.textContent = t_('statusAllUnlocked')(total, lockedCount);
       } else {
-        statusEl.textContent = '共 ' + total + ' 件货品 · 实时同步';
+        statusEl.textContent = t_('statusTotal')(total);
       }
     }
 
@@ -469,12 +734,12 @@
         toggleBtn.hidden = false;
         toggleBtn.classList.add('is-unlocked');
         toggleBtn.querySelector('.btn__icon').textContent = '🔓';
-        toggleLabel.textContent = '已解锁全部';
+        toggleLabel.textContent = t_('vipUnlocked');
       } else {
         toggleBtn.hidden = false;
         toggleBtn.classList.remove('is-unlocked');
         toggleBtn.querySelector('.btn__icon').textContent = '🔒';
-        toggleLabel.textContent = '密码专区 (' + lockedCount + ')';
+        toggleLabel.textContent = t_('vipBtn')(lockedCount);
       }
     }
 
@@ -487,7 +752,7 @@
     }
   }
 
-  /* ==================== 最新上架横向速览 ==================== */
+  /* ==================== New Arrivals Rail ==================== */
   function renderLatestStrip_() {
     var section = document.getElementById('latest-section');
     var track = document.getElementById('latest-track');
@@ -520,7 +785,7 @@
       thumb.className = 'latest-card__thumb';
       var img = document.createElement('img');
       img.src = getThumbUrl_(item.link, 240);
-      img.alt = item.text;
+      img.alt = getItemTitle_(item);
       img.referrerPolicy = 'no-referrer';
       img.loading = 'lazy';
       img.onerror = function () {
@@ -546,7 +811,7 @@
 
       var title = document.createElement('div');
       title.className = 'latest-card__title';
-      title.textContent = item.text;
+      title.textContent = getItemTitle_(item);
 
       info.appendChild(top);
       info.appendChild(title);
@@ -558,13 +823,12 @@
     track.appendChild(frag);
   }
 
-  /* ==================== 动态分类标签栏 ==================== */
+  /* ==================== Dynamic Category Pills ==================== */
   function renderTagBar_() {
     var bar = document.getElementById('tag-bar');
     if (!bar) return;
 
     var tags = getTagCandidates_();
-    // 如果当前选中的标签不再存在，重置
     if (
       state.activeTag &&
       !tags.some(function (t) {
@@ -580,7 +844,7 @@
     var allBtn = document.createElement('button');
     allBtn.type = 'button';
     allBtn.className = 'tag-pill' + (state.activeTag === '' ? ' is-active' : '');
-    allBtn.textContent = '全部系列';
+    allBtn.textContent = t_('allSeries');
     allBtn.addEventListener('click', function () {
       state.activeTag = '';
       state.currentPage = 0;
@@ -607,26 +871,23 @@
     bar.appendChild(frag);
   }
 
-  function escapeHtml_(str) {
-    var d = document.createElement('div');
-    d.textContent = str;
-    return d.innerHTML;
-  }
-
-  /* ==================== 单张货品卡片 ==================== */
+  /* ==================== Product Card Builder ==================== */
   function buildProductCard_(item, viewableQueue) {
     var masked = isItemMasked_(item);
     var isSelected = !!state.selectedKeys[item.key];
     var isNew = item.newestRank < CONFIG.NEW_BADGE_COUNT;
+    var primaryThumbSize = state.viewMode === 'large' ? 800 : 600;
 
     var card = document.createElement('article');
-    card.className = 'product-card' + (masked ? ' product-card--locked' : '') + (isSelected ? ' is-selected' : '');
+    card.className =
+      'product-card' +
+      (masked ? ' product-card--locked' : '') +
+      (isSelected ? ' is-selected' : '');
 
-    // 图片展示区
+    // Media area
     var media = document.createElement('div');
     media.className = 'product-card__media';
 
-    // 左上角徽标（NEW / 密码区）
     var badges = document.createElement('div');
     badges.className = 'product-card__badges';
     if (isNew) {
@@ -638,7 +899,7 @@
     if (!item.isPublic && state.unlocked) {
       var privBadge = document.createElement('span');
       privBadge.className = 'badge-private';
-      privBadge.textContent = '密码区';
+      privBadge.textContent = t_('privateBadge');
       badges.appendChild(privBadge);
     }
     if (badges.childNodes.length > 0) {
@@ -650,15 +911,16 @@
       lockVis.className = 'locked-visual';
       lockVis.innerHTML =
         '<div class="locked-visual__icon" aria-hidden="true">🔒</div>' +
-        '<div class="locked-visual__text">加密货品 · 点击输入密码解锁</div>';
+        '<div class="locked-visual__text">' +
+        escapeHtml_(t_('lockedCardText')) +
+        '</div>';
       media.appendChild(lockVis);
       media.addEventListener('click', openUnlockDrawer_);
     } else {
-      // 右上角选货按钮（网格模式）
       var selBtn = document.createElement('button');
       selBtn.type = 'button';
       selBtn.className = 'product-card__select' + (isSelected ? ' is-selected' : '');
-      selBtn.title = isSelected ? '从看货清单移除' : '加入看货清单';
+      selBtn.title = isSelected ? t_('removeTitle') : t_('addTitle');
       selBtn.setAttribute('aria-label', selBtn.title);
       selBtn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
       selBtn.textContent = isSelected ? '✓' : '＋';
@@ -672,12 +934,12 @@
         media.classList.add('is-loading');
         var img = document.createElement('img');
         img.className = 'product-card__img';
-        attachResilientImage_(img, media, item.link, 600, 300);
+        attachResilientImage_(img, media, item.link, primaryThumbSize, 320);
         media.appendChild(img);
 
         var hint = document.createElement('span');
         hint.className = 'product-card__zoom-hint';
-        hint.textContent = '🔍 点击放大看细节';
+        hint.textContent = t_('zoomHint');
         media.appendChild(hint);
 
         media.addEventListener('click', function () {
@@ -687,14 +949,14 @@
       } else {
         var noImg = document.createElement('div');
         noImg.className = 'product-card__placeholder';
-        noImg.innerHTML = '<span>📦</span><span>暂无预览图</span>';
+        noImg.innerHTML = '<span>📦</span><span>' + escapeHtml_(t_('noPreview')) + '</span>';
         media.appendChild(noImg);
       }
     }
 
     card.appendChild(media);
 
-    // 卡片信息区
+    // Body area
     var body = document.createElement('div');
     body.className = 'product-card__body';
 
@@ -703,20 +965,17 @@
 
     var title = document.createElement('h3');
     title.className = 'product-card__title';
-    title.textContent = masked ? '已隐藏货品（需输入密码）' : item.text;
-    if (!masked) title.title = item.text;
+    title.textContent = masked ? t_('lockedCardTitle') : getItemTitle_(item);
+    if (!masked) title.title = getItemTitle_(item);
 
     var meta = document.createElement('div');
     meta.className = 'product-card__meta';
-    var timeSpan = document.createElement('span');
-    timeSpan.textContent = masked ? '上架时间：--' : item.timeFormatted;
-    meta.appendChild(timeSpan);
+    meta.textContent = masked ? t_('lockedTime') : item.timeFormatted;
 
     infoWrap.appendChild(title);
     infoWrap.appendChild(meta);
     body.appendChild(infoWrap);
 
-    // 卡片底部操作区
     var actions = document.createElement('div');
     actions.className = 'product-card__actions';
 
@@ -724,7 +983,7 @@
       var unlockAction = document.createElement('button');
       unlockAction.type = 'button';
       unlockAction.className = 'card-action-btn';
-      unlockAction.textContent = '🔑 输入密码解锁';
+      unlockAction.textContent = t_('unlockCardBtn');
       unlockAction.addEventListener('click', openUnlockDrawer_);
       actions.appendChild(unlockAction);
     } else {
@@ -732,7 +991,7 @@
         var zoomBtn = document.createElement('button');
         zoomBtn.type = 'button';
         zoomBtn.className = 'card-action-btn';
-        zoomBtn.textContent = '🔍 看大图';
+        zoomBtn.textContent = t_('zoomBtn');
         zoomBtn.addEventListener('click', function () {
           var qIdx = viewableQueue.indexOf(item);
           openLightboxForItem_(item, viewableQueue, qIdx >= 0 ? qIdx : 0);
@@ -740,11 +999,10 @@
         actions.appendChild(zoomBtn);
       }
 
-      // 列表模式专用选货按钮
       var listSelBtn = document.createElement('button');
       listSelBtn.type = 'button';
       listSelBtn.className = 'card-action-btn list-select-btn' + (isSelected ? ' is-selected' : '');
-      listSelBtn.textContent = isSelected ? '✓ 已选' : '＋ 选货';
+      listSelBtn.textContent = isSelected ? t_('selectShortAdded') : t_('selectShortAdd');
       listSelBtn.addEventListener('click', function () {
         toggleSelectItem_(item.key);
       });
@@ -756,7 +1014,7 @@
         driveLink.href = item.link;
         driveLink.target = '_blank';
         driveLink.rel = 'noopener';
-        driveLink.textContent = '原图 ↗';
+        driveLink.textContent = t_('originalLink');
         actions.appendChild(driveLink);
       }
     }
@@ -766,7 +1024,7 @@
     return card;
   }
 
-  /* ==================== 主目录与分页渲染 ==================== */
+  /* ==================== Catalog & Pagination ==================== */
   function renderCatalog_() {
     var feed = document.getElementById('feed');
     if (!feed) return;
@@ -786,7 +1044,14 @@
     var start = state.currentPage * pageSize;
     var pageSlice = filtered.slice(start, start + pageSize);
 
-    feed.className = 'catalog ' + (state.viewMode === 'list' ? 'catalog--list' : 'catalog--grid');
+    var modeClass =
+      state.viewMode === 'list'
+        ? 'catalog--list'
+        : state.viewMode === 'large'
+        ? 'catalog--large'
+        : 'catalog--grid';
+
+    feed.className = 'catalog ' + modeClass;
     feed.innerHTML = '';
 
     if (pageSlice.length === 0) {
@@ -794,12 +1059,16 @@
       empty.className = 'empty-state';
       empty.innerHTML =
         '<div class="empty-state__icon">🔎</div>' +
-        '<h3 class="empty-state__title">没有找到匹配的货品</h3>' +
-        '<p class="empty-state__desc">可以尝试更换关键词、切换分类标签，或清除筛选条件。</p>';
+        '<h3 class="empty-state__title">' +
+        escapeHtml_(t_('emptyTitle')) +
+        '</h3>' +
+        '<p class="empty-state__desc">' +
+        escapeHtml_(t_('emptyDesc')) +
+        '</p>';
       var resetBtn = document.createElement('button');
       resetBtn.type = 'button';
       resetBtn.className = 'btn btn--primary';
-      resetBtn.textContent = '重置全部筛选';
+      resetBtn.textContent = t_('resetFilters');
       resetBtn.addEventListener('click', resetFilters_);
       empty.appendChild(resetBtn);
       feed.appendChild(empty);
@@ -822,9 +1091,9 @@
       el.textContent = '';
       return;
     }
-    var parts = ['当前展示 ' + filteredTotal + ' 件'];
-    if (state.searchQuery.trim()) parts.push('关键词“' + state.searchQuery.trim() + '”');
-    if (state.activeTag) parts.push('系列已筛选');
+    var parts = [t_('showingCount')(filteredTotal)];
+    if (state.searchQuery.trim()) parts.push(t_('searchTag')(state.searchQuery.trim()));
+    else if (state.activeTag) parts.push(t_('seriesFiltered'));
     el.textContent = parts.join(' · ');
   }
 
@@ -834,6 +1103,7 @@
     var prevBtn = document.getElementById('page-prev');
     var nextBtn = document.getElementById('page-next');
     var numsWrap = document.getElementById('page-numbers');
+    var mobInfo = document.getElementById('page-mobile-info');
     if (!nav || !prevBtn || !nextBtn || !numsWrap) return;
 
     if (total === 0 || totalPages <= 1) {
@@ -843,8 +1113,10 @@
 
     nav.hidden = false;
     if (rangeEl) {
-      rangeEl.textContent =
-        '显示第 ' + (start + 1) + '–' + (start + sliceLen) + ' 件，共 ' + total + ' 件';
+      rangeEl.textContent = t_('pageRange')(start + 1, start + sliceLen, total);
+    }
+    if (mobInfo) {
+      mobInfo.textContent = state.currentPage + 1 + ' / ' + totalPages;
     }
 
     prevBtn.disabled = state.currentPage <= 0;
@@ -863,7 +1135,6 @@
         btn.type = 'button';
         btn.className = 'page-num' + (p === state.currentPage ? ' is-active' : '');
         btn.textContent = String(p + 1);
-        btn.setAttribute('aria-label', '第 ' + (p + 1) + ' 页');
         btn.addEventListener('click', function () {
           goToPage_(p);
         });
@@ -909,7 +1180,7 @@
     renderCatalog_();
   }
 
-  /* ==================== 客户选货清单 ==================== */
+  /* ==================== Inquiry Selection List ==================== */
   function getSelectedItems_() {
     return state.allItems.filter(function (item) {
       return !!state.selectedKeys[item.key] && !isItemMasked_(item);
@@ -933,7 +1204,7 @@
     renderCatalog_();
     updateLightboxSelectionBtn_();
     closeSelectionModal_();
-    showToast_('已清空选货清单');
+    showToast_(t_('clearedToast'));
   }
 
   function updateSelectionBar_() {
@@ -951,7 +1222,7 @@
 
     bar.hidden = false;
     document.body.classList.add('has-selection-bar');
-    countEl.textContent = '已选 ' + selected.length + ' 件货品';
+    countEl.textContent = t_('selectedCount')(selected.length);
     thumbsEl.innerHTML = '';
 
     selected.slice(0, 4).forEach(function (item) {
@@ -966,10 +1237,10 @@
   }
 
   function formatInquiryText_(items) {
-    var lines = ['【看货询价清单 · 共 ' + items.length + ' 件】'];
+    var lines = [t_('inquiryHeader')(items.length)];
     items.forEach(function (item, idx) {
       lines.push(
-        idx + 1 + '. ' + item.text + '（' + item.timeFormatted + '）' + (item.link ? '\n   ' + item.link : '')
+        idx + 1 + '. ' + getItemTitle_(item) + ' (' + item.timeFormatted + ')' + (item.link ? '\n   ' + item.link : '')
       );
     });
     return lines.join('\n');
@@ -978,15 +1249,15 @@
   function copySelectedList_() {
     var selected = getSelectedItems_();
     if (selected.length === 0) {
-      showToast_('请先勾选需要询价的货品');
+      showToast_(t_('pickFirstToast'));
       return;
     }
     copyTextToClipboard_(formatInquiryText_(selected))
       .then(function () {
-        showToast_('已复制 ' + selected.length + ' 件货品清单，可直接粘贴发给客服');
+        showToast_(t_('copiedListToast')(selected.length));
       })
       .catch(function () {
-        showToast_('复制失败，请点击“查看清单”手动复制');
+        showToast_(t_('copyFailedToast'));
       });
   }
 
@@ -1001,7 +1272,10 @@
     listEl.innerHTML = '';
 
     if (selected.length === 0) {
-      listEl.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:24px 0;">暂未勾选任何货品</p>';
+      listEl.innerHTML =
+        '<p style="text-align:center;color:var(--text-muted);padding:24px 0;">' +
+        escapeHtml_(t_('modalEmpty')) +
+        '</p>';
     } else {
       selected.forEach(function (item) {
         var row = document.createElement('div');
@@ -1020,7 +1294,7 @@
         info.className = 'modal-item__info';
         info.innerHTML =
           '<div class="modal-item__title">' +
-          escapeHtml_(item.text) +
+          escapeHtml_(getItemTitle_(item)) +
           '</div>' +
           '<div class="modal-item__time">' +
           escapeHtml_(item.timeFormatted) +
@@ -1030,7 +1304,7 @@
         var rmBtn = document.createElement('button');
         rmBtn.type = 'button';
         rmBtn.className = 'modal-item__remove';
-        rmBtn.textContent = '移除';
+        rmBtn.textContent = t_('removeBtn');
         rmBtn.addEventListener('click', function () {
           delete state.selectedKeys[item.key];
           updateSelectionBar_();
@@ -1056,7 +1330,7 @@
     }
   }
 
-  /* ==================== 高清大图灯箱 Lightbox ==================== */
+  /* ==================== Full-Screen HD Lightbox ==================== */
   function openLightboxForItem_(item, queue, index) {
     if (!item || !item.link || isItemMasked_(item)) return;
     state.lightboxList = queue && queue.length ? queue : [item];
@@ -1087,7 +1361,7 @@
     var media = document.getElementById('lb-media');
     var zoomBtn = document.getElementById('lb-zoom-btn');
     if (media) media.classList.toggle('is-zoomed', zoomed);
-    if (zoomBtn) zoomBtn.textContent = zoomed ? '🔍 还原' : '🔍 放大';
+    if (zoomBtn) zoomBtn.textContent = zoomed ? t_('zoomOutBtn') : t_('zoomBtn');
   }
 
   function updateLightboxSelectionBtn_() {
@@ -1097,7 +1371,7 @@
     if (!item) return;
     var selected = !!state.selectedKeys[item.key];
     btn.classList.toggle('is-selected', selected);
-    btn.textContent = selected ? '✓ 已加入清单' : '＋ 加入选货';
+    btn.textContent = selected ? t_('selectAdded') : t_('selectAdd');
   }
 
   function preloadLightboxNeighbors_(idx) {
@@ -1128,8 +1402,8 @@
     var spinner = document.getElementById('lb-spinner');
 
     if (counter) counter.textContent = state.lightboxIndex + 1 + ' / ' + state.lightboxList.length;
-    if (titleEl) titleEl.textContent = item.text;
-    if (timeEl) timeEl.textContent = '上架时间：' + item.timeFormatted;
+    if (titleEl) titleEl.textContent = getItemTitle_(item);
+    if (timeEl) timeEl.textContent = t_('lbPosted')(item.timeFormatted);
     if (newBadge) newBadge.hidden = !(item.newestRank < CONFIG.NEW_BADGE_COUNT);
     if (driveLink) driveLink.href = item.link;
     if (prevBtn) prevBtn.disabled = state.lightboxIndex <= 0;
@@ -1137,14 +1411,13 @@
 
     updateLightboxSelectionBtn_();
 
-    // 先展示已缓存的 600px 预览图做到零白屏，同时加载 1600px 高清大图无缝替换
     if (imgEl && spinner) {
       var previewUrl = getThumbUrl_(item.link, 600);
       var hiResUrl = getThumbUrl_(item.link, 1600);
       var currentKey = item.key;
 
       imgEl.src = previewUrl;
-      imgEl.alt = item.text;
+      imgEl.alt = getItemTitle_(item);
       spinner.hidden = false;
 
       var hiImg = new Image();
@@ -1172,7 +1445,7 @@
     renderLightboxCurrent_();
   }
 
-  /* ==================== 密码解锁交互 ==================== */
+  /* ==================== Password Drawer ==================== */
   function openUnlockDrawer_() {
     if (state.unlocked) return;
     var panel = document.getElementById('unlock-panel');
@@ -1199,15 +1472,20 @@
       var panel = document.getElementById('unlock-panel');
       if (panel) panel.hidden = true;
       renderAll_();
-      showToast_('已解锁全部密码专区货品');
+      showToast_(t_('unlockedToast'));
     } else if (err) {
-      err.textContent = '密码不正确，请重新输入';
+      err.textContent = t_('wrongPass');
       input.focus();
       input.select();
     }
   }
 
-  /* ==================== 主题切换 ==================== */
+  /* ==================== Theme & Language ==================== */
+  function syncThemeColorMeta_(theme) {
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', theme === 'dark' ? '#0e0f13' : '#f6f5f1');
+  }
+
   function initTheme_() {
     var saved = '';
     try {
@@ -1215,18 +1493,42 @@
     } catch (e) {}
     var theme = saved === 'dark' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', theme);
+    syncThemeColorMeta_(theme);
   }
 
   function toggleTheme_() {
     var cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
     var next = cur === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
+    syncThemeColorMeta_(next);
     try {
       localStorage.setItem(THEME_STORAGE_KEY, next);
     } catch (e) {}
   }
 
-  /* ==================== 错误提示与数据拉取 ==================== */
+  function initLang_() {
+    var saved = '';
+    try {
+      saved = localStorage.getItem(LANG_STORAGE_KEY) || '';
+    } catch (e) {}
+    state.lang = saved === 'zh' ? 'zh' : CONFIG.DEFAULT_LANG;
+    applyStaticTranslations_();
+  }
+
+  function toggleLang_() {
+    state.lang = state.lang === 'en' ? 'zh' : 'en';
+    try {
+      localStorage.setItem(LANG_STORAGE_KEY, state.lang);
+    } catch (e) {}
+    applyStaticTranslations_();
+    renderAll_();
+    var lb = document.getElementById('lightbox');
+    if (lb && !lb.hidden) renderLightboxCurrent_();
+    var modal = document.getElementById('selection-modal');
+    if (modal && !modal.hidden) openSelectionModal_();
+  }
+
+  /* ==================== Data Load ==================== */
   function showError_(msg) {
     var el = document.getElementById('error');
     if (!el) return;
@@ -1251,9 +1553,8 @@
 
   function loadData_(isManualRefresh) {
     if (!CONFIG.SPREADSHEET_ID || CONFIG.SPREADSHEET_ID === 'YOUR_SPREADSHEET_ID') {
-      var st = document.getElementById('status');
-      if (st) st.textContent = '请先在 news.js 中配置 SPREADSHEET_ID';
-      showError_('未配置数据源：请在 news.js 顶部设置 CONFIG.SPREADSHEET_ID 与 CONFIG.GID。');
+      setText_('status', t_('syncFailed'));
+      showError_(t_('configErr'));
       return;
     }
 
@@ -1274,12 +1575,11 @@
         state.currentPage = 0;
         renderAll_();
         if (isManualRefresh) {
-          showToast_('已同步最新货品，共 ' + state.allItems.length + ' 件');
+          showToast_(t_('syncedToast')(state.allItems.length));
         }
       })
       .catch(function (e) {
-        var st = document.getElementById('status');
-        if (st) st.textContent = '数据同步失败';
+        setText_('status', t_('syncFailed'));
         showError_(String((e && e.message) || e));
         if (state.allItems.length === 0) {
           var feed = document.getElementById('feed');
@@ -1294,13 +1594,14 @@
       });
   }
 
-  /* ==================== 事件绑定 ==================== */
+  /* ==================== Event Bindings ==================== */
   function bindEvents_() {
-    // 主题切换
     var themeBtn = document.getElementById('theme-toggle-btn');
     if (themeBtn) themeBtn.addEventListener('click', toggleTheme_);
 
-    // 刷新数据
+    var langBtn = document.getElementById('lang-toggle-btn');
+    if (langBtn) langBtn.addEventListener('click', toggleLang_);
+
     var refreshBtn = document.getElementById('refresh-btn');
     if (refreshBtn) {
       refreshBtn.addEventListener('click', function () {
@@ -1308,7 +1609,6 @@
       });
     }
 
-    // 密码抽屉开关与提交
     var unlockToggle = document.getElementById('unlock-toggle-btn');
     var unlockPanel = document.getElementById('unlock-panel');
     var unlockClose = document.getElementById('unlock-close-btn');
@@ -1334,20 +1634,18 @@
       });
     }
 
-    // 最新上架条左右滚动
     var latestTrack = document.getElementById('latest-track');
     var latestPrev = document.getElementById('latest-prev');
     var latestNext = document.getElementById('latest-next');
     if (latestTrack && latestPrev && latestNext) {
       latestPrev.addEventListener('click', function () {
-        latestTrack.scrollBy({ left: -340, behavior: 'smooth' });
+        latestTrack.scrollBy({ left: -300, behavior: 'smooth' });
       });
       latestNext.addEventListener('click', function () {
-        latestTrack.scrollBy({ left: 340, behavior: 'smooth' });
+        latestTrack.scrollBy({ left: 300, behavior: 'smooth' });
       });
     }
 
-    // 搜索框
     var findInput = document.getElementById('find-input');
     var findClear = document.getElementById('find-clear');
     var searchTimer = null;
@@ -1382,7 +1680,6 @@
       });
     }
 
-    // 仅看公开货品开关
     var hideLockedToggle = document.getElementById('hide-locked-toggle');
     if (hideLockedToggle) {
       hideLockedToggle.checked = state.hideLocked;
@@ -1393,7 +1690,6 @@
       });
     }
 
-    // 排序 & 每页数量
     var sortSelect = document.getElementById('sort-select');
     if (sortSelect) {
       sortSelect.addEventListener('change', function () {
@@ -1412,25 +1708,29 @@
       });
     }
 
-    // 网格 / 列表视图切换
     var gridBtn = document.getElementById('view-grid-btn');
+    var largeBtn = document.getElementById('view-large-btn');
     var listBtn = document.getElementById('view-list-btn');
     function setViewMode(mode) {
       state.viewMode = mode;
-      if (gridBtn) {
-        gridBtn.classList.toggle('is-active', mode === 'grid');
-        gridBtn.setAttribute('aria-pressed', mode === 'grid' ? 'true' : 'false');
-      }
-      if (listBtn) {
-        listBtn.classList.toggle('is-active', mode === 'list');
-        listBtn.setAttribute('aria-pressed', mode === 'list' ? 'true' : 'false');
-      }
+      [
+        [gridBtn, 'grid'],
+        [largeBtn, 'large'],
+        [listBtn, 'list']
+      ].forEach(function (pair) {
+        var btn = pair[0];
+        var m = pair[1];
+        if (btn) {
+          btn.classList.toggle('is-active', mode === m);
+          btn.setAttribute('aria-pressed', mode === m ? 'true' : 'false');
+        }
+      });
       renderCatalog_();
     }
     if (gridBtn) gridBtn.addEventListener('click', function () { setViewMode('grid'); });
+    if (largeBtn) largeBtn.addEventListener('click', function () { setViewMode('large'); });
     if (listBtn) listBtn.addEventListener('click', function () { setViewMode('list'); });
 
-    // 分页上下页
     var prevPage = document.getElementById('page-prev');
     var nextPage = document.getElementById('page-next');
     if (prevPage) {
@@ -1444,7 +1744,6 @@
       });
     }
 
-    // 选货浮动条 & 弹窗按钮
     var selViewBtn = document.getElementById('selection-view-btn');
     var selCopyBtn = document.getElementById('selection-copy-btn');
     var selClearBtn = document.getElementById('selection-clear-btn');
@@ -1461,7 +1760,6 @@
       el.addEventListener('click', closeSelectionModal_);
     });
 
-    // 灯箱交互
     var lbCloseBtn = document.getElementById('lb-close-btn');
     var lbPrevBtn = document.getElementById('lb-prev-btn');
     var lbNextBtn = document.getElementById('lb-next-btn');
@@ -1497,14 +1795,13 @@
       lbCopyBtn.addEventListener('click', function () {
         var cur = state.lightboxList[state.lightboxIndex];
         if (!cur) return;
-        var text = cur.text + '（' + cur.timeFormatted + '）\n' + (cur.link || '');
+        var text = getItemTitle_(cur) + ' (' + cur.timeFormatted + ')\n' + (cur.link || '');
         copyTextToClipboard_(text)
-          .then(function () { showToast_('已复制该货品信息'); })
-          .catch(function () { showToast_('复制失败'); });
+          .then(function () { showToast_(t_('copiedItemToast')); })
+          .catch(function () { showToast_(t_('copyFailedToast')); });
       });
     }
 
-    // 灯箱触摸左右滑切图
     if (lbStage) {
       var touchStartX = 0;
       var touchStartY = 0;
@@ -1523,7 +1820,7 @@
           if (state.lightboxZoomed || !ev.changedTouches || ev.changedTouches.length !== 1) return;
           var dx = ev.changedTouches[0].clientX - touchStartX;
           var dy = ev.changedTouches[0].clientY - touchStartY;
-          if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+          if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.35) {
             stepLightbox_(dx < 0 ? 1 : -1);
           }
         },
@@ -1531,7 +1828,6 @@
       );
     }
 
-    // 全局快捷键（灯箱与弹窗）
     document.addEventListener('keydown', function (ev) {
       var lb = document.getElementById('lightbox');
       var modal = document.getElementById('selection-modal');
@@ -1545,8 +1841,9 @@
     });
   }
 
-  /* ==================== 初始化入口 ==================== */
+  /* ==================== Init ==================== */
   initTheme_();
+  initLang_();
   bindEvents_();
   loadData_(false);
 })();
