@@ -6,13 +6,13 @@
     "use strict";
 
     var CHARACTER_INFO = {
-        alice: { role: "三女神之一", function: "因果的最终裁决者，掌控秩序", personality: "严格、冷静", color: "#b48cff" },
-        yume: { role: "三女神之一", function: "时间的记录者，记忆碎片", personality: "神秘、温柔", color: "#e0e0ff" },
-        hana: { role: "四女仆之一", function: "情感的感知者，心灵守护", personality: "温柔、体贴", color: "#a0ffc8" },
-        azalea: { role: "四女仆之一", function: "秩序的维护者，规则执行", personality: "严格、守序", color: "#ff6644" },
-        meiling: { role: "四女仆之一", function: "音乐与茶艺，心灵慰藉", personality: "温暖、治愈", color: "#ffdd00" },
-        shella: { role: "四女仆之一", function: "秘密的守护者，暗夜使者", personality: "神秘、安静", color: "#8844ff" },
-        mizuki: { role: "四女仆之一", function: "庭院守卫，安全保障", personality: "严肃、忠诚", color: "#00ffff" }
+        alice: { role: "三姐妹之一 / 未来", function: "终局的裁定者，宣告黑之书、白之书与未定义", personality: "冷静、书页感、克制而悲悯", color: "#f7f0c3" },
+        yume: { role: "三姐妹之一 / 过去", function: "时间的记录者，见证已发生之物而不改写", personality: "静默、理性、像长姐般留有余白", color: "#d7d1ff" },
+        hana: { role: "三姐妹之一 / 现在", function: "当下的引导者，接住痛楚但不替人免罪", personality: "温柔而有边界、陪你走过再经历", color: "#a0ffc8" },
+        azalea: { role: "四人偶之一 / 幸福碎片", function: "确认、照料，把牵挂落实成日常秩序", personality: "沉稳、细致、寡言温柔", color: "#f2d7c8" },
+        meiling: { role: "四人偶之一 / 幸福碎片", function: "清点与陪伴，记得那些容易被漏掉的微光", personality: "温暖、细心、轻声照应", color: "#ffdd77" },
+        shella: { role: "四人偶之一 / 幸福碎片", function: "维持庭院的留位与等价流动", personality: "含笑、克制、安静守候", color: "#c4a3ff" },
+        mizuki: { role: "四人偶之一 / 幸福碎片", function: "守门与守望，护住庭院的边界与藏书", personality: "严肃、警觉、始终先行一步", color: "#8ae8ff" }
     };
 
     /** 根据当前时间 + 心情动态更新背景色（无背景图），并设置 day-mode / night-mode */
@@ -164,18 +164,31 @@
     function renderLibraryReaderPage() {
         var textEl = document.getElementById("library-reader-text");
         var pageNumEl = document.getElementById("library-reader-page-num");
+        var pagesWrap = document.getElementById("library-reader-pages");
         var pages = libraryReaderPages;
         var n = libraryReaderCurrent;
         if (textEl && pages.length > 0) {
             textEl.textContent = pages[n] || "";
+            textEl.scrollTop = 0;
         }
         if (pageNumEl) pageNumEl.textContent = "第 " + (n + 1) + " / " + pages.length + " 页";
-        var btn1 = document.getElementById("library-reader-page-1");
-        var btn2 = document.getElementById("library-reader-page-2");
-        var btn3 = document.getElementById("library-reader-page-3");
-        if (btn1) { btn1.style.display = pages.length >= 1 ? "inline-block" : "none"; btn1.classList.toggle("active", n === 0); }
-        if (btn2) { btn2.style.display = pages.length >= 2 ? "inline-block" : "none"; btn2.classList.toggle("active", n === 1); }
-        if (btn3) { btn3.style.display = pages.length >= 3 ? "inline-block" : "none"; btn3.classList.toggle("active", n === 2); }
+        if (pagesWrap) {
+            pagesWrap.innerHTML = "";
+            for (var i = 0; i < pages.length; i++) {
+                var pBtn = document.createElement("button");
+                pBtn.type = "button";
+                pBtn.className = "library-reader-page-btn" + (i === n ? " active" : "");
+                pBtn.textContent = String(i + 1);
+                pBtn.setAttribute("aria-label", "第 " + (i + 1) + " 页");
+                (function (targetIdx) {
+                    pBtn.onclick = function () {
+                        libraryReaderCurrent = targetIdx;
+                        renderLibraryReaderPage();
+                    };
+                })(i);
+                pagesWrap.appendChild(pBtn);
+            }
+        }
         var prevBtn = document.getElementById("library-reader-prev");
         var nextBtn = document.getElementById("library-reader-next");
         if (prevBtn) prevBtn.style.display = (n > 0) ? "inline-block" : "none";
@@ -187,10 +200,18 @@
         var closeBtn = document.getElementById("library-reader-close");
         var prevBtn = document.getElementById("library-reader-prev");
         var nextBtn = document.getElementById("library-reader-next");
-        var btn1 = document.getElementById("library-reader-page-1");
-        var btn2 = document.getElementById("library-reader-page-2");
-        var btn3 = document.getElementById("library-reader-page-3");
         if (closeBtn) closeBtn.onclick = function () { if (overlay) overlay.classList.add("hidden"); };
+        if (overlay && !overlay.dataset.backdropBound) {
+            overlay.dataset.backdropBound = "1";
+            overlay.addEventListener("click", function (e) {
+                if (e.target === overlay) overlay.classList.add("hidden");
+            });
+            document.addEventListener("keydown", function (e) {
+                if (e.key === "Escape" && overlay && !overlay.classList.contains("hidden")) {
+                    overlay.classList.add("hidden");
+                }
+            });
+        }
         if (prevBtn) prevBtn.onclick = function () {
             if (libraryReaderCurrent > 0) {
                 libraryReaderCurrent--;
@@ -203,15 +224,6 @@
                 renderLibraryReaderPage();
             }
         };
-        function goToPage(idx) {
-            if (idx >= 0 && idx < libraryReaderPages.length) {
-                libraryReaderCurrent = idx;
-                renderLibraryReaderPage();
-            }
-        }
-        if (btn1) btn1.onclick = function () { goToPage(0); };
-        if (btn2) btn2.onclick = function () { goToPage(1); };
-        if (btn3) btn3.onclick = function () { goToPage(2); };
     }
 
     function showLibraryShelf() {
@@ -262,6 +274,16 @@
                 }
             }
         };
+        if (!shelf.dataset.keyBound) {
+            shelf.dataset.keyBound = "1";
+            shelf.addEventListener("keydown", function (e) {
+                if (e.key !== "Enter" && e.key !== " ") return;
+                var wrapEl = e.target && e.target.closest ? e.target.closest(".library-cover-wrap") : null;
+                if (!wrapEl) return;
+                e.preventDefault();
+                wrapEl.click();
+            });
+        }
         var backShelfBtn = document.getElementById("library-back-shelf");
         if (backShelfBtn) backShelfBtn.onclick = showLibraryShelf;
         var prevBtn = document.getElementById("library-prev");
@@ -279,7 +301,7 @@
         var name = typeof c === "object" && c.name ? c.name : id;
         var chip = document.createElement("div");
         chip.className = "card-chip owned";
-        var imgSrc = (cardsDir + id + ".webp").replace(/\/+/g, "/");
+        var imgSrc = (typeof c === "object" && c.image) ? String(c.image) : (cardsDir + id + ".webp").replace(/\/+/g, "/");
         var img = document.createElement("img");
         img.src = imgSrc;
         img.alt = name || id;

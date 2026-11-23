@@ -39,6 +39,11 @@ var Divination = (function () {
         if (el) el.textContent = text;
     }
 
+    function notify(msg, type) {
+        if (typeof App !== "undefined" && App.toast) App.toast(msg, type);
+        else if (typeof alert === "function") alert(msg);
+    }
+
     function renderCardSlot(index, card) {
         var container = document.getElementById("divination-card-slots");
         if (!container) return;
@@ -48,8 +53,12 @@ var Divination = (function () {
         slot.classList.remove("face-down");
         slot.classList.add("face-up");
         if (card) {
-            slot.querySelector(".divination-card-title").textContent = card.title || "";
-            slot.querySelector(".divination-card-faction").textContent = card.faction || "";
+            var titleEl = slot.querySelector(".divination-card-title");
+            var facEl = slot.querySelector(".divination-card-faction");
+            var kwEl = slot.querySelector(".divination-card-kw");
+            if (titleEl) titleEl.textContent = card.title || "";
+            if (facEl) facEl.textContent = card.faction || "";
+            if (kwEl) kwEl.textContent = Array.isArray(card.keywords) ? card.keywords.join(" · ") : "";
             slot.setAttribute("data-phase", PHASES[index]);
         }
     }
@@ -65,10 +74,51 @@ var Divination = (function () {
         container.querySelectorAll(".divination-card-slot").forEach(function (slot) {
             slot.classList.remove("face-up");
             slot.classList.add("face-down");
-            slot.querySelector(".divination-card-title").textContent = "";
-            slot.querySelector(".divination-card-faction").textContent = "";
+            var titleEl = slot.querySelector(".divination-card-title");
+            var facEl = slot.querySelector(".divination-card-faction");
+            var kwEl = slot.querySelector(".divination-card-kw");
+            if (titleEl) titleEl.textContent = "";
+            if (facEl) facEl.textContent = "";
+            if (kwEl) kwEl.textContent = "";
             slot.removeAttribute("data-phase");
         });
+    }
+
+    function bindBlankCard() {
+        var saveBtn = document.getElementById("divination-blank-save");
+        var noteInput = document.getElementById("divination-blank-note");
+        var savedEl = document.getElementById("divination-blank-saved");
+        var STORAGE_KEY = "AliceGarden_Card13_Note";
+        if (savedEl) {
+            try {
+                var prev = localStorage.getItem(STORAGE_KEY);
+                if (prev) {
+                    savedEl.textContent = "上次夹入书页的留痕：「" + prev + "」";
+                    savedEl.classList.remove("hidden");
+                }
+            } catch (e) {}
+        }
+        if (saveBtn && !saveBtn.dataset.bound) {
+            saveBtn.dataset.bound = "1";
+            saveBtn.addEventListener("click", function () {
+                var txt = noteInput ? noteInput.value.trim() : "";
+                if (!txt) {
+                    if (savedEl) {
+                        savedEl.textContent = "你选择了留白——“即使什么都不写，也依然可以存在。”";
+                        savedEl.classList.remove("hidden");
+                    }
+                    notify("第十三张牌已保持空白");
+                    return;
+                }
+                try { localStorage.setItem(STORAGE_KEY, txt); } catch (e) {}
+                if (savedEl) {
+                    savedEl.textContent = "已夹入第十三张牌：「" + txt + "」";
+                    savedEl.classList.remove("hidden");
+                }
+                if (noteInput) noteInput.value = "";
+                notify("已将这句话留给此刻的翻牌者", "success");
+            });
+        }
     }
 
     function showResult(data) {
@@ -123,14 +173,22 @@ var Divination = (function () {
         if (step === 4) return;
 
         if (step === 0) {
+            if (typeof Auth !== "undefined" && Auth.isGuest && Auth.isGuest()) {
+                if (typeof App !== "undefined" && App.promptCitizenUpgrade) {
+                    App.promptCitizenUpgrade("Sienna 十三牌占卜");
+                } else {
+                    notify("占卜需要市民身份，请先免费注册。", "warn");
+                }
+                return;
+            }
             if (getArchetypes().length < 3) {
-                if (typeof alert === "function") alert("庭院牌组未加载，请刷新页面重试。");
+                notify("庭院牌组未加载，请刷新页面重试。", "error");
                 return;
             }
             var cost = ALICE_CONSTANTS.BALANCE.DIVINATION_COST || 100;
             var authState = typeof Auth !== "undefined" ? Auth.getState() : null;
             if (!authState || authState.points < cost) {
-                if (typeof alert === "function") alert("因果值不足 " + cost + "，请至市集兑换或完成每日任务。");
+                notify("因果值不足 " + cost + "，请前往 Meiling 每日祈愿获取。", "warn");
                 return;
             }
             var doStart = function () {
@@ -140,12 +198,12 @@ var Divination = (function () {
                 state.selectedCards = [];
                 resetCardSlots();
                 setCardSlotsVisible(true);
-                renderPhaseLabel("点击水晶球 · 过去");
-                renderCrystalLabel("过去");
+                renderPhaseLabel("轻触水晶球 · 翻开「过去」");
+                renderCrystalLabel("翻开 · 过去");
                 state.step = 1;
             };
             if (typeof App !== "undefined" && App.showConfirm) {
-                App.showConfirm("占卜将消耗 " + cost + " 因果值，是否确认？", doStart, function () {});
+                App.showConfirm("十三牌占卜将消耗 " + cost + " 因果值，是否开始翻牌？", doStart, function () {}, { title: "Sienna · 十三牌占卜", okText: "消耗 " + cost + " 并开始", cancelText: "稍后再来" });
             } else {
                 doStart();
             }
@@ -238,6 +296,7 @@ var Divination = (function () {
         hideResult();
         renderPhaseLabel("");
         renderCrystalLabel("开始占卜");
+        bindBlankCard();
     }
 
     return {

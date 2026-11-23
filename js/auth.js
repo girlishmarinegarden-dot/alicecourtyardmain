@@ -60,14 +60,6 @@ const Auth = {
             uid: String(uid).trim(),
             password: String(password)
         };
-        try {
-            await fetch(url, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify(payload)
-            });
-        } catch (e) {}
         var res;
         try {
             res = await fetch(url, {
@@ -101,6 +93,59 @@ const Auth = {
             points: Number(user.points ?? user.userPoints ?? 0),
             memory: user.memory || user.userMemory || "",
             cards: Array.isArray(user.cards) ? user.cards : (user.ownCards || [])
+        };
+        localStorage.setItem(ALICE_CONSTANTS.STORAGE.TOKEN, token);
+        localStorage.setItem(ALICE_CONSTANTS.STORAGE.USER_STATE, JSON.stringify(this.state));
+        return this.state;
+    },
+
+    async register(name, password) {
+        var url = ALICE_CONSTANTS.GAS_URL;
+        var cleanName = String(name || "").trim();
+        var cleanPwd = String(password || "");
+        if (!cleanName) throw new Error("请填写你的昵称");
+        if (cleanPwd.length < 3) throw new Error("密码至少需要 3 位字符");
+        var payload = {
+            action: (ALICE_CONSTANTS.ACTIONS && ALICE_CONSTANTS.ACTIONS.REGISTER) || "register",
+            name: cleanName,
+            password: cleanPwd
+        };
+        var res;
+        try {
+            res = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            });
+        } catch (err) {
+            var isFile = /^file:\/\//i.test(location.href);
+            throw new Error(isFile
+                ? "无法连接服务器（当前是 file:// 打开）。请使用本地服务器或线上站点访问。"
+                : "网络请求失败，请检查网络连接后重试。");
+        }
+        var rawText = await res.text();
+        var data;
+        try {
+            data = JSON.parse(rawText);
+        } catch (e) {
+            throw new Error("注册接口返回非 JSON，请确认 GAS 已更新并重新部署。");
+        }
+        if (data.result !== "success") {
+            if (data.message && String(data.message).indexOf("未知指令") !== -1) {
+                throw new Error("后端 GAS 尚未更新开放注册接口：请将 SETTING/CODE.GS.txt 粘贴至 Google Apps Script 并重新部署。");
+            }
+            throw new Error(data.message || "注册失败，请稍后重试");
+        }
+        var token = data.token || data.sessionToken || "";
+        var user = data.userData || data.user || {};
+        this.token = token;
+        this.state = {
+            uid: user.uid || "",
+            name: user.name || cleanName,
+            role: user.role || ALICE_CONSTANTS.ROLES.CITIZEN,
+            points: Number(user.points ?? 200),
+            memory: user.memory || "",
+            cards: Array.isArray(user.cards) ? user.cards : []
         };
         localStorage.setItem(ALICE_CONSTANTS.STORAGE.TOKEN, token);
         localStorage.setItem(ALICE_CONSTANTS.STORAGE.USER_STATE, JSON.stringify(this.state));

@@ -176,6 +176,9 @@
         loading = true;
         if (loadingEl) loadingEl.classList.remove("hidden");
         if (loadingVideo) {
+            if (!loadingVideo.src && loadingVideo.dataset && loadingVideo.dataset.src) {
+                loadingVideo.src = loadingVideo.dataset.src;
+            }
             try { loadingVideo.play().catch(function () {}); } catch (e) {}
         }
         if (gridEl) gridEl.classList.add("hidden");

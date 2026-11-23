@@ -81,11 +81,14 @@ const CharacterFavor = {
         return map[level] || "心情1";
     },
 
-    /** 返回该角色某表情的图片路径（约定：default 用 cfg.default，其余 assets/characters/{charId}_{emotion}.webp） */
+    /** 返回该角色某表情的图片路径（仅当 cfg.emotions 明确包含该表情时才请求差分图，避免无效 404） */
     getSpritePath(charId, emotion) {
         var cfg = ALICE_CONSTANTS.CHARACTERS && ALICE_CONSTANTS.CHARACTERS[charId];
         var defaultPath = cfg && cfg.default ? cfg.default : "assets/characters/" + charId + "default.webp";
         if (!emotion || emotion === "default") return defaultPath;
+        if (cfg && Array.isArray(cfg.emotions) && cfg.emotions.indexOf(emotion) === -1) {
+            return defaultPath;
+        }
         return "assets/characters/" + charId + "_" + emotion + ".webp";
     },
 

@@ -29,8 +29,8 @@
         } catch (e) {}
         stageEl.style.left = "";
         stageEl.style.top = "";
-        stageEl.style.right = "0";
-        stageEl.style.bottom = "0";
+        stageEl.style.right = "0.65rem";
+        stageEl.style.bottom = "5.35rem";
     }
 
     function savePosition() {

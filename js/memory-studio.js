@@ -206,7 +206,8 @@
     function onAddBtnClick(e) {
         e.stopPropagation();
         if (getContainerCount() >= MAX_CONTAINERS) {
-            alert("最多 " + MAX_CONTAINERS + " 个容器。");
+            if (typeof window.App !== "undefined" && window.App.toast) window.App.toast("最多可放置 " + MAX_CONTAINERS + " 个留影图层。", "warn");
+            else alert("最多 " + MAX_CONTAINERS + " 个容器。");
             return;
         }
         if (!memoryPlusFeePaid) {
@@ -214,7 +215,13 @@
             var state = typeof Auth !== "undefined" ? Auth.getState() : null;
             var points = (state && state.points != null) ? Number(state.points) : 0;
             if (points < cost) {
-                alert("因果值不足 " + cost + "，无法使用拍照场地。请至市集兑换或完成每日任务。");
+                if (typeof Auth !== "undefined" && Auth.isGuest && Auth.isGuest() && typeof window.App !== "undefined" && window.App.promptCitizenUpgrade) {
+                    window.App.promptCitizenUpgrade("记忆留影室");
+                } else if (typeof window.App !== "undefined" && window.App.toast) {
+                    window.App.toast("因果值不足 " + cost + "，请先前往 Meiling 每日祈愿领取。", "warn");
+                } else {
+                    alert("因果值不足 " + cost + "，无法使用拍照场地。");
+                }
                 return;
             }
             var doPayAndOpen = function () {
@@ -308,7 +315,8 @@
 
     function onScreenshotClick() {
         if (typeof html2canvas === "undefined") {
-            alert("截图功能加载中，请稍后再试。");
+            if (typeof window.App !== "undefined" && window.App.toast) window.App.toast("截图引擎加载中，请稍后再试。", "warn");
+            else alert("截图功能加载中，请稍后再试。");
             return;
         }
         html2canvas(stageEl, {

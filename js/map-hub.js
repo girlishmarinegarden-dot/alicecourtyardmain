@@ -36,11 +36,6 @@
         window.open("social.html", "_blank", "noopener,noreferrer");
     }
 
-    function goAnother() {
-        close();
-        window.location.href = "another.html";
-    }
-
     function openIndividualShop() {
         close();
         window.location.href = "individualshop.html";
@@ -82,7 +77,6 @@
         goScene: goScene,
         openNews: openNews,
         openSocial: openSocial,
-        goAnother: goAnother,
         openIndividualShop: openIndividualShop,
         openShowcase: openShowcase,
         openChat: openChat,

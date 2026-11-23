@@ -168,14 +168,6 @@ const Game = {
             newPoints: state ? state.points : 0
         };
         var url = ALICE_CONSTANTS.GAS_URL;
-        try {
-            await fetch(url, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify(payload)
-            });
-        } catch (e) {}
         var res;
         try {
             res = await fetch(url, {
@@ -313,7 +305,9 @@ const Game = {
         const name = safeName + "_" + dateStr + ".html";
         const cardId = (this.currentDetail && this.currentDetail.id) ? String(this.currentDetail.id) : "";
         const cardsDir = (ALICE_CONSTANTS.PATHS && ALICE_CONSTANTS.PATHS.CARDS_IMAGES) || "assets/cards/";
-        const cardImageUrl = cardId ? (cardsDir + cardId + ".webp").replace(/\/+/g, "/") : "";
+        const cardImageUrl = (this.currentDetail && this.currentDetail.image)
+            ? String(this.currentDetail.image)
+            : (cardId ? (cardsDir + cardId + ".webp").replace(/\/+/g, "/") : "");
         const bgPath = this.getEndingBgPath(fateText);
         let bgDataUrl = "";
         let cardDataUrl = "";

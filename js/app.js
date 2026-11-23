@@ -35,32 +35,87 @@ const App = {
         if (hanaVideo) hanaVideo.pause();
     },
 
-    /** 主题风格确认框（无动画低功耗），确认执行 onConfirm，取消执行 onCancel */
-    showConfirm(message, onConfirm, onCancel) {
-        var overlay = document.getElementById("confirm-overlay");
+    _toastTimer: null,
+    _whisperTimer: null,
+
+    /** 庭院非阻断轻提示（替代原生 alert） */
+    toast(message, type) {
+        var el = document.getElementById("courtyard-toast");
+        if (!el) {
+            if (typeof console !== "undefined") console.log("[Toast]", message);
+            return;
+        }
+        clearTimeout(this._toastTimer);
+        el.textContent = String(message || "");
+        el.className = "cg-toast" + (type ? " cg-toast--" + type : "");
+        el.hidden = false;
+        requestAnimationFrame(function () {
+            el.classList.add("is-visible");
+        });
+        this._toastTimer = setTimeout(function () {
+            el.classList.remove("is-visible");
+            setTimeout(function () { el.hidden = true; }, 260);
+        }, 3200);
+    },
+
+    /** 原生 <dialog> 确认框（遵循 showModal / closedby / returnValue 规范） */
+    showConfirm(message, onConfirm, onCancel, opts) {
+        var dialog = document.getElementById("confirm-dialog");
         var msgEl = document.getElementById("confirm-message");
+        var titleEl = document.getElementById("confirm-dialog-title");
         var okBtn = document.getElementById("confirm-ok");
         var cancelBtn = document.getElementById("confirm-cancel");
-        if (!overlay || !msgEl) return;
-        msgEl.textContent = message || "";
-        overlay.classList.remove("hidden");
-        overlay.setAttribute("aria-hidden", "false");
-        var close = function () {
-            overlay.classList.add("hidden");
-            overlay.setAttribute("aria-hidden", "true");
-        };
-        okBtn.onclick = function () {
-            okBtn.onclick = null;
-            cancelBtn.onclick = null;
-            close();
+        if (!dialog || !msgEl) {
             if (typeof onConfirm === "function") onConfirm();
+            return;
+        }
+        opts = opts || {};
+        if (titleEl) titleEl.textContent = opts.title || "庭院提示";
+        msgEl.textContent = message || "";
+        if (okBtn) okBtn.textContent = opts.okText || "确认";
+        if (cancelBtn) cancelBtn.textContent = opts.cancelText || "取消";
+
+        /* Safari 等不支持 closedby="any" 时按 pointerdown+pointerup 坐标回退轻点关闭 */
+        if (!dialog.dataset.closedbyFallback && !("closedBy" in HTMLDialogElement.prototype)) {
+            dialog.dataset.closedbyFallback = "1";
+            var isOutside = function (e) {
+                var r = dialog.getBoundingClientRect();
+                return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+            };
+            var pressedOutside = false;
+            dialog.addEventListener("pointerdown", function (e) { pressedOutside = isOutside(e); });
+            dialog.addEventListener("pointerup", function (e) {
+                if (pressedOutside && isOutside(e)) dialog.close("cancel");
+            });
+        }
+
+        var handleClose = function () {
+            var val = dialog.returnValue;
+            dialog.returnValue = "";
+            if (val === "ok") {
+                if (typeof onConfirm === "function") onConfirm();
+            } else {
+                if (typeof onCancel === "function") onCancel();
+            }
         };
-        cancelBtn.onclick = function () {
-            okBtn.onclick = null;
-            cancelBtn.onclick = null;
-            close();
-            if (typeof onCancel === "function") onCancel();
-        };
+        dialog.addEventListener("close", handleClose, { once: true });
+        dialog.returnValue = "";
+        if (typeof dialog.showModal === "function") {
+            if (!dialog.open) dialog.showModal();
+        } else {
+            dialog.setAttribute("open", "");
+        }
+    },
+
+    /** 访客需要市民身份时的柔和引导 */
+    promptCitizenUpgrade(featureLabel) {
+        var self = this;
+        this.showConfirm(
+            "「" + featureLabel + "」需要庭院市民身份。开放自助注册仅需 10 秒：自动分配专属 A00xxx 编号，即刻获赠 200 因果值。现在前往注册吗？",
+            function () { self.openAuthPortal("register"); },
+            null,
+            { title: "成为庭院市民", okText: "立即免费注册", cancelText: "先继续漫游" }
+        );
     },
 
     /** 按场景切换主页立绘（assets/characters 下对应角色 .webp 状态机） */
@@ -79,6 +134,15 @@ const App = {
             if (target) target.classList.add("active");
             document.body.classList.toggle("memory-active", id === "scene-memory");
             document.body.classList.toggle("alice-ending-active", id === "scene-alice-ending");
+            document.body.classList.toggle("login-active", id === "scene-login");
+            var dock = document.getElementById("cg-bottom-dock");
+            if (dock) {
+                var hideDock = (id === "scene-login" || id === "scene-memory" || id === "scene-alice-ending");
+                dock.classList.toggle("hidden", hideDock);
+                dock.querySelectorAll("[data-dock-scene]").forEach(function (btn) {
+                    btn.classList.toggle("is-active", btn.getAttribute("data-dock-scene") === id);
+                });
+            }
             if (id === "scene-theater" && BGM.audio) BGM.audio.pause();
             if (prevId === "scene-theater" && id !== "scene-theater" && BGM.audio) {
                 var btn = document.getElementById("btn-bgm");
@@ -137,6 +201,9 @@ const App = {
             if (id === "scene-divination" && typeof Divination !== "undefined" && Divination.init) {
                 Divination.init();
             }
+            if (id === "scene-market" && self.renderShellaMarket) {
+                self.renderShellaMarket();
+            }
         };
         if (id === "scene-gallery") {
             this.showLoading("加载图鉴…");
@@ -162,12 +229,37 @@ const App = {
 
     updateUI() {
         const s = Auth.getState();
+        const isGuest = Auth.isGuest();
         const nameEl = document.getElementById("display-name");
+        const uidEl = document.getElementById("display-uid");
         const pointsEl = document.getElementById("display-points");
         const roleEl = document.getElementById("display-role");
-        if (nameEl) nameEl.textContent = s ? s.name : "访客";
+        const authBtn = document.getElementById("auth-action-btn");
+        const guestBanner = document.getElementById("cg-guest-banner");
+        const langBtn = document.getElementById("cg-lang-btn");
+        if (nameEl) nameEl.textContent = s ? s.name : "漫游访客";
+        if (uidEl) {
+            var showUid = s && s.uid && !isGuest ? String(s.uid) : "";
+            uidEl.textContent = showUid;
+            uidEl.style.display = showUid ? "" : "none";
+        }
         if (pointsEl) pointsEl.textContent = s ? String(s.points) : "0";
-        if (roleEl) roleEl.textContent = s ? s.role : "GUEST";
+        if (roleEl) {
+            roleEl.textContent = isGuest ? "访客" : "市民";
+            roleEl.classList.toggle("role-badge--citizen", !isGuest);
+        }
+        if (authBtn) {
+            authBtn.textContent = isGuest ? "注册 / 登录" : "登出";
+            authBtn.classList.toggle("logout-btn--primary", isGuest);
+        }
+        if (guestBanner) {
+            guestBanner.classList.toggle("hidden", !isGuest);
+        }
+        if (langBtn) {
+            var curLang = "zh-CN";
+            try { curLang = localStorage.getItem(ALICE_CONSTANTS.STORAGE.LANG) || "zh-CN"; } catch (e) {}
+            langBtn.textContent = curLang === "en" ? "EN" : (curLang === "ms" ? "MS" : "中");
+        }
         this.updateMapLocks();
         if (typeof window.MoichanNav !== "undefined" && window.MoichanNav.updateVisibility) window.MoichanNav.updateVisibility();
     },
@@ -175,11 +267,888 @@ const App = {
     updateMapLocks() {
         const citizen = Auth.isCitizen();
         document.querySelectorAll("[data-node='GARDEN']").forEach(el => {
-            el.classList.toggle("locked", !citizen);
+            el.classList.toggle("is-guest-locked", !citizen);
         });
-        document.querySelectorAll("[data-node='MARKET']").forEach(el => {
-            el.classList.toggle("locked", !citizen);
+    },
+
+    /** 切换登录 / 注册门户标签 */
+    switchAuthTab(mode) {
+        var isReg = mode === "register";
+        var loginTab = document.getElementById("tab-btn-login");
+        var regTab = document.getElementById("tab-btn-register");
+        var loginForm = document.getElementById("login-form");
+        var regForm = document.getElementById("register-form");
+        if (loginTab) {
+            loginTab.classList.toggle("is-active", !isReg);
+            loginTab.setAttribute("aria-selected", isReg ? "false" : "true");
+        }
+        if (regTab) {
+            regTab.classList.toggle("is-active", isReg);
+            regTab.setAttribute("aria-selected", isReg ? "true" : "false");
+        }
+        if (loginForm) loginForm.hidden = isReg;
+        if (regForm) regForm.hidden = !isReg;
+    },
+
+    /** 从任意页面打开登录/注册门户（不强制清除当前访客数据，直到切换账号） */
+    openAuthPortal(mode) {
+        this.switchAuthTab(mode || "register");
+        this.showScene("scene-login");
+        var target = document.getElementById(mode === "login" ? "input-uid" : "reg-name");
+        if (target) setTimeout(function () { target.focus(); }, 180);
+    },
+
+    /** 顶栏登录/登出按钮行为 */
+    handleAuthAction() {
+        if (Auth.isGuest()) {
+            this.openAuthPortal("register");
+            return;
+        }
+        var self = this;
+        this.showConfirm("确定要退出当前市民账号吗？", function () {
+            self.logout();
+        }, null, { title: "离开庭院", okText: "确认登出", cancelText: "留下" });
+    },
+
+    /** 快捷语言切换（中 → EN → MS） */
+    cycleLanguage() {
+        var key = (ALICE_CONSTANTS.STORAGE && ALICE_CONSTANTS.STORAGE.LANG) || "AliceGarden_Lang";
+        var order = ["zh-CN", "en", "ms"];
+        var cur = "zh-CN";
+        try { cur = localStorage.getItem(key) || "zh-CN"; } catch (e) {}
+        var idx = order.indexOf(cur);
+        var next = order[(idx + 1) % order.length];
+        try {
+            localStorage.setItem(key, next);
+            if (next === "zh-CN") {
+                document.cookie = "googtrans=; path=/; max-age=0";
+            } else {
+                document.cookie = "googtrans=/zh-CN/" + next + "; path=/";
+            }
+            window.location.reload();
+        } catch (e) {}
+    },
+
+    /** 初始化登录/开放注册表单、密码显示开关与交互后校验 ARIA 同步 */
+    initAuthPortal() {
+        if (this._authPortalInited) return;
+        this._authPortalInited = true;
+        var self = this;
+
+        var loginTab = document.getElementById("tab-btn-login");
+        var regTab = document.getElementById("tab-btn-register");
+        if (loginTab) loginTab.addEventListener("click", function () { self.switchAuthTab("login"); });
+        if (regTab) regTab.addEventListener("click", function () { self.switchAuthTab("register"); });
+
+        var loginForm = document.getElementById("login-form");
+        if (loginForm) {
+            loginForm.addEventListener("submit", function (e) {
+                e.preventDefault();
+                self.handleLogin();
+            });
+        }
+        var regForm = document.getElementById("register-form");
+        if (regForm) {
+            regForm.addEventListener("submit", function (e) {
+                e.preventDefault();
+                self.handleRegister();
+            });
+        }
+
+        document.querySelectorAll("[data-toggle-pwd]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                var targetId = btn.getAttribute("data-toggle-pwd");
+                var input = targetId ? document.getElementById(targetId) : null;
+                if (!input) return;
+                var show = input.type === "password";
+                input.type = show ? "text" : "password";
+                btn.textContent = show ? "隐藏" : "显示";
+                btn.setAttribute("aria-pressed", show ? "true" : "false");
+                btn.setAttribute("aria-label", show ? "隐藏密码" : "显示密码");
+            });
         });
+
+        /* 交互后校验 ARIA 同步（支持 :user-invalid 与旧浏览器 WeakMap 回退） */
+        var supportsUserInvalid = typeof CSS !== "undefined" && CSS.supports && CSS.supports("selector(:user-invalid)");
+        var dirtyState = typeof WeakMap !== "undefined" ? new WeakMap() : null;
+        var linkError = function (el, shown) {
+            var errorId = el.dataset && el.dataset.error;
+            if (!errorId) return;
+            var ids = (el.getAttribute("aria-describedby") || "").split(/\s+/).filter(function (id) { return id && id !== errorId; });
+            if (shown) ids.push(errorId);
+            if (ids.length) el.setAttribute("aria-describedby", ids.join(" "));
+            else el.removeAttribute("aria-describedby");
+        };
+        var syncField = function (el, fromSubmit) {
+            if (!el || !el.matches || !el.matches(".cg-auth-form input")) return;
+            var invalid = false;
+            if (supportsUserInvalid) {
+                invalid = el.matches(":user-invalid") || (fromSubmit && !el.validity.valid);
+                if (fromSubmit && !el.validity.valid) el.classList.add("user-invalid-fallback");
+                else if (el.validity.valid) el.classList.remove("user-invalid-fallback");
+            } else {
+                invalid = !el.validity.valid;
+                el.classList.toggle("user-invalid-fallback", invalid);
+                el.classList.toggle("user-valid-fallback", !invalid);
+            }
+            el.setAttribute("aria-invalid", invalid ? "true" : "false");
+            linkError(el, invalid);
+        };
+
+        document.querySelectorAll(".cg-auth-form input").forEach(function (el) {
+            el.setAttribute("aria-invalid", "false");
+            el.addEventListener("blur", function () {
+                if (dirtyState) {
+                    var st = dirtyState.get(el) || { interacted: false, blurred: false };
+                    st.blurred = true;
+                    dirtyState.set(el, st);
+                    if (st.interacted) syncField(el, false);
+                } else {
+                    syncField(el, false);
+                }
+            });
+            el.addEventListener("input", function () {
+                if (dirtyState) {
+                    var st = dirtyState.get(el) || { interacted: false, blurred: false };
+                    st.interacted = true;
+                    dirtyState.set(el, st);
+                    if (st.blurred || el.getAttribute("aria-invalid") === "true") syncField(el, false);
+                } else if (el.getAttribute("aria-invalid") === "true") {
+                    syncField(el, false);
+                }
+            });
+        });
+    },
+
+    /** 初始化主页时段问候、世界观轮换语录与分区筛选 */
+    initHomeHub() {
+        if (this._homeHubInited) return;
+        this._homeHubInited = true;
+
+        var hour = (new Date()).getHours();
+        var phaseLabel = "夜幕 · 99.000000%";
+        if (hour >= 5 && hour < 11) phaseLabel = "晨雾 · 99.000000%";
+        else if (hour >= 11 && hour < 14) phaseLabel = "昼光 · 99.000000%";
+        else if (hour >= 14 && hour < 18) phaseLabel = "暮色 · 99.000000%";
+        var phaseEl = document.getElementById("cg-time-phase");
+        if (phaseEl) phaseEl.textContent = phaseLabel;
+
+        var quotes = [
+            "“即使没有答案，存在也可以继续。”",
+            "“有些页，还没有写完；停下来也没关系。”",
+            "“前十二张是已被翻开的事，第十三张，属于翻牌的人。”",
+            "“这里不是天堂，也不是审判所，而是人停下来那一刻的空间。”",
+            "“存在并不需要先被看见，才配继续。”"
+        ];
+        var qEl = document.getElementById("cg-hero-quote");
+        if (qEl) qEl.textContent = quotes[Math.floor(Math.random() * quotes.length)];
+
+        var pills = document.querySelectorAll("[data-hub-filter]");
+        var sections = document.querySelectorAll("[data-hub-group]");
+        var dailyCard = document.getElementById("cg-daily-draw-card");
+        var tcgPreviewCard = document.getElementById("cg-tcg-preview-card");
+        var dailyStrip = document.querySelector(".cg-daily-strip");
+        pills.forEach(function (pill) {
+            pill.addEventListener("click", function () {
+                var f = pill.getAttribute("data-hub-filter") || "all";
+                pills.forEach(function (p) {
+                    var active = p === pill;
+                    p.classList.toggle("is-active", active);
+                    p.setAttribute("aria-selected", active ? "true" : "false");
+                });
+                sections.forEach(function (sec) {
+                    var grp = sec.getAttribute("data-hub-group");
+                    sec.hidden = (f !== "all" && grp !== f);
+                });
+                if (dailyCard) dailyCard.hidden = (f === "tcg");
+                if (tcgPreviewCard) tcgPreviewCard.hidden = (f === "courtyard");
+                if (dailyStrip) dailyStrip.classList.toggle("is-single", f !== "all");
+            });
+        });
+
+        this.initDailyDraw();
+        this.initHomeTcgPreview();
+        this.initResidualEasterEgg();
+    },
+
+    /** 主页：今日免费一签（访客与市民皆可每日免费翻 1 张原型牌） */
+    initDailyDraw() {
+        var flipBtn = document.getElementById("cg-daily-flip-btn");
+        var actionBtn = document.getElementById("cg-daily-action-btn");
+        var card3d = document.getElementById("cg-daily-card-3d");
+        var titleEl = document.getElementById("cg-daily-title");
+        var factionEl = document.getElementById("cg-daily-faction");
+        var kwEl = document.getElementById("cg-daily-kw");
+        var whisperEl = document.getElementById("cg-daily-whisper");
+        var pillEl = document.getElementById("cg-daily-status-pill");
+        if (!flipBtn || !card3d) return;
+
+        var STORAGE_KEY = "AliceGarden_DailyDraw";
+        var WHISPERS = {
+            1: "你不必先把自己修成完美，才允许自己照见真实的轮廓。",
+            2: "白之书记录的是承认，而不是强迫原谅——今天也请温柔对待未愈合的页边。",
+            3: "拒绝不再适合自己的旧结构，有时比顺从更需要勇气。",
+            4: "在被世界打分之前，你原本的样子就已经足够珍贵。",
+            5: "回头看并非原地踏步，只是确认这一次不再走回旧路。",
+            6: "裂纹不是坏掉的证明，它往往是光第一次真正照进来的地方。",
+            7: "前十二张是已被翻开的事；今天这一步，由翻牌的你亲自落笔。",
+            8: "哪怕只是一盏微弱的灯，也足以陪你走过长夜里的下一小段路。",
+            9: "把选择权从别人的评价里轻轻拿回来，放回自己掌心吧。",
+            10: "把已经完成的那一章折好归档，空出来的页脚才能写下新的东西。",
+            11: "雨落下来的时候不必急着赶路，有些沉重只需要被静静洗淡一点。",
+            12: "今天种下的微小行动不必立刻开花，它已经在看不见的地方发芽。",
+            13: "第十三张牌始终留白——即使暂时没有答案，存在也可以继续。"
+        };
+
+        var getLocalDateKey = function () {
+            var d = new Date();
+            var m = d.getMonth() + 1;
+            var day = d.getDate();
+            return d.getFullYear() + "-" + (m < 10 ? "0" + m : m) + "-" + (day < 10 ? "0" + day : day);
+        };
+
+        var archetypes = (typeof window !== "undefined" && Array.isArray(window.gardenArchetypes) && window.gardenArchetypes.length)
+            ? window.gardenArchetypes
+            : [{ id: 13, title: "庭院未完", faction: "成长系", keywords: ["无限可能", "继续书写"] }];
+
+        var applyCard = function (card, alreadyDrawn) {
+            if (!card) return;
+            if (titleEl) titleEl.textContent = card.title || "庭院未完";
+            if (factionEl) factionEl.textContent = card.faction || "庭院原型";
+            if (kwEl) kwEl.textContent = Array.isArray(card.keywords) ? card.keywords.join(" · ") : "";
+            if (whisperEl) whisperEl.textContent = "「" + (WHISPERS[card.id] || WHISPERS[13]) + "」";
+            card3d.classList.add("is-flipped");
+            flipBtn.setAttribute("aria-label", "今日已抽：" + (card.title || ""));
+            if (pillEl) {
+                pillEl.textContent = "今日已启封";
+                pillEl.classList.add("is-done");
+            }
+            if (actionBtn) {
+                actionBtn.textContent = "✓ 今日已抽 · " + (card.title || "");
+                actionBtn.disabled = true;
+            }
+            if (!alreadyDrawn) {
+                App.toast("今日庭院回响：「" + (card.title || "") + "」", "success");
+            }
+        };
+
+        var todayKey = getLocalDateKey();
+        try {
+            var savedRaw = localStorage.getItem(STORAGE_KEY);
+            if (savedRaw) {
+                var saved = JSON.parse(savedRaw);
+                if (saved && saved.date === todayKey && saved.id) {
+                    var found = archetypes.find(function (a) { return a.id === saved.id; }) || archetypes[0];
+                    applyCard(found, true);
+                    return;
+                }
+            }
+        } catch (e) {}
+
+        var triggerDraw = function () {
+            if (card3d.classList.contains("is-flipped")) return;
+            var picked = archetypes[Math.floor(Math.random() * archetypes.length)];
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: todayKey, id: picked.id }));
+            } catch (e) {}
+            applyCard(picked, false);
+        };
+
+        flipBtn.addEventListener("click", triggerDraw);
+        if (actionBtn) actionBtn.addEventListener("click", triggerDraw);
+    },
+
+    /** 主页：直连官方 TCG 货架表（仅展示公开 isPublic=true 的最新 3 件） */
+    initHomeTcgPreview() {
+        var grid = document.getElementById("cg-tcg-preview-grid");
+        if (!grid || grid.dataset.tcgPreviewLoaded) return;
+        grid.dataset.tcgPreviewLoaded = "1";
+
+        var SHEET_ID = "1WFuFX7jVCV0ZVm5HBsHbMB8qOew2wVhnL8tNzWsjss4";
+        var GID = "0";
+        var settled = false;
+
+        var renderFallback = function () {
+            grid.innerHTML =
+                '<a href="news.html" class="cg-tcg-fallback">' +
+                '<span class="cg-tcg-fallback__icon" aria-hidden="true">🛍️</span>' +
+                '<span>前往 TCG 官方商品目录查看全部最新上架单卡与周边 →</span>' +
+                '</a>';
+        };
+
+        var extractDriveId = function (link) {
+            if (!link) return "";
+            var m1 = String(link).match(/\/file\/d\/([^/?#]+)/);
+            if (m1) return m1[1];
+            var m2 = String(link).match(/[?&]id=([^&#]+)/);
+            return m2 ? m2[1] : "";
+        };
+
+        var parseCell = function (cell) {
+            if (!cell) return "";
+            if (cell.f !== undefined && cell.f !== null && cell.f !== "") return String(cell.f);
+            if (cell.v !== undefined && cell.v !== null) return String(cell.v);
+            return "";
+        };
+
+        var parseTs = function (cell, displayStr) {
+            if (cell && typeof cell.v === "string") {
+                var dm = cell.v.match(/^Date\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*(\d+))?)?\s*\)$/);
+                if (dm) return new Date(Number(dm[1]), Number(dm[2]), Number(dm[3]), Number(dm[4] || 0), Number(dm[5] || 0), Number(dm[6] || 0)).getTime();
+            }
+            var parsed = Date.parse(String(displayStr || "").trim());
+            return isNaN(parsed) ? 0 : parsed;
+        };
+
+        var isTrueVal = function (raw) {
+            if (raw === true) return true;
+            if (raw === false) return false;
+            var s = String(raw || "").trim().toLowerCase();
+            return s === "true" || s === "yes" || s === "1" || s === "是";
+        };
+
+        var timeoutId = setTimeout(function () {
+            if (!settled) {
+                settled = true;
+                renderFallback();
+            }
+        }, 12000);
+
+        window.google = window.google || {};
+        window.google.visualization = window.google.visualization || {};
+        window.google.visualization.Query = window.google.visualization.Query || {};
+        var prevHandler = window.google.visualization.Query.setResponse;
+        window.google.visualization.Query.setResponse = function (resp) {
+            if (typeof prevHandler === "function") {
+                try { prevHandler(resp); } catch (e) {}
+            }
+            if (settled) return;
+            settled = true;
+            clearTimeout(timeoutId);
+            try {
+                var rows = (resp && resp.table && Array.isArray(resp.table.rows)) ? resp.table.rows : [];
+                var items = [];
+                rows.forEach(function (row, idx) {
+                    var c = row && row.c ? row.c : [];
+                    var rawTime = parseCell(c[0]);
+                    var rawText = parseCell(c[1]).trim();
+                    var rawLink = parseCell(c[2]).trim();
+                    var rawHasText = c[3] && c[3].v !== undefined ? c[3].v : parseCell(c[3]);
+                    if (idx === 0 && /timestamp|时间/i.test(rawTime)) return;
+                    if (!isTrueVal(rawHasText)) return; // 严格跳过 VIP/私密项
+                    if (!rawText && !rawLink) return;
+                    var ts = parseTs(c[0], rawTime);
+                    var driveId = extractDriveId(rawLink);
+                    var thumb = driveId ? ("https://drive.google.com/thumbnail?id=" + driveId + "&sz=w360") : rawLink;
+                    items.push({ title: rawText || "TCG 新品", thumb: thumb, ts: ts });
+                });
+                items.sort(function (a, b) { return b.ts - a.ts; });
+                var top3 = items.slice(0, 3);
+                if (!top3.length) {
+                    renderFallback();
+                    return;
+                }
+                grid.innerHTML = top3.map(function (it) {
+                    var dateTxt = "";
+                    if (it.ts) {
+                        var d = new Date(it.ts);
+                        if (!isNaN(d.getTime())) {
+                            var mm = d.getMonth() + 1;
+                            var dd = d.getDate();
+                            dateTxt = (mm < 10 ? "0" + mm : mm) + "-" + (dd < 10 ? "0" + dd : dd);
+                        }
+                    }
+                    return (
+                        '<a href="news.html" class="cg-tcg-mini">' +
+                        '<div class="cg-tcg-mini__media">' +
+                        (it.thumb ? '<img src="' + escapeHtml(it.thumb) + '" alt="' + escapeHtml(it.title) + '" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">' : '') +
+                        '<span class="cg-tcg-mini__badge">NEW</span>' +
+                        '</div>' +
+                        '<div class="cg-tcg-mini__info">' +
+                        '<span class="cg-tcg-mini__title">' + escapeHtml(it.title) + '</span>' +
+                        (dateTxt ? '<span class="cg-tcg-mini__date">' + escapeHtml(dateTxt) + '</span>' : '') +
+                        '</div>' +
+                        '</a>'
+                    );
+                }).join("");
+            } catch (e) {
+                renderFallback();
+            }
+        };
+
+        var script = document.createElement("script");
+        script.src = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/gviz/tq?tqx=out:json&gid=" + GID + "&_=" + Date.now();
+        script.async = true;
+        script.onerror = function () {
+            if (!settled) {
+                settled = true;
+                clearTimeout(timeoutId);
+                renderFallback();
+            }
+        };
+        document.head.appendChild(script);
+    },
+
+    /** 99.000000% → 1% 残差世界观微彩蛋（连续点击 5 次解锁印记与聊天室称号） */
+    initResidualEasterEgg() {
+        var RES_KEY = "AliceGarden_ResidualUnlocked";
+        var triggers = document.querySelectorAll("[data-residual-trigger]");
+        if (!triggers.length) return;
+        var taps = 0;
+
+        var applyUnlockedVisual = function () {
+            triggers.forEach(function (el) {
+                el.classList.add("is-residual");
+                if (el.id === "cg-time-phase") {
+                    el.textContent = "✦ 99.000001% · RESIDUAL 1%";
+                } else {
+                    el.textContent = "ALICE CORE · 1% RESIDUAL";
+                }
+            });
+        };
+
+        try {
+            if (localStorage.getItem(RES_KEY) === "1") {
+                applyUnlockedVisual();
+            }
+        } catch (e) {}
+
+        triggers.forEach(function (el) {
+            if (el.dataset.residualBound) return;
+            el.dataset.residualBound = "1";
+            el.addEventListener("click", function () {
+                var already = false;
+                try { already = localStorage.getItem(RES_KEY) === "1"; } catch (e) {}
+                if (already) {
+                    App.toast("Moel：『1% 残差印记已刻入你的市民档案，也可在聊天室佩戴。』");
+                    return;
+                }
+                taps += 1;
+                el.classList.remove("is-glitch");
+                void el.offsetWidth;
+                el.classList.add("is-glitch");
+                if (taps < 5) {
+                    if (taps === 3) App.toast("…观测值出现极微弱抖动 (99.000000% → ?)");
+                    return;
+                }
+                try { localStorage.setItem(RES_KEY, "1"); } catch (e) {}
+                if (App.ensureResidualTitleUnlocked) App.ensureResidualTitleUnlocked();
+                applyUnlockedVisual();
+                App.toast("Moel：「从前的你们，只是梦。现在的你们，才是梦醒之后也不会消失的存在。」— 已解锁「1% 残差见证者」", "success");
+            });
+        });
+    },
+
+    /* ==================== 市民档案卡 / Shella 市集兑换 / 暗号系统 ==================== */
+    getShopUnlocks() {
+        var def = { stickers: [], frames: [], titles: [], activeTitle: "", activeFrame: "", redeemedCodes: [], titleManualOff: false };
+        try {
+            var key = (ALICE_CONSTANTS.STORAGE && ALICE_CONSTANTS.STORAGE.SHOP_UNLOCKS) || "AliceGarden_ShopUnlocks";
+            var raw = localStorage.getItem(key);
+            if (!raw) return def;
+            var obj = JSON.parse(raw);
+            return {
+                stickers: Array.isArray(obj.stickers) ? obj.stickers : [],
+                frames: Array.isArray(obj.frames) ? obj.frames : [],
+                titles: Array.isArray(obj.titles) ? obj.titles : [],
+                activeTitle: typeof obj.activeTitle === "string" ? obj.activeTitle : "",
+                activeFrame: typeof obj.activeFrame === "string" ? obj.activeFrame : "",
+                redeemedCodes: Array.isArray(obj.redeemedCodes) ? obj.redeemedCodes : [],
+                titleManualOff: !!obj.titleManualOff
+            };
+        } catch (e) {
+            return def;
+        }
+    },
+
+    saveShopUnlocks(obj) {
+        try {
+            var key = (ALICE_CONSTANTS.STORAGE && ALICE_CONSTANTS.STORAGE.SHOP_UNLOCKS) || "AliceGarden_ShopUnlocks";
+            localStorage.setItem(key, JSON.stringify(obj));
+        } catch (e) {}
+    },
+
+    ensureResidualTitleUnlocked() {
+        var u = this.getShopUnlocks();
+        if (u.titles.indexOf("1% 残差") === -1) u.titles.push("1% 残差");
+        if (!u.activeTitle && !u.titleManualOff) u.activeTitle = "1% 残差";
+        this.saveShopUnlocks(u);
+    },
+
+    deriveArchiveSeal(memoryStr) {
+        var m = String(memoryStr || "").trim();
+        if (!m) return { key: "none", label: "尚未归档", badge: "" };
+        if (/白之书|白书|white/i.test(m)) return { key: "white", label: "白之书 · 承认", badge: "白之书" };
+        if (/黑之书|黑书|black/i.test(m)) return { key: "black", label: "黑之书 · 拒绝", badge: "黑之书" };
+        return { key: "undefined", label: "未定义 · 留白", badge: "未定义" };
+    },
+
+    getAvailableTitles() {
+        var u = this.getShopUnlocks();
+        var s = Auth.getState();
+        var list = [];
+        var addUnique = function (t) { if (t && list.indexOf(t) === -1) list.push(t); };
+        var seal = this.deriveArchiveSeal(s && s.memory);
+        if (seal.badge) addUnique(seal.badge);
+        try {
+            if (localStorage.getItem((ALICE_CONSTANTS.STORAGE && ALICE_CONSTANTS.STORAGE.RESIDUAL_UNLOCKED) || "AliceGarden_ResidualUnlocked") === "1") {
+                addUnique("1% 残差");
+            }
+        } catch (e) {}
+        u.titles.forEach(addUnique);
+        return list;
+    },
+
+    getEffectiveActiveTitle() {
+        var u = this.getShopUnlocks();
+        if (u.titleManualOff) return "";
+        var avail = this.getAvailableTitles();
+        if (u.activeTitle && avail.indexOf(u.activeTitle) !== -1) return u.activeTitle;
+        return avail[0] || "";
+    },
+
+    openProfileDialog() {
+        var dialog = document.getElementById("profile-dialog");
+        if (!dialog) return;
+        this.renderProfileDialog();
+        if (!dialog.dataset.closedbyFallback) {
+            dialog.dataset.closedbyFallback = "1";
+            var isOutside = function (e) {
+                var r = dialog.getBoundingClientRect();
+                return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+            };
+            var pressedOutside = false;
+            dialog.addEventListener("pointerdown", function (e) { pressedOutside = isOutside(e); });
+            dialog.addEventListener("pointerup", function (e) {
+                if (pressedOutside && isOutside(e)) dialog.close("close");
+            });
+        }
+        if (typeof dialog.showModal === "function") {
+            if (!dialog.open) dialog.showModal();
+        } else {
+            dialog.setAttribute("open", "");
+        }
+    },
+
+    openMarketFromProfile() {
+        var dialog = document.getElementById("profile-dialog");
+        if (dialog && dialog.open) dialog.close("market");
+        this.navigateTo("MARKET");
+    },
+
+    renderProfileDialog() {
+        var s = Auth.getState() || { name: "漫游访客", uid: "", points: 0, cards: [], memory: "" };
+        var isGuest = Auth.isGuest();
+        var u = this.getShopUnlocks();
+        var seal = this.deriveArchiveSeal(s.memory);
+        var activeTitle = this.getEffectiveActiveTitle();
+        var cards = Array.isArray(s.cards) ? s.cards : (Array.isArray(s.ownCards) ? s.ownCards : []);
+        var residualUnlocked = false;
+        try {
+            residualUnlocked = localStorage.getItem((ALICE_CONSTANTS.STORAGE && ALICE_CONSTANTS.STORAGE.RESIDUAL_UNLOCKED) || "AliceGarden_ResidualUnlocked") === "1";
+        } catch (e) {}
+
+        var setText = function (id, txt) { var el = document.getElementById(id); if (el) el.textContent = txt; };
+        setText("profile-name", s.name || "漫游访客");
+        setText("profile-uid", !isGuest && s.uid ? ("UID · " + s.uid) : "GUEST · 免费注册可获专属 A00xxx 编号");
+        setText("profile-role-pill", isGuest ? "GUEST" : "CITIZEN");
+        setText("profile-points", String(s.points || 0));
+        setText("profile-card-count", cards.length + " / 6");
+        setText("profile-archive-seal", seal.label);
+
+        var activeTitleEl = document.getElementById("profile-active-title");
+        if (activeTitleEl) {
+            activeTitleEl.textContent = activeTitle ? ("[" + activeTitle + "]") : "";
+            activeTitleEl.classList.toggle("hidden", !activeTitle);
+        }
+
+        var sealsEl = document.getElementById("profile-seals");
+        if (sealsEl) {
+            var sealChips = [];
+            if (!isGuest) sealChips.push('<span class="cg-seal-chip cg-seal-chip--gold">✦ 庭院市民</span>');
+            if (seal.badge) sealChips.push('<span class="cg-seal-chip cg-seal-chip--lilac">📖 ' + escapeHtml(seal.label) + '</span>');
+            if (residualUnlocked) sealChips.push('<span class="cg-seal-chip cg-seal-chip--residual">✧ 1% 残差见证者</span>');
+            if (u.stickers.indexOf("pack_courtyard") !== -1) sealChips.push('<span class="cg-seal-chip">🐱 庭院三影贴纸</span>');
+            if (u.frames.indexOf("gold") !== -1) sealChips.push('<span class="cg-seal-chip cg-seal-chip--gold">◈ 星金气泡框</span>');
+            if (u.frames.indexOf("lilac") !== -1) sealChips.push('<span class="cg-seal-chip cg-seal-chip--lilac">◈ 月影紫气泡框</span>');
+            if (u.titles.indexOf("翻牌者") !== -1) sealChips.push('<span class="cg-seal-chip">🃏 翻牌者</span>');
+            if (!sealChips.length) sealChips.push('<span class="cg-seal-chip cg-seal-chip--muted">尚无印记 · 可前往 Shella 市集或点击 99% 观测值探索</span>');
+            sealsEl.innerHTML = sealChips.join("");
+        }
+
+        var noteEl = document.getElementById("profile-card13-note");
+        if (noteEl) {
+            var c13 = "";
+            try { c13 = localStorage.getItem("AliceGarden_Card13_Note") || ""; } catch (e) {}
+            if (c13) {
+                noteEl.textContent = "第十三张空白牌留痕：「" + c13 + "」";
+                noteEl.classList.remove("hidden");
+            } else {
+                noteEl.classList.add("hidden");
+            }
+        }
+
+        var self = this;
+        var titlePicker = document.getElementById("profile-title-picker");
+        if (titlePicker) {
+            var availTitles = this.getAvailableTitles();
+            var html = '<button type="button" class="cg-cosmetic-pill' + (!activeTitle ? ' is-active' : '') + '" data-pick-title="__off__">不佩戴</button>';
+            availTitles.forEach(function (t) {
+                html += '<button type="button" class="cg-cosmetic-pill' + (activeTitle === t ? ' is-active' : '') + '" data-pick-title="' + escapeHtml(t) + '">[' + escapeHtml(t) + ']</button>';
+            });
+            titlePicker.innerHTML = html;
+            titlePicker.querySelectorAll("[data-pick-title]").forEach(function (btn) {
+                btn.addEventListener("click", function () {
+                    var val = btn.getAttribute("data-pick-title");
+                    var cur = self.getShopUnlocks();
+                    if (val === "__off__") {
+                        cur.activeTitle = "";
+                        cur.titleManualOff = true;
+                    } else {
+                        cur.activeTitle = val;
+                        cur.titleManualOff = false;
+                    }
+                    self.saveShopUnlocks(cur);
+                    self.renderProfileDialog();
+                    self.toast(val === "__off__" ? "已取消佩戴聊天室称号" : "已佩戴聊天室称号 [" + val + "]", "success");
+                });
+            });
+        }
+
+        var framePicker = document.getElementById("profile-frame-picker");
+        if (framePicker) {
+            var frames = [
+                { val: "", label: "默认边框", unlocked: true },
+                { val: "gold", label: "星金流光", unlocked: u.frames.indexOf("gold") !== -1 },
+                { val: "lilac", label: "月影暮紫", unlocked: u.frames.indexOf("lilac") !== -1 }
+            ];
+            framePicker.innerHTML = frames.map(function (f) {
+                var active = (u.activeFrame || "") === f.val;
+                return '<button type="button" class="cg-cosmetic-pill' + (active ? ' is-active' : '') + (!f.unlocked ? ' is-locked' : '') + '" data-pick-frame="' + escapeHtml(f.val) + '"' + (!f.unlocked ? ' disabled title="可在 Shella 市集兑换解锁"' : '') + '>' + escapeHtml(f.label) + (f.unlocked ? '' : ' 🔒') + '</button>';
+            }).join("");
+            framePicker.querySelectorAll("[data-pick-frame]:not([disabled])").forEach(function (btn) {
+                btn.addEventListener("click", function () {
+                    var val = btn.getAttribute("data-pick-frame") || "";
+                    var cur = self.getShopUnlocks();
+                    cur.activeFrame = val;
+                    self.saveShopUnlocks(cur);
+                    self.renderProfileDialog();
+                    self.toast(val ? "已切换聊天室气泡框，进入聊天室即生效" : "已切回默认气泡框", "success");
+                });
+            });
+        }
+    },
+
+    async exportProfileCardPng() {
+        var card = document.getElementById("profile-export-card");
+        if (!card) return;
+        if (typeof window.html2canvas !== "function") {
+            this.toast("导出组件加载中，请稍候再试", "warn");
+            return;
+        }
+        var btn = document.getElementById("btn-export-profile");
+        if (btn) btn.disabled = true;
+        try {
+            var canvas = await window.html2canvas(card, {
+                backgroundColor: "#141126",
+                scale: 2,
+                useCORS: true
+            });
+            var link = document.createElement("a");
+            var s = Auth.getState();
+            var tag = (s && s.uid && !Auth.isGuest()) ? s.uid : "Guest";
+            link.download = "AliceGarden_Archive_" + tag + ".png";
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+            this.toast("已生成高清市民档案卡 PNG", "success");
+        } catch (e) {
+            this.toast("导出失败，请稍后重试", "error");
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    },
+
+    renderShellaMarket() {
+        var grid = document.getElementById("shella-redeem-grid");
+        var form = document.getElementById("promo-code-form");
+        var self = this;
+
+        if (form && !form.dataset.promoBound) {
+            form.dataset.promoBound = "1";
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+                self.handlePromoRedeem();
+            });
+        }
+
+        if (!grid) return;
+        var items = Array.isArray(ALICE_CONSTANTS.SHOP_ITEMS) ? ALICE_CONSTANTS.SHOP_ITEMS : [];
+        var u = this.getShopUnlocks();
+        var activeTitle = this.getEffectiveActiveTitle();
+
+        grid.innerHTML = items.map(function (item) {
+            var owned = false;
+            var equipped = false;
+            if (item.type === "sticker") owned = u.stickers.indexOf(item.value) !== -1;
+            else if (item.type === "frame") {
+                owned = u.frames.indexOf(item.value) !== -1;
+                equipped = owned && u.activeFrame === item.value;
+            } else if (item.type === "title") {
+                owned = u.titles.indexOf(item.value) !== -1;
+                equipped = owned && activeTitle === item.value;
+            }
+            var btnText = owned
+                ? (item.type === "sticker" ? "已解锁 · 去聊天室使用 →" : (equipped ? "佩戴中 ✓" : "立即佩戴"))
+                : ("兑换 (" + item.cost + " 因果值)");
+            var btnClass = owned ? (equipped ? "cg-redeem-btn is-equipped" : "cg-redeem-btn is-owned") : "cg-redeem-btn";
+            return (
+                '<div class="shop-item glass-panel cg-redeem-card' + (owned ? ' is-unlocked' : '') + '">' +
+                '<span class="cg-redeem-badge">' + escapeHtml(item.badge) + '</span>' +
+                '<h4>' + escapeHtml(item.title) + '</h4>' +
+                '<p class="cost">' + (owned ? '已收入囊中' : (item.cost + ' 因果值')) + '</p>' +
+                '<p class="question-text">' + escapeHtml(item.desc) + '</p>' +
+                '<button type="button" class="' + btnClass + '" data-redeem-id="' + escapeHtml(item.id) + '">' + escapeHtml(btnText) + '</button>' +
+                '</div>'
+            );
+        }).join("");
+
+        grid.querySelectorAll("[data-redeem-id]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                self.handleShopRedeem(btn.getAttribute("data-redeem-id"));
+            });
+        });
+    },
+
+    unlockShopItemLocal(item, autoEquip) {
+        var u = this.getShopUnlocks();
+        if (item.type === "sticker") {
+            if (u.stickers.indexOf(item.value) === -1) u.stickers.push(item.value);
+        } else if (item.type === "frame") {
+            if (u.frames.indexOf(item.value) === -1) u.frames.push(item.value);
+            if (autoEquip) u.activeFrame = item.value;
+        } else if (item.type === "title") {
+            if (u.titles.indexOf(item.value) === -1) u.titles.push(item.value);
+            if (autoEquip) {
+                u.activeTitle = item.value;
+                u.titleManualOff = false;
+            }
+        }
+        this.saveShopUnlocks(u);
+    },
+
+    async syncPointsToGas(newPoints) {
+        if (Auth.isGuest()) return;
+        var s = Auth.getState();
+        var token = Auth.getToken();
+        if (!s || !s.uid || !token) return;
+        try {
+            await fetch(ALICE_CONSTANTS.GAS_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({
+                    action: ALICE_CONSTANTS.ACTIONS.UPDATE_MEMORY,
+                    uid: s.uid,
+                    token: token,
+                    points: newPoints
+                })
+            });
+        } catch (e) {}
+    },
+
+    handleShopRedeem(itemId) {
+        var items = Array.isArray(ALICE_CONSTANTS.SHOP_ITEMS) ? ALICE_CONSTANTS.SHOP_ITEMS : [];
+        var item = items.find(function (x) { return x.id === itemId; });
+        if (!item) return;
+
+        var u = this.getShopUnlocks();
+        var owned = (item.type === "sticker" && u.stickers.indexOf(item.value) !== -1)
+            || (item.type === "frame" && u.frames.indexOf(item.value) !== -1)
+            || (item.type === "title" && u.titles.indexOf(item.value) !== -1);
+
+        if (owned) {
+            if (item.type === "sticker") {
+                window.location.href = "chat.html";
+                return;
+            }
+            if (item.type === "frame") u.activeFrame = item.value;
+            if (item.type === "title") { u.activeTitle = item.value; u.titleManualOff = false; }
+            this.saveShopUnlocks(u);
+            this.renderShellaMarket();
+            this.toast("已切换佩戴「" + item.title + "」，聊天室同步生效", "success");
+            return;
+        }
+
+        if (Auth.isGuest()) {
+            this.promptCitizenUpgrade("用因果值兑换「" + item.title + "」");
+            return;
+        }
+
+        var s = Auth.getState();
+        var curPts = (s && typeof s.points === "number") ? s.points : Number((s && s.points) || 0);
+        if (curPts < item.cost) {
+            this.toast("因果值不足（需要 " + item.cost + "，当前 " + curPts + "），可先去每日祈愿或输入暗号 ALICE99", "warn");
+            return;
+        }
+
+        var self = this;
+        this.showConfirm(
+            "确定消耗 " + item.cost + " 因果值兑换「" + item.title + "」吗？",
+            function () {
+                var nextPts = Math.max(0, curPts - item.cost);
+                Auth.updateLocal({ points: nextPts });
+                self.unlockShopItemLocal(item, true);
+                self.updateUI();
+                self.renderShellaMarket();
+                self.syncPointsToGas(nextPts);
+                self.toast("兑换成功！已解锁并佩戴「" + item.title + "」", "success");
+            },
+            null,
+            { title: "Shella · 等价交换", okText: "确认兑换", cancelText: "再想想" }
+        );
+    },
+
+    handlePromoRedeem() {
+        var input = document.getElementById("promo-code-input");
+        if (!input) return;
+        var code = input.value.trim().toUpperCase();
+        if (!code) {
+            this.toast("请先输入纪念暗号", "warn");
+            input.focus();
+            return;
+        }
+        var codes = ALICE_CONSTANTS.PROMO_CODES || {};
+        var reward = codes[code];
+        if (!reward) {
+            this.toast("未找到暗号「" + code + "」，请核对大小写或卡包说明书", "error");
+            return;
+        }
+        var u = this.getShopUnlocks();
+        if (u.redeemedCodes.indexOf(code) !== -1) {
+            this.toast("你已经领取过暗号「" + code + "」的奖励啦", "warn");
+            return;
+        }
+        if (reward.points && Auth.isGuest()) {
+            this.promptCitizenUpgrade("领取暗号「" + code + "」的 +" + reward.points + " 因果值");
+            return;
+        }
+
+        u.redeemedCodes.push(code);
+        this.saveShopUnlocks(u);
+
+        if (reward.points) {
+            var s = Auth.getState();
+            var nextPts = Number((s && s.points) || 0) + Number(reward.points);
+            Auth.updateLocal({ points: nextPts });
+            this.updateUI();
+            this.syncPointsToGas(nextPts);
+        }
+        if (reward.unlockId) {
+            var item = (ALICE_CONSTANTS.SHOP_ITEMS || []).find(function (x) { return x.id === reward.unlockId; });
+            if (item) this.unlockShopItemLocal(item, true);
+        }
+        input.value = "";
+        this.renderShellaMarket();
+        this.toast("暗号核销成功「" + reward.label + "」：" + reward.desc, "success");
     },
 
     async init() {
@@ -190,6 +1159,8 @@ const App = {
                 if (e.target && e.target.tagName === "IMG" && shell.contains(e.target)) e.preventDefault();
             }, false);
         }
+        this.initAuthPortal();
+        this.initHomeHub();
         this.showLoading("连接因果线…");
         var state = Auth.getState();
         var token = Auth.getToken();
@@ -197,7 +1168,8 @@ const App = {
         if (state && state.uid && token) {
             this.worldData = null;
             this.updateUI();
-            this.showScene(ALICE_CONSTANTS.SCENES.MAP);
+            var startScene = (location.hash === "#market") ? ALICE_CONSTANTS.SCENES.MARKET : ALICE_CONSTANTS.SCENES.MAP;
+            this.showScene(startScene);
             this.initYumeWall();
             this.tryBgmWelcomePulse();
             if (typeof AliceFeatures !== "undefined" && AliceFeatures.updateEnvironment) {
@@ -205,11 +1177,12 @@ const App = {
                 setInterval(AliceFeatures.updateEnvironment, 60000);
             }
             BGM.init();
+            this.initTheaterLazyPlay();
             this.initGardenVnTheaterBg();
             this.hideLoading();
             return;
         }
-        /* 无本地登录态则显示登录页 */
+        /* 无本地登录态则显示登录/注册门户 */
         this.showScene("scene-login");
         var fileHint = document.getElementById("login-file-hint");
         if (fileHint && this.isFileProtocol()) fileHint.classList.remove("hidden");
@@ -244,9 +1217,18 @@ const App = {
     playGardenVnTheaterBg() {
         var root = document.getElementById("scene-theater");
         if (!root) return;
+        var reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         root.querySelectorAll(".garden-vn-card").forEach(function (card) {
             var video = card.querySelector("video.garden-vn-card-bg");
             if (!video) return;
+            if (reducedMotion) {
+                card.classList.add("is-bg-done");
+                video.pause();
+                return;
+            }
+            if (!video.src && video.dataset && video.dataset.src) {
+                video.src = video.dataset.src;
+            }
             card.classList.remove("is-bg-done");
             video.loop = false;
             video.muted = true;
@@ -298,11 +1280,7 @@ const App = {
 
     navigateTo(key) {
         if (key === "GARDEN" && !Auth.canEnterGarden()) {
-            alert("仅市民可进入庭院。");
-            return;
-        }
-        if (key === "MARKET" && !Auth.canEnterMarket()) {
-            alert("仅市民可进入市集。");
+            this.promptCitizenUpgrade("因果庭院抽卡");
             return;
         }
         var id = ALICE_CONSTANTS.SCENES[key];
@@ -318,10 +1296,34 @@ const App = {
 
     showMaidDialog(maid) {
         const arr = ALICE_CONSTANTS.DIALOGUES[maid];
-        if (Array.isArray(arr) && arr.length) {
-            const msg = arr[Math.floor(Math.random() * arr.length)];
-            console.log("[" + maid + "] " + msg);
-        }
+        if (!Array.isArray(arr) || !arr.length) return;
+        const msg = arr[Math.floor(Math.random() * arr.length)];
+        var names = {
+            YUME: "Yume · 记录者",
+            HANA: "Hana · 引导者",
+            ALICE: "Alice · 裁定者",
+            AZALEA: "Azalea · 确认",
+            MEILING: "Meiling · 清点",
+            SHELLA: "Shella · 维持",
+            MIZUKI: "Mizuki · 守望",
+            SIENNA: "Sienna · 翻牌者"
+        };
+        var wrap = document.getElementById("character-whisper");
+        var whoEl = document.getElementById("character-whisper-who");
+        var textEl = document.getElementById("character-whisper-text");
+        if (!wrap || !textEl) return;
+        clearTimeout(this._whisperTimer);
+        if (whoEl) whoEl.textContent = names[maid] || maid;
+        textEl.textContent = "“" + msg + "”";
+        wrap.classList.remove("hidden", "is-leaving");
+        wrap.onclick = function () {
+            wrap.classList.add("is-leaving");
+            setTimeout(function () { wrap.classList.add("hidden"); wrap.classList.remove("is-leaving"); }, 260);
+        };
+        this._whisperTimer = setTimeout(function () {
+            wrap.classList.add("is-leaving");
+            setTimeout(function () { wrap.classList.add("hidden"); wrap.classList.remove("is-leaving"); }, 260);
+        }, 4800);
     },
 
     async enterGarden() {
@@ -371,9 +1373,6 @@ const App = {
             uid: state.uid,
             token: Auth.getToken()
         };
-        try {
-            await fetch(url, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-        } catch (e) {}
         var res;
         try {
             res = await fetch(url, {
@@ -402,7 +1401,7 @@ const App = {
         return welcome;
     },
 
-    /** Hana 迎宾 section：气泡框慢速打字 50–80 字 */
+    /** Hana 迎宾 section：支持点击立刻出全字、再点击继续 */
     playHanaPrologue(text) {
         return new Promise(function(resolve) {
             var overlay = document.getElementById("hana-prologue");
@@ -413,23 +1412,36 @@ const App = {
             overlay.classList.remove("hidden");
             textEl.textContent = "";
             var i = 0;
-            var interval = 65;
+            var typingDone = false;
+            var closed = false;
+            var finishDone = function () {
+                if (closed) return;
+                closed = true;
+                overlay.onclick = null;
+                if (sprite) sprite.classList.add("hana-dissolve");
+                setTimeout(function () {
+                    overlay.classList.add("hidden");
+                    if (sprite) sprite.classList.remove("hana-dissolve");
+                    resolve();
+                }, 650);
+            };
             var t = setInterval(function() {
                 textEl.textContent += text.charAt(i);
                 i++;
                 if (i >= text.length) {
                     clearInterval(t);
-                    var done = function() {
-                        overlay.classList.add("hidden");
-                        if (sprite) sprite.classList.remove("hana-dissolve");
-                        resolve();
-                    };
-                    overlay.onclick = function() {
-                        if (sprite) sprite.classList.add("hana-dissolve");
-                        setTimeout(done, 1200);
-                    };
+                    typingDone = true;
                 }
-            }, interval);
+            }, 45);
+            overlay.onclick = function () {
+                if (!typingDone) {
+                    clearInterval(t);
+                    textEl.textContent = text;
+                    typingDone = true;
+                    return;
+                }
+                finishDone();
+            };
         });
     },
 
@@ -446,25 +1458,34 @@ const App = {
         } else {
             Game.currentDetail = null;
         }
-        await UI.runGalgameFlow({ detail: Game.currentDetail, startFromIndex: progress.questionIndex || 0 });
+        var finished = await UI.runGalgameFlow({ detail: Game.currentDetail, startFromIndex: progress.questionIndex || 0 });
+        if (!finished) {
+            this.showScene(ALICE_CONSTANTS.SCENES.MAP);
+            return;
+        }
         this.showScene(ALICE_CONSTANTS.SCENES.GARDEN);
         App.finishQuiz();
     },
 
     async handleLogin() {
-        const uid = document.getElementById("input-uid")?.value?.trim();
-        const pwd = document.getElementById("input-pwd")?.value;
+        var uidEl = document.getElementById("input-uid");
+        var pwdEl = document.getElementById("input-pwd");
+        const uid = uidEl ? uidEl.value.trim() : "";
+        const pwd = pwdEl ? pwdEl.value : "";
         if (!uid || !pwd) {
-            alert("请填写 UID 与密码");
+            if (uidEl && !uid) { uidEl.classList.add("user-invalid-fallback"); uidEl.setAttribute("aria-invalid", "true"); uidEl.focus(); }
+            else if (pwdEl && !pwd) { pwdEl.classList.add("user-invalid-fallback"); pwdEl.setAttribute("aria-invalid", "true"); pwdEl.focus(); }
+            this.toast("请填写灵魂编号（或昵称）与密码", "warn");
             return;
         }
-        this.showLoading("身份认证中…");
+        this.showLoading("正在核对庭院档案…");
         try {
-            await Auth.login(uid, pwd);
+            var state = await Auth.login(uid, pwd);
             const out = await Auth.refreshFromGAS();
             if (out) this.worldData = out.world;
             this.updateUI();
             this.hideLoading();
+            this.toast("欢迎回到庭院，" + (state.name || state.uid), "success");
             if (typeof OpenDoorTransition !== "undefined" && OpenDoorTransition.run) {
                 OpenDoorTransition.run(function () {
                     this.showScene(ALICE_CONSTANTS.SCENES.MAP);
@@ -478,7 +1499,45 @@ const App = {
             }
         } catch (e) {
             this.hideLoading();
-            alert(e.message || "认证失败");
+            this.toast(e.message || "认证失败", "error");
+        }
+    },
+
+    async handleRegister() {
+        var nameEl = document.getElementById("reg-name");
+        var pwdEl = document.getElementById("reg-pwd");
+        var name = nameEl ? nameEl.value.trim() : "";
+        var pwd = pwdEl ? pwdEl.value : "";
+        if (!name) {
+            if (nameEl) { nameEl.classList.add("user-invalid-fallback"); nameEl.setAttribute("aria-invalid", "true"); nameEl.focus(); }
+            this.toast("请先填写你想使用的庭院昵称", "warn");
+            return;
+        }
+        if (pwd.length < 3) {
+            if (pwdEl) { pwdEl.classList.add("user-invalid-fallback"); pwdEl.setAttribute("aria-invalid", "true"); pwdEl.focus(); }
+            this.toast("密码至少需要 3 位字符", "warn");
+            return;
+        }
+        this.showLoading("Yume 正在为你签发庭院编号…");
+        try {
+            var state = await Auth.register(name, pwd);
+            this.updateUI();
+            this.hideLoading();
+            this.toast("已为你签发编号 " + (state.uid || "") + "（赠 200 因果值）", "success");
+            if (typeof OpenDoorTransition !== "undefined" && OpenDoorTransition.run) {
+                OpenDoorTransition.run(function () {
+                    this.showScene(ALICE_CONSTANTS.SCENES.MAP);
+                    this.initYumeWall();
+                    this.tryBgmWelcomePulse();
+                }.bind(this));
+            } else {
+                this.showScene(ALICE_CONSTANTS.SCENES.MAP);
+                this.initYumeWall();
+                this.tryBgmWelcomePulse();
+            }
+        } catch (e) {
+            this.hideLoading();
+            this.toast(e.message || "注册失败，请稍后重试", "error");
         }
     },
 
@@ -487,17 +1546,10 @@ const App = {
         Auth.loginAsGuest();
         this.updateUI();
         this.hideLoading();
-        if (typeof OpenDoorTransition !== "undefined" && OpenDoorTransition.run) {
-            OpenDoorTransition.run(function () {
-                this.showScene(ALICE_CONSTANTS.SCENES.MAP);
-                this.initYumeWall();
-                this.tryBgmWelcomePulse();
-            }.bind(this));
-        } else {
-            this.showScene(ALICE_CONSTANTS.SCENES.MAP);
-            this.initYumeWall();
-            this.tryBgmWelcomePulse();
-        }
+        this.toast("已以漫游访客进入 · 可随时免费注册成为市民");
+        this.showScene(ALICE_CONSTANTS.SCENES.MAP);
+        this.initYumeWall();
+        this.tryBgmWelcomePulse();
     },
 
     /** 是否以 file 协议打开（易导致 Failed to fetch） */
@@ -531,14 +1583,14 @@ const App = {
 
     async handleWallPost() {
         if (Auth.isGuest()) {
-            alert("留言同步需要灵魂认证（市民身份）。请在登录界面完成认证契约~");
+            this.promptCitizenUpgrade("在 Yume 留言墙同步留痕");
             return;
         }
         var input = document.getElementById("wall-input");
         var msg = input ? input.value.trim() : "";
         if (!msg) return;
         var state = Auth.getState();
-        this.showLoading("同步中…");
+        this.showLoading("正在写入页边留痕…");
         try {
             var payload = {
                 action: "wall_post",
@@ -560,19 +1612,20 @@ const App = {
             }
             if (data.result === "success") {
                 input.value = "";
+                this.toast("你的留痕已记录在留言墙上", "success");
                 this.initYumeWall();
             } else {
-                alert(data.message || "发送失败");
+                this.toast(data.message || "发送失败", "error");
             }
         } catch (e) {
-            alert("发送失败");
+            this.toast("发送失败，请稍后重试", "error");
         }
         this.hideLoading();
     },
 
     async handleCheckin() {
         if (Auth.isGuest()) {
-            alert("每日祈愿与因果值累积需要灵魂认证。欢迎漫游探索庭院与壁纸花园~");
+            this.promptCitizenUpgrade("每日祈愿（+1000 因果值）");
             return;
         }
         const state = Auth.getState();
@@ -580,10 +1633,10 @@ const App = {
         const last = localStorage.getItem(ALICE_CONSTANTS.STORAGE.LAST_CHECKIN);
         const today = new Date().toISOString().split("T")[0];
         if (last === today) {
-            alert("今日已祈愿");
+            this.toast("今天已经祈愿过了，明天再来看看吧。");
             return;
         }
-        this.showLoading("祈愿中…");
+        this.showLoading("Meiling 正在清点今天的因果值…");
         try {
             const res = await fetch(ALICE_CONSTANTS.GAS_URL, {
                 method: "POST",
@@ -599,7 +1652,7 @@ const App = {
             try {
                 data = JSON.parse(rawText);
             } catch (e) {
-                alert("祈愿未能传达");
+                this.toast("祈愿未能传达，请稍后再试", "error");
                 this.hideLoading();
                 return;
             }
@@ -607,12 +1660,12 @@ const App = {
                 Auth.updateLocal({ points: data.newPoints ?? state.points + ALICE_CONSTANTS.BALANCE.DAILY_REWARD });
                 localStorage.setItem(ALICE_CONSTANTS.STORAGE.LAST_CHECKIN, today);
                 this.updateUI();
-                alert("祈愿成功，因果值 +" + ALICE_CONSTANTS.BALANCE.DAILY_REWARD);
+                this.toast("祈愿已传达 · 因果值 +" + ALICE_CONSTANTS.BALANCE.DAILY_REWARD, "success");
             } else {
-                alert(data.message || "祈愿失败");
+                this.toast(data.message || "祈愿失败", "warn");
             }
         } catch (e) {
-            alert("祈愿未能传达");
+            this.toast("祈愿未能传达，请检查网络", "error");
         }
         this.hideLoading();
     },
@@ -845,7 +1898,7 @@ const UI = {
         function setCardImg() {
             if (cardImg && detail.id) {
                 var dir = ALICE_CONSTANTS.PATHS.CARDS_IMAGES || "assets/cards/";
-                cardImg.src = (dir + detail.id + ".webp").replace(/\/+/g, "/");
+                cardImg.src = detail.image ? String(detail.image) : (dir + detail.id + ".webp").replace(/\/+/g, "/");
                 cardImg.alt = detail.name || detail.id;
                 cardImg.style.display = "";
                 if (cardImgWrap) cardImgWrap.classList.remove("hidden");
@@ -879,29 +1932,87 @@ const UI = {
             if (manualInput) manualInput.maxLength = ALICE_CONSTANTS.BALANCE.ANSWER_MAX_LEN || 30;
         }
 
-        function typewriter(el, text, delay) {
-            return new Promise(function(resolve) {
-                if (!el) return resolve();
-                el.textContent = "";
-                var i = 0;
-                var t = setInterval(function() {
-                    el.textContent += text.charAt(i);
-                    i++;
-                    if (i >= text.length) {
-                        clearInterval(t);
-                        resolve();
-                    }
-                }, delay || CHAR_DELAY);
-            });
+        var aborted = false;
+        var activeTimers = [];
+        var abortResolvers = [];
+
+        function setProgress(stepIndex, totalCount, labelText) {
+            var titleEl = document.getElementById("galgame-card-title");
+            var stepEl = document.getElementById("galgame-step-label");
+            var fillEl = document.getElementById("galgame-progress-fill");
+            if (titleEl) titleEl.textContent = (detail && (detail.name || detail.id)) ? String(detail.name || detail.id) : "因果剧场";
+            if (stepEl) stepEl.textContent = labelText || (String(stepIndex).padStart(2, "0") + " / " + String(totalCount).padStart(2, "0"));
+            if (fillEl) fillEl.style.width = Math.min(100, Math.max(0, Math.round((stepIndex / totalCount) * 100))) + "%";
         }
 
-        function waitClick() {
-            return new Promise(function(resolve) {
-                var handler = function() {
-                    overlay.removeEventListener("click", handler);
+        function cleanupExit() {
+            activeTimers.forEach(function (id) { clearInterval(id); });
+            activeTimers.length = 0;
+            abortResolvers.forEach(function (fn) { try { fn(); } catch (e) {} });
+            abortResolvers.length = 0;
+        }
+
+        var pauseBtn = document.getElementById("galgame-pause-exit");
+        if (pauseBtn) {
+            pauseBtn.onclick = function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                aborted = true;
+                Game.saveProgress();
+                cleanupExit();
+                overlay.classList.add("hidden");
+                hideChoices();
+                if (typeof App !== "undefined" && App.toast) App.toast("当前进度已自动保存，随时可回到庭院继续。");
+            };
+        }
+
+        /** 点击一次立刻出全字，再点击继续下一句 */
+        function playLineAndWait(text) {
+            return new Promise(function (resolve) {
+                if (aborted || !textEl) return resolve();
+                var str = String(text || "");
+                textEl.textContent = "";
+                if (nextEl) nextEl.textContent = "点击加速";
+                var i = 0;
+                var typingDone = false;
+                var done = false;
+                var timer = setInterval(function () {
+                    if (aborted) {
+                        clearInterval(timer);
+                        return;
+                    }
+                    textEl.textContent += str.charAt(i);
+                    i++;
+                    if (i >= str.length) {
+                        clearInterval(timer);
+                        typingDone = true;
+                        if (nextEl) nextEl.textContent = "点击继续";
+                    }
+                }, CHAR_DELAY);
+                activeTimers.push(timer);
+
+                var onClick = function (e) {
+                    if (e && e.target && e.target.closest && e.target.closest("#galgame-top-hud, #galgame-character-hide-btn")) return;
+                    if (done) return;
+                    if (!typingDone) {
+                        clearInterval(timer);
+                        textEl.textContent = str;
+                        typingDone = true;
+                        if (nextEl) nextEl.textContent = "点击继续";
+                        return;
+                    }
+                    done = true;
+                    overlay.removeEventListener("click", onClick);
                     resolve();
                 };
-                overlay.addEventListener("click", handler);
+                overlay.addEventListener("click", onClick);
+                abortResolvers.push(function () {
+                    if (done) return;
+                    done = true;
+                    clearInterval(timer);
+                    overlay.removeEventListener("click", onClick);
+                    resolve();
+                });
             });
         }
 
@@ -909,38 +2020,37 @@ const UI = {
         setCardImg();
         setGalgameHanaEmotion("default");
         if (nameEl) nameEl.textContent = "Hana";
+        setProgress(startFromIndex, ALICE_CONSTANTS.BALANCE.QUIZ_COUNT, startFromIndex === 0 ? "序幕" : null);
         showDialogueBox();
         overlay.classList.remove("hidden");
         initGalgameCharacterDragAndHide();
 
         if (startFromIndex === 0 && (detail.fixedStory || "").trim()) {
-            await typewriter(textEl, detail.fixedStory.trim(), CHAR_DELAY);
-            nextEl.textContent = "点击继续";
-            await waitClick();
+            await playLineAndWait(detail.fixedStory.trim());
+            if (aborted) return false;
         }
 
         var questions = Game.getQuestions();
-        for (var idx = startFromIndex; idx < ALICE_CONSTANTS.BALANCE.QUIZ_COUNT; idx++) {
+        var totalQ = ALICE_CONSTANTS.BALANCE.QUIZ_COUNT;
+        for (var idx = startFromIndex; idx < totalQ; idx++) {
+            if (aborted) return false;
             var q = questions[idx];
             if (!q) continue;
 
+            setProgress(idx + 1, totalQ, String(idx + 1).padStart(2, "0") + " / " + String(totalQ).padStart(2, "0"));
             setGalgameHanaEmotion(q.emotion);
 
             if (q.dialogs && q.dialogs.length > 0) {
                 showDialogueBox();
                 for (var d = 0; d < q.dialogs.length; d++) {
-                    textEl.textContent = "";
-                    await typewriter(textEl, q.dialogs[d], CHAR_DELAY);
-                    nextEl.textContent = "点击继续";
-                    await waitClick();
+                    await playLineAndWait(q.dialogs[d]);
+                    if (aborted) return false;
                 }
             }
 
             showDialogueBox();
-            textEl.textContent = "";
-            await typewriter(textEl, q.text, CHAR_DELAY);
-            nextEl.textContent = "点击继续";
-            await waitClick();
+            await playLineAndWait(q.text);
+            if (aborted) return false;
 
             showChoices(q);
             var answerPromise = new Promise(function(resolveAnswer) {
@@ -953,6 +2063,11 @@ const UI = {
                     Game.saveProgress();
                     resolveAnswer();
                 }
+                abortResolvers.push(function () {
+                    if (resolved) return;
+                    resolved = true;
+                    resolveAnswer();
+                });
 
                 if (q.type === "choice" || (q.type === "choice_manual" && q.options && q.options.length > 0)) {
                     (q.options || []).forEach(function(opt) {
@@ -971,7 +2086,7 @@ const UI = {
                         var manualBtn = document.createElement("button");
                         manualBtn.type = "button";
                         manualBtn.className = "galgame-choice-btn galgame-choice-manual";
-                        manualBtn.textContent = "手动输入…";
+                        manualBtn.textContent = "写下自己的回答…";
                         manualBtn.onclick = function(e) {
                             e.preventDefault();
                             e.stopPropagation();
@@ -993,7 +2108,7 @@ const UI = {
                         if (e) { e.preventDefault(); e.stopPropagation(); }
                         var val = manualInput ? manualInput.value.trim() : "";
                         if (!val) {
-                            alert("请输入你的回答。");
+                            if (typeof App !== "undefined" && App.toast) App.toast("请输入你的回答。", "warn");
                             return;
                         }
                         submitAnswer(val);
@@ -1007,10 +2122,12 @@ const UI = {
                 }
             });
             await answerPromise;
+            if (aborted) return false;
         }
 
         overlay.classList.add("hidden");
         hideChoices();
+        return true;
     },
 
     renderQuiz() {
@@ -1052,11 +2169,11 @@ const UI = {
             submitBtn.onclick = function() {
                 var text = inputEl ? inputEl.value.trim() : "";
                 if (!text) {
-                    alert("请输入你的回答。");
+                    App.toast("请输入你的回答。", "warn");
                     return;
                 }
                 if (text.length > maxLen) {
-                    alert("回答不能超过 " + maxLen + " 字。");
+                    App.toast("回答不能超过 " + maxLen + " 字。", "warn");
                     return;
                 }
                 Game.answer(text);
@@ -1286,12 +2403,12 @@ App.startGachaFlow = async function() {
     const state = Auth.getState();
     const cost = ALICE_CONSTANTS.BALANCE.GACHA_COST;
     if (state && state.points < cost) {
-        alert("因果值不足 " + cost + "，请至市集兑换或完成每日任务。");
+        this.toast("因果值不足 " + cost + "，请先前往 Meiling 每日祈愿领取因果值。", "warn");
         return;
     }
     var self = this;
-    self.showConfirm("抽卡将消耗 " + cost + " 因果值，是否确认？", async function () {
-        self.showLoading("庭院正在准备中…");
+    self.showConfirm("抽取一张命运卡牌并进入十题剧场将消耗 " + cost + " 因果值，是否继续？", async function () {
+        self.showLoading("庭院正在展开剧场…");
         try {
             const detail = await Game.drawCard();
             var s = Auth.getState();
@@ -1300,14 +2417,18 @@ App.startGachaFlow = async function() {
             self.hideLoading();
             Game.currentDetail = detail;
             Game.saveProgress();
-            await UI.showCardStory(detail);
+            var finished = await UI.showCardStory(detail);
+            if (!finished) {
+                self.showScene(ALICE_CONSTANTS.SCENES.MAP);
+                return;
+            }
             self.showScene(ALICE_CONSTANTS.SCENES.GARDEN);
             App.finishQuiz();
         } catch (e) {
             self.hideLoading();
-            alert(e.message || "抽卡失败");
+            self.toast(e.message || "抽卡失败", "error");
         }
-    }, function () {});
+    }, function () {}, { title: "开启因果剧场", okText: "消耗 " + cost + " 并抽卡", cancelText: "先停一会儿" });
 };
 
 App.finishQuiz = async function() {
@@ -1327,7 +2448,7 @@ App.finishQuiz = async function() {
         this.updateUI();
         UI.showFateInSection(fateText);
     } catch (e) {
-        alert(e.message || "终局生成失败");
+        this.toast(e.message || "终局生成失败", "error");
         this.navigateTo("MAP");
     }
 };

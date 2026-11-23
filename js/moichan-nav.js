@@ -32,9 +32,9 @@
                 }
             }
         } catch (e) {}
-        navEl.style.left = "1rem";
+        navEl.style.left = "0.75rem";
         navEl.style.top = "auto";
-        navEl.style.bottom = "1rem";
+        navEl.style.bottom = "5.25rem";
     }
 
     function savePosition() {
@@ -47,8 +47,18 @@
         if (imgEl) imgEl.src = isOpenEyes ? IMG_OPEN : IMG_CLOSED;
     }
 
+    var MOEL_WHISPERS = [
+        "“有些页，还没有写完。”",
+        "“存在不需要先被看见，才配继续。”",
+        "“黑猫没有任务，只是刚好在这里。”",
+        "“99.000000% 之外，剩下的 1% 属于你。”",
+        "“第十三张牌，总是空白的。”"
+    ];
+
     function openBubble() {
         if (bubbleEl) {
+            var w = document.getElementById("moichan-nav-whisper");
+            if (w) w.textContent = MOEL_WHISPERS[Math.floor(Math.random() * MOEL_WHISPERS.length)];
             bubbleEl.classList.remove("hidden");
             bubbleOpenedAt = Date.now();
         }
@@ -132,12 +142,20 @@
             window.open("https://girlishmarinewallpaper-crypto.github.io/wallpaper/", "_blank", "noopener,noreferrer");
             return;
         }
-        if (go === "ANOTHER") {
-            window.location.href = "another.html";
+        if (go === "NEWS") {
+            window.location.href = "news.html";
             return;
         }
-        if (go === "OBSERVATION") {
-            window.location.href = "observation.html";
+        if (go === "SHOP") {
+            window.location.href = "individualshop.html";
+            return;
+        }
+        if (go === "SHOWCASE") {
+            window.location.href = "showcase.html";
+            return;
+        }
+        if (go === "CHAT") {
+            window.location.href = "chat.html";
             return;
         }
         if (go && typeof App !== "undefined" && App.navigateTo) App.navigateTo(go);
