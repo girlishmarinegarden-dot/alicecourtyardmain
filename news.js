@@ -15,6 +15,8 @@
     DEFAULT_PAGE_SIZE: 20,
     /** Password for hasText=false private rows (session-only, resets on reload) */
     UNLOCK_PASS: 'alicecourtyardr18',
+    /** Optional WhatsApp number in international digits without '+' (leave empty to let customer pick chat in WhatsApp) */
+    WHATSAPP_NUMBER: '',
     /** Default UI language: 'en' | 'zh' */
     DEFAULT_LANG: 'en'
   };
@@ -99,6 +101,8 @@
       },
       viewList: 'View',
       copyList: 'Copy List',
+      waShort: 'WhatsApp',
+      waModalBtn: 'Send via WhatsApp ↗',
       modalTitle: 'Selected Items',
       modalEmpty: 'No items selected yet.',
       clearAll: 'Clear All',
@@ -201,6 +205,8 @@
       },
       viewList: '查看',
       copyList: '复制清单',
+      waShort: 'WhatsApp',
+      waModalBtn: 'WhatsApp 询单 ↗',
       modalTitle: '已选货品清单',
       modalEmpty: '暂未勾选任何货品',
       clearAll: '清空全部',
@@ -562,10 +568,12 @@
     setText_('page-next', t_('next'));
     setText_('footer-tip', t_('footerTip'));
     setText_('selection-view-btn', t_('viewList'));
+    setText_('selection-wa-btn', t_('waShort'));
     setText_('selection-copy-btn', t_('copyList'));
     setText_('modal-title-text', t_('modalTitle'));
     setText_('modal-clear-btn', t_('clearAll'));
     setText_('modal-copy-btn', t_('copyInquiryBtn'));
+    setText_('modal-wa-btn', t_('waModalBtn'));
     setText_('lb-copy-btn', t_('copyBtn'));
     setText_('lb-drive-link', t_('originalLink'));
 
@@ -1246,6 +1254,20 @@
     return lines.join('\n');
   }
 
+  function sendSelectedToWhatsApp_() {
+    var selected = getSelectedItems_();
+    if (selected.length === 0) {
+      showToast_(t_('pickFirstToast'));
+      return;
+    }
+    var text = formatInquiryText_(selected);
+    var num = String(CONFIG.WHATSAPP_NUMBER || '').replace(/\D/g, '');
+    var url = num
+      ? 'https://wa.me/' + num + '?text=' + encodeURIComponent(text)
+      : 'https://wa.me/?text=' + encodeURIComponent(text);
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
   function copySelectedList_() {
     var selected = getSelectedItems_();
     if (selected.length === 0) {
@@ -1745,15 +1767,19 @@
     }
 
     var selViewBtn = document.getElementById('selection-view-btn');
+    var selWaBtn = document.getElementById('selection-wa-btn');
     var selCopyBtn = document.getElementById('selection-copy-btn');
     var selClearBtn = document.getElementById('selection-clear-btn');
     var modalCopyBtn = document.getElementById('modal-copy-btn');
+    var modalWaBtn = document.getElementById('modal-wa-btn');
     var modalClearBtn = document.getElementById('modal-clear-btn');
 
     if (selViewBtn) selViewBtn.addEventListener('click', openSelectionModal_);
+    if (selWaBtn) selWaBtn.addEventListener('click', sendSelectedToWhatsApp_);
     if (selCopyBtn) selCopyBtn.addEventListener('click', copySelectedList_);
     if (selClearBtn) selClearBtn.addEventListener('click', clearSelection_);
     if (modalCopyBtn) modalCopyBtn.addEventListener('click', copySelectedList_);
+    if (modalWaBtn) modalWaBtn.addEventListener('click', sendSelectedToWhatsApp_);
     if (modalClearBtn) modalClearBtn.addEventListener('click', clearSelection_);
 
     document.querySelectorAll('[data-modal-close]').forEach(function (el) {

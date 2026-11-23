@@ -281,10 +281,94 @@
     return null;
   }
 
-  function driveThumbUrl(link) {
+  function driveThumbUrl(link, width) {
     var id = driveIdFromUrl(link);
-    if (id) return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w240';
+    if (id) return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w' + (width || 240);
     return link;
+  }
+
+  /* ==================== 站内原生高清灯箱 (<dialog id="gal-lightbox">) ==================== */
+  var lbState_ = { links: [], index: 0, title: '', caption: '', zoomed: false };
+
+  function renderLightbox_() {
+    var img = document.getElementById('gal-lb-img');
+    var titleEl = document.getElementById('gal-lb-title');
+    var counterEl = document.getElementById('gal-lb-counter');
+    var captionEl = document.getElementById('gal-lb-caption');
+    var origEl = document.getElementById('gal-lb-orig');
+    var prevBtn = document.getElementById('gal-lb-prev');
+    var nextBtn = document.getElementById('gal-lb-next');
+    var zoomBtn = document.getElementById('gal-lb-zoom');
+    if (!img || !lbState_.links.length) return;
+    var url = lbState_.links[lbState_.index];
+    img.src = driveThumbUrl(url, 1600);
+    img.alt = lbState_.title || '摊位图片';
+    img.classList.toggle('is-zoomed', lbState_.zoomed);
+    if (zoomBtn) zoomBtn.textContent = lbState_.zoomed ? '🔍 还原' : '🔍 放大';
+    if (titleEl) titleEl.textContent = lbState_.title || '摊位大图预览';
+    if (counterEl) {
+      counterEl.textContent = lbState_.links.length > 1 ? ((lbState_.index + 1) + ' / ' + lbState_.links.length) : '';
+    }
+    if (captionEl) captionEl.textContent = lbState_.caption || '';
+    if (origEl) origEl.href = url;
+    var multi = lbState_.links.length > 1;
+    if (prevBtn) prevBtn.hidden = !multi;
+    if (nextBtn) nextBtn.hidden = !multi;
+  }
+
+  function stepLightbox_(delta) {
+    if (lbState_.links.length <= 1) return;
+    lbState_.index = (lbState_.index + delta + lbState_.links.length) % lbState_.links.length;
+    lbState_.zoomed = false;
+    renderLightbox_();
+  }
+
+  function bindLightbox_() {
+    var dlg = document.getElementById('gal-lightbox');
+    if (!dlg || dlg.dataset.lbBound) return;
+    dlg.dataset.lbBound = '1';
+    var prevBtn = document.getElementById('gal-lb-prev');
+    var nextBtn = document.getElementById('gal-lb-next');
+    var zoomBtn = document.getElementById('gal-lb-zoom');
+    var img = document.getElementById('gal-lb-img');
+    if (prevBtn) prevBtn.addEventListener('click', function () { stepLightbox_(-1); });
+    if (nextBtn) nextBtn.addEventListener('click', function () { stepLightbox_(1); });
+    var toggleZoom = function () {
+      lbState_.zoomed = !lbState_.zoomed;
+      renderLightbox_();
+    };
+    if (zoomBtn) zoomBtn.addEventListener('click', toggleZoom);
+    if (img) img.addEventListener('click', toggleZoom);
+    dlg.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowLeft') { e.preventDefault(); stepLightbox_(-1); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); stepLightbox_(1); }
+    });
+    var isOutside = function (e) {
+      var r = dlg.getBoundingClientRect();
+      return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+    };
+    var pressedOutside = false;
+    dlg.addEventListener('pointerdown', function (e) { pressedOutside = isOutside(e); });
+    dlg.addEventListener('pointerup', function (e) {
+      if (pressedOutside && isOutside(e)) dlg.close();
+    });
+  }
+
+  function openLightbox_(links, startIdx, title, caption) {
+    var dlg = document.getElementById('gal-lightbox');
+    if (!dlg || !links || !links.length) return;
+    bindLightbox_();
+    lbState_.links = links.slice();
+    lbState_.index = Math.max(0, Math.min(startIdx || 0, links.length - 1));
+    lbState_.title = title || '摊位大图预览';
+    lbState_.caption = caption || '';
+    lbState_.zoomed = false;
+    renderLightbox_();
+    if (typeof dlg.showModal === 'function') {
+      if (!dlg.open) dlg.showModal();
+    } else {
+      dlg.setAttribute('open', '');
+    }
   }
 
   function escapeHtml(str) {
@@ -381,16 +465,23 @@
     if (links.length) {
       var imgInner = document.createElement('div');
       imgInner.className = 'shop-card__thumbs';
-      links.forEach(function (url) {
+      links.forEach(function (url, idx) {
         var a = document.createElement('a');
         a.className = 'shop-card__thumb';
         a.href = url;
         a.target = '_blank';
         a.rel = 'noopener noreferrer';
-        a.title = 'Drive';
+        a.title = '点击高清放大预览';
+        a.addEventListener('click', function (ev) {
+          ev.preventDefault();
+          var capParts = [];
+          if (desc) capParts.push(desc);
+          if (contact) capParts.push('联系方式：' + contact);
+          openLightbox_(links, idx, desc ? desc.slice(0, 28) : '摊位大图预览', capParts.join('\n'));
+        });
         var img = document.createElement('img');
-        img.src = driveThumbUrl(url).replace(/sz=w\d+/, 'sz=w120');
-        img.alt = '';
+        img.src = driveThumbUrl(url, 180);
+        img.alt = desc ? desc.slice(0, 32) : '摊位图片';
         img.referrerPolicy = 'no-referrer';
         img.loading = 'lazy';
         img.onerror = function () {
@@ -630,52 +721,25 @@
     var stage = document.getElementById('gal-stage');
     var vid = document.querySelector('.gal-bg-video');
     var boot = document.getElementById('gal-boot');
-    var settled = false;
+    var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    function revealPage_() {
-      if (settled) return;
-      settled = true;
-      document.body.classList.add('gal-ready');
-      if (boot) {
-        boot.setAttribute('aria-busy', 'false');
-        boot.setAttribute('aria-hidden', 'true');
-      }
+    document.body.classList.add('gal-ready');
+    if (boot) {
+      boot.setAttribute('aria-busy', 'false');
+      boot.setAttribute('aria-hidden', 'true');
     }
-
-    function onVideoReady_() {
-      if (settled) return;
-      if (stage) stage.classList.add('gal-video-ready');
-      revealPage_();
+    if (!vid || !stage) return;
+    if (reducedMotion) {
+      vid.pause();
+      stage.classList.add('gal-video-missing');
+      return;
     }
-
-    function onVideoMissing_() {
-      if (settled) return;
-      if (stage) stage.classList.add('gal-video-missing');
-      revealPage_();
-    }
-
-    if (!vid || !stage) {
-      revealPage_();
-    } else {
-      vid.preload = 'auto';
-      vid.addEventListener('canplaythrough', onVideoReady_);
-      vid.addEventListener('error', onVideoMissing_);
-      vid.addEventListener('progress', function () {
-        if (vid.readyState >= 4) onVideoReady_();
-      });
-      if (vid.readyState >= 4) {
-        onVideoReady_();
-      } else {
-        setTimeout(function () {
-          if (settled) return;
-          if (vid.error) onVideoMissing_();
-          else if (vid.readyState >= 2) {
-            if (stage) stage.classList.add('gal-video-ready');
-            revealPage_();
-          } else onVideoMissing_();
-        }, 18000);
-      }
-    }
+    vid.addEventListener('canplay', function () {
+      stage.classList.add('gal-video-ready');
+    }, { once: true });
+    vid.addEventListener('error', function () {
+      stage.classList.add('gal-video-missing');
+    }, { once: true });
   }
 
   function init() {

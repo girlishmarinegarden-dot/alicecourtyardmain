@@ -4,14 +4,33 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#12081c" />
-  <title>聊天 | 爱丽丝庭院</title>
+  <title>频道聊天 | 爱丽丝庭院</title>
+  <meta name="description" content="爱丽丝庭院公共频道聊天室：携带你的白/黑之书印记、称号与贴纸，与同好实时交流。" />
+  <meta property="og:title" content="频道聊天 | 爱丽丝庭院" />
+  <meta property="og:description" content="爱丽丝庭院公共频道聊天室：携带你的庭院印记与限定贴纸，实时交流。" />
+  <meta property="og:image" content="assets/alicecore.webp" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="news.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Noto+Serif+SC:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="courtyard-subpage.css" />
   <link rel="stylesheet" href="chat.css" />
 </head>
 <body class="gal-body">
+  <nav class="cg-subnav" aria-label="站内导航">
+    <div class="cg-subnav__inner">
+      <a href="index.html" class="cg-subnav__brand">✦ 爱丽丝庭院</a>
+      <div class="cg-subnav__links">
+        <a href="index.html" class="cg-subnav__link">主页</a>
+        <a href="news.html" class="cg-subnav__link">商品目录</a>
+        <a href="individualshop.html" class="cg-subnav__link">私人摊位</a>
+        <a href="showcase.html" class="cg-subnav__link">晒卡墙</a>
+        <a href="chat.html" class="cg-subnav__link is-active" aria-current="page">频道聊天</a>
+        <a href="social.html" class="cg-subnav__link">社群</a>
+      </div>
+    </div>
+  </nav>
   <div class="gal-stage gal-stage--chat" id="gal-stage">
     <div class="gal-bg-fallback" aria-hidden="true"></div>
     <div class="gal-vignette" aria-hidden="true"></div>
@@ -20,9 +39,23 @@
     <div class="gal-content gal-content--chat">
       <a href="index.html" class="gal-back-home">← 返回庭院</a>
 
-      <section class="chat-panel gal-panel" aria-label="状态">
-        <p class="chat-status-line" id="chat-status">连接中…</p>
-        <p class="chat-name-preview">当前昵称：<span id="chat-name-preview">访客</span></p>
+      <section class="chat-panel gal-panel" aria-label="状态与装扮">
+        <div class="chat-status-top">
+          <p class="chat-status-line" id="chat-status">连接中…</p>
+          <a href="index.html#market" class="chat-market-link">✦ 去 Shella 市集换装扮 →</a>
+        </div>
+        <div class="chat-identity-bar">
+          <p class="chat-name-preview">
+            当前身份：<span id="chat-name-preview">访客</span>
+            <span id="chat-badge-preview" class="chat-badge" hidden></span>
+            <span id="chat-frame-preview" class="chat-frame-pill" hidden></span>
+          </p>
+          <form id="chat-nick-form" class="chat-nick-form" autocomplete="off">
+            <label for="chat-nick-input" class="chat-sr-only">自定义聊天昵称</label>
+            <input type="text" id="chat-nick-input" class="chat-nick-input" maxlength="24" placeholder="自定义临时昵称…" />
+            <button type="submit" class="chat-nick-btn">设昵称</button>
+          </form>
+        </div>
       </section>
 
       <section class="chat-panel gal-panel" aria-label="消息列表">

@@ -49,6 +49,7 @@ const ALICE_CONSTANTS = {
     ACTIONS: {
         FETCH_CORE: "fetch_core",
         LOGIN: "login",
+        REGISTER: "register",
         REFRESH_TOKEN: "refresh_token",
         CHECKIN: "daily_checkin",
         GENERATE: "generate_fate",
@@ -68,7 +69,74 @@ const ALICE_CONSTANTS = {
         BGM_ENABLED: "AliceGarden_BGM_Enabled",
         CHARACTER_FAVOR: "AliceGarden_Character_Favor",
         HANA_WELCOME_CACHE: "AliceGarden_HanaWelcome",
-        LANG: "AliceGarden_Lang"
+        LANG: "AliceGarden_Lang",
+        SHOP_UNLOCKS: "AliceGarden_ShopUnlocks",
+        RESIDUAL_UNLOCKED: "AliceGarden_ResidualUnlocked",
+        CHAT_NICK: "AliceGarden_ChatNick"
+    },
+
+    /** Shella 因果市集可兑换装扮与贴纸包 */
+    SHOP_ITEMS: [
+        {
+            id: "pack_courtyard",
+            type: "sticker",
+            value: "pack_courtyard",
+            title: "限定贴纸包 · 庭院三影",
+            badge: "STICKER PACK",
+            desc: "解锁聊天室 3 枚专属动效贴纸：Moel 黑猫、404 蝴蝶、第十三张空白牌。",
+            cost: 300
+        },
+        {
+            id: "frame_gold",
+            type: "frame",
+            value: "gold",
+            title: "聊天室 · 星金气泡框",
+            badge: "CHAT FRAME",
+            desc: "在公共频道发言时展示星金流光边框与柔金微晕。",
+            cost: 400
+        },
+        {
+            id: "frame_lilac",
+            type: "frame",
+            value: "lilac",
+            title: "聊天室 · 月影紫气泡框",
+            badge: "CHAT FRAME",
+            desc: "在公共频道发言时展示庭院暮紫边框与雾光阴影。",
+            cost: 400
+        },
+        {
+            id: "title_flipper",
+            type: "title",
+            value: "翻牌者",
+            title: "专属称号「翻牌者」",
+            badge: "TITLE SEAL",
+            desc: "在市民档案与频道聊天昵称旁佩戴 [翻牌者] 印记。",
+            cost: 200
+        }
+    ],
+
+    /** 实体 TCG 卡包 / 活动纪念暗号（站长可随时在此增删） */
+    PROMO_CODES: {
+        ALICE99: {
+            label: "庭院迎宾暗号",
+            points: 300,
+            desc: "获赠 +300 因果值"
+        },
+        MOEL01: {
+            label: "黑猫边界信物",
+            unlockId: "pack_courtyard",
+            desc: "直接解锁聊天室限定贴纸包（Moel / 404 蝴蝶 / 空白牌）"
+        },
+        CARD13: {
+            label: "第十三张空白牌暗号",
+            unlockId: "title_flipper",
+            desc: "直接解锁专属称号「翻牌者」"
+        },
+        AFTERALICE: {
+            label: "梦醒之后纪念暗号",
+            unlockId: "frame_gold",
+            desc: "直接解锁聊天室「星金气泡框」"
+        }
     },
 
     PATHS: {
@@ -104,11 +172,11 @@ const ALICE_CONSTANTS = {
     CHARACTERS: {
         hana: {
             default: "assets/characters/hanadefault.webp",
-            emotions: ["default", "smile", "sad", "prologue", "thinking"]
+            emotions: ["default", "smile", "sad", "angry"]
         },
         alice: {
             default: "assets/characters/alicedefault.webp",
-            emotions: ["default", "smile", "cold"]
+            emotions: ["default", "end", "judge"]
         },
         yume: {
             default: "assets/characters/yumedefault.webp",
@@ -137,14 +205,45 @@ const ALICE_CONSTANTS = {
     },
 
     DIALOGUES: {
-        YUME: ["记录无声，因果有痕。", "一切成立之事，皆已归档。", "笔尖所及，即为真实。"],
-        AZALEA: ["权限确认。卡牌序列已重组。", "秩序即是美德，请妥善保管您的因果资产。", "监控到能量波动……是稀有因果的味道。"],
-        MEILING: ["哎呀，今天也辛苦了，这是给勤奋灵魂的奖励~", "补充一点糖分（因果值）吧，温柔的人运气都不会差哦。", "收好这些，这是您与庭院建立联系的证明。"],
-        SHELLA: ["呵呵，想交换些什么？我这里的因果……可是明码标价的。", "腹黑？不，我只是比别人更懂得价值的流动而已。", "成交。希望这份碎片能带给你预想中的乐趣。"],
-        MIZUKI: ["此处为禁域，守护‘设定’是我的最高准则。", "干扰者已排除。请在规则内阅读，不要触碰红线。", "剑与意志，皆为庭院而鸣。"],
-        HANA: ["欢迎来到因果之庭。", "抽一张卡，我会为你讲述它的故事。", "十题之后，Alice 会为你写下终局。"],
-        ALICE: ["因果已归档。", "你的选择，即是你的终局。"],
-        SIENNA: ["占卜即与因果对话。", "选你所选，见你所见。", "命运之线，在此交织。"]
+        YUME: [
+            "有些页，还没有写完。",
+            "历史可以被重演，但结果不会被抹除。",
+            "你经过的每一处停顿，我都安静记下了。"
+        ],
+        AZALEA: [
+            "茶还温着，你的卡牌序列我也替你理好了。",
+            "请先坐下吧，这里的一切我都已确认无误。",
+            "每一次被认真对待的碎片，都值得好好安放。"
+        ],
+        MEILING: [
+            "今天也有被好好看见吗？这是给你的每日祈愿。",
+            "一点微小的累积，也能在长夜里留下光。",
+            "别忘了来清点今天的因果值哦。"
+        ],
+        SHELLA: [
+            "空着的位置我一直留着。想看看庭院里的等价交换吗？",
+            "每一段轨迹都有它的重量，这里的标价一向坦诚。",
+            "不急，慢慢看就好，时间在这里走得很慢。"
+        ],
+        MIZUKI: [
+            "书架上的每一卷都还静着，翻开哪一页都可以。",
+            "我会在这里守着门，你安心阅读便是。",
+            "有些真相不在结论里，而在页边的留白里。"
+        ],
+        HANA: [
+            "停下来也没关系。先抽一张牌吧，我会陪你走完这一页。",
+            "我不会替你决定，但你不是一个人在那里。",
+            "十个问题之后，Alice 会把这一页折好交给你。"
+        ],
+        ALICE: [
+            "你要去哪一边？",
+            "归档已成立。无论黑白，或是尚未写完的空白。"
+        ],
+        SIENNA: [
+            "前十二张是已被翻开的事，第十三张，始终留给翻牌的人。",
+            "我不替你下结论，只把牌面的纹理轻轻说给你听。",
+            "先把手放在水晶球上，看看今天哪三张牌愿意回应你。"
+        ]
     }
 };
 if (typeof Object.freeze === "function") Object.freeze(ALICE_CONSTANTS);

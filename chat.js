@@ -8,6 +8,9 @@
   'use strict';
 
   var USER_STATE_KEY = 'AliceGarden_User_State';
+  var SHOP_UNLOCKS_KEY = 'AliceGarden_ShopUnlocks';
+  var RESIDUAL_KEY = 'AliceGarden_ResidualUnlocked';
+  var CHAT_NICK_KEY = 'AliceGarden_ChatNick';
   var MAX_LINES = 300;
   var PRUNE_COUNT = 100;
   var DISPLAY_COUNT = 200;
@@ -28,7 +31,7 @@
 
   /**
    * 默认贴纸：内置 SVG + 固定动效（randomFx:false）。
-   * 自定义：WebP + randomFx:true，发送时随机 fx，也可在数组末尾追加条目。
+   * 自定义：WebP + randomFx:true，发送时随机 fx；unlockPack 为空表示默认开放，否则需在 Shella 市集或暗号解锁。
    * 仅允许白名单 src，勿把用户输入当 URL。
    */
   var STICKERS = [
@@ -39,9 +42,10 @@
     { id: 'fire', src: 'assets/chat-stickers/fire.svg', alt: 'fire', randomFx: false, className: 'chat-sticker--fire' },
     { id: 'moon', src: 'assets/chat-stickers/moon.svg', alt: 'moon', randomFx: false, className: 'chat-sticker--moon' },
     { id: '001', src: 'assets/chat-stickers/001.webp', alt: '001', randomFx: true },
-    { id: 'AZA001', src: 'assets/chat-stickers/AZA001.webp', alt: 'AZA001', randomFx: true }
-    // 示例（放入同名 webp 后取消注释）：
-    // ,{ id: 'my1', src: 'assets/chat-stickers/my1.webp', alt: '我的1', randomFx: true }
+    { id: 'AZA001', src: 'assets/chat-stickers/AZA001.webp', alt: 'AZA001', randomFx: true },
+    { id: 'moel_cat', src: 'assets/chat-stickers/moel_cat.svg', alt: 'Moel 黑猫', randomFx: false, className: 'chat-sticker--moon', unlockPack: 'pack_courtyard' },
+    { id: 'butterfly_404', src: 'assets/chat-stickers/butterfly_404.svg', alt: '404 蝴蝶', randomFx: false, className: 'chat-sticker--sparkle', unlockPack: 'pack_courtyard' },
+    { id: 'card13_blank', src: 'assets/chat-stickers/card13_blank.svg', alt: '第十三张空白牌', randomFx: false, className: 'chat-sticker--star', unlockPack: 'pack_courtyard' }
   ];
 
   var stickerById = {};
@@ -74,17 +78,81 @@
     return FX_POOL[idx];
   }
 
-  function getDisplayName() {
+  function readUserState() {
     try {
       var raw = localStorage.getItem(USER_STATE_KEY);
-      if (!raw) return '访客';
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function readShopUnlocks() {
+    try {
+      var raw = localStorage.getItem(SHOP_UNLOCKS_KEY);
+      if (!raw) return { stickers: [], frames: [], titles: [], activeTitle: '', activeFrame: '', titleManualOff: false };
       var o = JSON.parse(raw);
-      var n = o && o.name;
-      if (typeof n === 'string' && n.trim()) return n.trim().slice(0, 40);
+      return {
+        stickers: Array.isArray(o.stickers) ? o.stickers : [],
+        frames: Array.isArray(o.frames) ? o.frames : [],
+        titles: Array.isArray(o.titles) ? o.titles : [],
+        activeTitle: typeof o.activeTitle === 'string' ? o.activeTitle : '',
+        activeFrame: typeof o.activeFrame === 'string' ? o.activeFrame : '',
+        titleManualOff: !!o.titleManualOff
+      };
+    } catch (e) {
+      return { stickers: [], frames: [], titles: [], activeTitle: '', activeFrame: '', titleManualOff: false };
+    }
+  }
+
+  function getDisplayName() {
+    try {
+      var custom = localStorage.getItem(CHAT_NICK_KEY);
+      var state = readUserState();
+      var isGuest = !state || state.role === 'GUEST' || !state.uid || state.uid === 'GUEST';
+      if (!isGuest && state && typeof state.name === 'string' && state.name.trim()) {
+        return state.name.trim().slice(0, 40);
+      }
+      if (custom && custom.trim()) return custom.trim().slice(0, 24);
+      if (state && typeof state.name === 'string' && state.name.trim()) {
+        return state.name.trim().slice(0, 40);
+      }
       return '访客';
     } catch (e) {
       return '访客';
     }
+  }
+
+  function getActiveBadge() {
+    var u = readShopUnlocks();
+    if (u.titleManualOff) return '';
+    var avail = [];
+    var pushUnique = function (v) { if (v && avail.indexOf(v) === -1) avail.push(v); };
+    var s = readUserState();
+    var mem = String((s && s.memory) || '').trim();
+    if (/白之书|白书|white/i.test(mem)) pushUnique('白之书');
+    else if (/黑之书|黑书|black/i.test(mem)) pushUnique('黑之书');
+    else if (mem) pushUnique('未定义');
+    try {
+      if (localStorage.getItem(RESIDUAL_KEY) === '1') pushUnique('1% 残差');
+    } catch (e) {}
+    u.titles.forEach(pushUnique);
+    if (u.activeTitle && avail.indexOf(u.activeTitle) !== -1) return u.activeTitle;
+    return avail[0] || '';
+  }
+
+  function getActiveFrame() {
+    var u = readShopUnlocks();
+    if (u.activeFrame && u.frames.indexOf(u.activeFrame) !== -1) {
+      return u.activeFrame;
+    }
+    return '';
+  }
+
+  function isStickerUnlocked(st) {
+    if (!st || !st.unlockPack) return true;
+    var u = readShopUnlocks();
+    return u.stickers.indexOf(st.unlockPack) !== -1;
   }
 
   function chatDocRef(db) {
@@ -135,16 +203,28 @@
     var frag = document.createDocumentFragment();
     entriesChronological.forEach(function (row) {
       var rowEl = document.createElement('div');
-      rowEl.className = 'chat-row';
+      var frameCls = '';
+      if (row.fr === 'gold') frameCls = ' chat-row--frame-gold';
+      else if (row.fr === 'lilac') frameCls = ' chat-row--frame-lilac';
+      rowEl.className = 'chat-row' + frameCls;
       var meta = document.createElement('div');
       meta.className = 'chat-meta';
+      var nameWrap = document.createElement('span');
+      nameWrap.className = 'chat-name-wrap';
       var nameSpan = document.createElement('span');
       nameSpan.className = 'chat-name';
       nameSpan.textContent = String(row.n != null ? row.n : '—');
+      nameWrap.appendChild(nameSpan);
+      if (row.b && typeof row.b === 'string') {
+        var badgeSpan = document.createElement('span');
+        badgeSpan.className = 'chat-badge';
+        badgeSpan.textContent = '[' + row.b.slice(0, 14) + ']';
+        nameWrap.appendChild(badgeSpan);
+      }
       var timeSpan = document.createElement('span');
       timeSpan.className = 'chat-time';
       timeSpan.textContent = formatLineTime(row.t);
-      meta.appendChild(nameSpan);
+      meta.appendChild(nameWrap);
       meta.appendChild(timeSpan);
       var body = document.createElement('div');
       body.className = 'chat-body';
@@ -190,12 +270,15 @@
 
   function initStickerBar(container) {
     if (!container) return;
+    container.replaceChildren();
     STICKERS.forEach(function (s) {
+      var unlocked = isStickerUnlocked(s);
       var btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'chat-sticker-btn';
+      btn.className = 'chat-sticker-btn' + (unlocked ? '' : ' is-locked');
       btn.setAttribute('data-sticker-id', s.id);
-      btn.setAttribute('title', s.alt || s.id);
+      btn.setAttribute('data-sticker-locked', unlocked ? '0' : '1');
+      btn.setAttribute('title', unlocked ? (s.alt || s.id) : ((s.alt || s.id) + '（在 Shella 市集或暗号 MOEL01 解锁）'));
       var thumb = document.createElement('img');
       thumb.className = 'chat-sticker-btn__thumb';
       thumb.src = s.src;
@@ -218,6 +301,13 @@
         { once: true }
       );
       btn.appendChild(thumb);
+      if (!unlocked) {
+        var lockMark = document.createElement('span');
+        lockMark.className = 'chat-sticker-btn__lock';
+        lockMark.textContent = '🔒';
+        lockMark.setAttribute('aria-hidden', 'true');
+        btn.appendChild(lockMark);
+      }
       container.appendChild(btn);
     });
   }
@@ -234,8 +324,46 @@
     var sendBtn = document.getElementById('chat-send');
     var stickerBar = document.getElementById('chat-stickers');
     var namePreview = document.getElementById('chat-name-preview');
+    var badgePreview = document.getElementById('chat-badge-preview');
+    var framePreview = document.getElementById('chat-frame-preview');
+    var nickForm = document.getElementById('chat-nick-form');
+    var nickInput = document.getElementById('chat-nick-input');
 
-    if (namePreview) namePreview.textContent = getDisplayName();
+    function syncIdentityPreview() {
+      if (namePreview) namePreview.textContent = getDisplayName();
+      var badge = getActiveBadge();
+      if (badgePreview) {
+        badgePreview.textContent = badge ? '[' + badge + ']' : '';
+        badgePreview.hidden = !badge;
+      }
+      var frame = getActiveFrame();
+      if (framePreview) {
+        framePreview.textContent = frame === 'gold' ? '◈ 星金框' : (frame === 'lilac' ? '◈ 月影紫框' : '');
+        framePreview.hidden = !frame;
+      }
+      var st = readUserState();
+      var isCitizen = !!(st && st.uid && st.uid !== 'GUEST' && st.role !== 'GUEST');
+      if (nickForm) nickForm.hidden = isCitizen;
+    }
+
+    syncIdentityPreview();
+
+    if (nickForm && nickInput) {
+      try {
+        var savedNick = localStorage.getItem(CHAT_NICK_KEY);
+        if (savedNick) nickInput.value = savedNick;
+      } catch (e) {}
+      nickForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var val = nickInput.value.trim().slice(0, 24);
+        try {
+          if (val) localStorage.setItem(CHAT_NICK_KEY, val);
+          else localStorage.removeItem(CHAT_NICK_KEY);
+        } catch (err) {}
+        syncIdentityPreview();
+        setStatus(statusEl, val ? ('已设置聊天昵称：' + val) : '已恢复默认访客昵称');
+      });
+    }
 
     var cfg = window.__FIREBASE_CHAT_CONFIG__;
     if (!cfg || !cfg.apiKey || cfg.apiKey === 'REPLACE_ME') {
@@ -358,6 +486,10 @@
         k: 't',
         v: t
       };
+      var activeBadge = getActiveBadge();
+      var activeFrame = getActiveFrame();
+      if (activeBadge) entry.b = activeBadge;
+      if (activeFrame) entry.fr = activeFrame;
       appendEntryTransaction(entry).catch(function (e) {
         setStatus(statusEl, '发送失败：' + (e.message || String(e)));
       });
@@ -366,12 +498,20 @@
     function sendSticker(stickerId) {
       if (!stickerId || !stickerById[stickerId]) return;
       var st = stickerById[stickerId];
+      if (!isStickerUnlocked(st)) {
+        setStatus(statusEl, '「' + (st.alt || st.id) + '」为庭院限定贴纸：返回主页 Shella 市集兑换（或输入暗号 MOEL01）即可解锁！');
+        return;
+      }
       var entry = {
         t: Date.now(),
         n: getDisplayName(),
         k: 's',
         v: stickerId
       };
+      var activeBadge = getActiveBadge();
+      var activeFrame = getActiveFrame();
+      if (activeBadge) entry.b = activeBadge;
+      if (activeFrame) entry.fr = activeFrame;
       if (st.randomFx && FX_POOL.length) {
         entry.fx = Math.floor(Math.random() * FX_POOL.length);
       }

@@ -5,15 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>晒卡光荣墙 · Showcase | 爱丽丝庭院 TCG</title>
   <meta name="description" content="访客晒图：展示你最光荣的卡牌收藏。投稿内容为 UGC，本站不验证真伪。" />
-  <link rel="preload" href="assets/bg.webm" as="video" type="video/webm" />
-  <link rel="preload" href="assets/bg-poster.webp" as="image" />
+  <meta property="og:title" content="晒卡光荣墙 · Showcase | 爱丽丝庭院 TCG" />
+  <meta property="og:description" content="展示你最光荣的 TCG 卡牌收藏，为每一份热爱点亮共鸣。" />
+  <meta property="og:image" content="assets/alicecore.webp" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="news.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Noto+Serif+SC:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="courtyard-subpage.css" />
   <link rel="stylesheet" href="showcase.css" />
 </head>
 <body class="gal-body">
+  <nav class="cg-subnav" aria-label="站内导航">
+    <div class="cg-subnav__inner">
+      <a href="index.html" class="cg-subnav__brand">✦ 爱丽丝庭院</a>
+      <div class="cg-subnav__links">
+        <a href="index.html" class="cg-subnav__link">主页</a>
+        <a href="news.html" class="cg-subnav__link">商品目录</a>
+        <a href="individualshop.html" class="cg-subnav__link">私人摊位</a>
+        <a href="showcase.html" class="cg-subnav__link is-active" aria-current="page">晒卡墙</a>
+        <a href="chat.html" class="cg-subnav__link">频道聊天</a>
+        <a href="social.html" class="cg-subnav__link">社群</a>
+      </div>
+    </div>
+  </nav>
   <div id="gal-boot" class="gal-boot" aria-busy="true" aria-live="polite">
     <div class="gal-boot-inner">
       <span class="gal-boot-spinner" aria-hidden="true"></span>
@@ -23,16 +39,17 @@
   <div class="gal-stage" id="gal-stage">
     <video
       class="gal-bg-video"
+      width="1280"
+      height="720"
       autoplay
       muted
       loop
       playsinline
-      preload="auto"
-      poster="assets/bg-poster.webp"
+      loading="lazy"
+      preload="none"
       aria-hidden="true"
     >
       <source src="assets/bg.webm" type="video/webm" />
-      <source src="assets/bg.mp4" type="video/mp4" />
     </video>
     <div class="gal-bg-fallback" aria-hidden="true"></div>
     <div class="gal-vignette" aria-hidden="true"></div>
@@ -88,6 +105,33 @@
     </div>
   </div>
 
+  <dialog id="gal-lightbox" class="gal-lightbox" closedby="any" aria-labelledby="gal-lb-title">
+    <div class="gal-lb__panel">
+      <div class="gal-lb__head">
+        <div class="gal-lb__titles">
+          <h3 id="gal-lb-title" class="gal-lb__title">晒卡大图预览</h3>
+          <span id="gal-lb-counter" class="gal-lb__counter"></span>
+        </div>
+        <div class="gal-lb__controls">
+          <button type="button" id="gal-lb-zoom" class="gal-lb__btn">🔍 放大</button>
+          <a id="gal-lb-orig" class="gal-lb__btn" href="#" target="_blank" rel="noopener noreferrer">原图 ↗</a>
+          <form method="dialog" style="margin:0;">
+            <button type="submit" class="gal-lb__btn gal-lb__btn--close" autofocus>关闭 ✕</button>
+          </form>
+        </div>
+      </div>
+      <div class="gal-lb__stage" id="gal-lb-stage">
+        <button type="button" id="gal-lb-prev" class="gal-lb__nav gal-lb__nav--prev" aria-label="上一张">‹</button>
+        <img id="gal-lb-img" class="gal-lb__img" src="" alt="" referrerpolicy="no-referrer" />
+        <button type="button" id="gal-lb-next" class="gal-lb__nav gal-lb__nav--next" aria-label="下一张">›</button>
+      </div>
+      <p id="gal-lb-caption" class="gal-lb__caption"></p>
+    </div>
+  </dialog>
+
+  <script src="https://www.gstatic.com/firebasejs/12.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore-compat.js"></script>
+  <script src="chat-firebase-config.js"></script>
   <script src="showcase.js"></script>
 </body>
 </html>

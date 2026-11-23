@@ -164,6 +164,19 @@ select {
   border: 1px solid var(--accent-border);
 }
 
+.topbar__home {
+  height: 32px;
+  padding: 0 9px;
+  font-size: 0.76rem;
+  flex-shrink: 0;
+  border-color: var(--border-strong);
+  color: var(--text-secondary);
+}
+.topbar__home:hover {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
 .brand__text {
   min-width: 0;
 }

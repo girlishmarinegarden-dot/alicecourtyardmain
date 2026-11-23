@@ -730,39 +730,6 @@ body.install-standalone-body #install-page {
 .install-done-btn:hover { background: var(--hana-glow); color: #0a0a12; }
 .app-shell.hidden { display: none !important; }
 
-/* ——— 不规则异世界（another.html）独立主页 ——— */
-.another-page {
-    min-height: 100vh;
-    display: flex; justify-content: center; align-items: center;
-    padding: 1rem;
-    box-sizing: border-box;
-    background: var(--void-deep);
-}
-.another-main {
-    width: 100%; max-width: 420px;
-}
-.another-card {
-    padding: 2rem;
-    text-align: center;
-    border: var(--line);
-    border-radius: 12px;
-    background: var(--glass);
-}
-.another-title {
-    font-size: 1.25rem; font-weight: 300;
-    color: var(--gold-glow);
-    letter-spacing: 0.15em;
-    margin-bottom: 1rem;
-}
-.another-desc {
-    font-size: 0.9rem; color: var(--silver-dim);
-    margin-bottom: 1.5rem; line-height: 1.6;
-}
-.another-back-btn {
-    text-decoration: none;
-    margin-bottom: 0;
-}
-
 /* Google Translate 挂载点与工具栏隐藏（仅用于自动翻译，不显示 UI） */
 .google-translate-hidden {
     position: absolute !important;

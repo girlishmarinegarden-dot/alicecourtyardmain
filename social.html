@@ -3,33 +3,49 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#12081c" />
+  <meta name="theme-color" content="#0d0c16" />
+  <meta name="description" content="关注爱丽丝庭院（Alice's Garden）官方频道、周边商铺与玩家同好社群。" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="社群 · Social | 爱丽丝庭院" />
+  <meta property="og:description" content="YouTube 专使频道、Shopee 店铺、实时频道聊天与同人壁纸花园入口汇总。" />
+  <meta property="og:image" content="assets/alicecore.webp" />
   <title>社群 · Social | 爱丽丝庭院</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="news.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Noto+Serif+SC:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="courtyard-subpage.css" />
   <link rel="stylesheet" href="social.css" />
 </head>
 <body class="gal-body">
+  <nav class="cg-subnav" aria-label="站内导航">
+    <div class="cg-subnav__inner">
+      <a href="index.html" class="cg-subnav__brand">✦ 爱丽丝庭院</a>
+      <div class="cg-subnav__links">
+        <a href="index.html" class="cg-subnav__link">主页</a>
+        <a href="news.html" class="cg-subnav__link">商品目录</a>
+        <a href="individualshop.html" class="cg-subnav__link">私人摊位</a>
+        <a href="showcase.html" class="cg-subnav__link">晒卡墙</a>
+        <a href="chat.html" class="cg-subnav__link">频道聊天</a>
+        <a href="social.html" class="cg-subnav__link is-active" aria-current="page">社群</a>
+      </div>
+    </div>
+  </nav>
+
   <div class="gal-stage gal-stage--social" id="gal-stage">
     <div class="gal-bg-fallback" aria-hidden="true"></div>
     <div class="gal-vignette" aria-hidden="true"></div>
-    <div class="gal-sakura" aria-hidden="true"></div>
 
     <div class="gal-content gal-content--social">
       <a href="index.html" class="gal-back-home">← 返回庭院</a>
 
       <header class="gal-header">
-        <div class="gal-header__ornament gal-header__ornament--tl" aria-hidden="true"></div>
-        <div class="gal-header__ornament gal-header__ornament--tr" aria-hidden="true"></div>
         <h1 class="gal-title">社群 · Social</h1>
-        <p class="gal-subtitle">关注爱丽丝庭院的官方与玩家渠道</p>
+        <p class="gal-subtitle">官方频道、商铺与玩家交流入口</p>
       </header>
 
       <section class="social-intro gal-panel" aria-label="说明">
         <p class="social-intro__text">
-          欢迎加入讨论、获取更新与与同好交流。点击下方卡片将在新标签页打开对应平台。
+          欢迎加入讨论、追踪 TCG 最新货架、欣赏音乐与视觉小说，或与同好一起分享收藏。
         </p>
       </section>
 
@@ -43,99 +59,92 @@
         >
           <span class="social-card__icon" aria-hidden="true">▶</span>
           <span class="social-card__body">
-            <span class="social-card__title">YouTube</span>
-            <span class="social-card__desc">专使频道 · 影像与音乐</span>
+            <span class="social-card__title">YouTube · 专使频道</span>
+            <span class="social-card__desc">官方影像、主题音乐与庭院幕后</span>
           </span>
-          <span class="social-card__arrow" aria-hidden="true">→</span>
+          <span class="social-card__arrow" aria-hidden="true">↗</span>
         </a>
 
         <a
-          class="social-card social-card--discord gal-panel"
+          class="social-card social-card--shopee gal-panel"
           role="listitem"
-          href="https://discord.com/invite/YOUR_INVITE"
+          href="https://shopee.com.my/shop/1063009262"
           target="_blank"
           rel="noopener noreferrer"
         >
-          <span class="social-card__icon social-card__icon--discord" aria-hidden="true">D</span>
+          <span class="social-card__icon" aria-hidden="true">🛍</span>
           <span class="social-card__body">
-            <span class="social-card__title">Discord</span>
-            <span class="social-card__desc">服务器邀请（请把 YOUR_INVITE 换成真实邀请码）</span>
+            <span class="social-card__title">Shopee 马来西亚官方店</span>
+            <span class="social-card__desc">实体 TCG 卡牌与周边贩售</span>
           </span>
-          <span class="social-card__arrow" aria-hidden="true">→</span>
+          <span class="social-card__arrow" aria-hidden="true">↗</span>
         </a>
 
         <a
-          class="social-card social-card--whatsapp gal-panel"
+          class="social-card social-card--vn gal-panel"
           role="listitem"
-          href="https://wa.me/000000000000"
+          href="https://girlishmarinegarden40-hash.github.io/VN/"
           target="_blank"
           rel="noopener noreferrer"
+        >
+          <span class="social-card__icon" aria-hidden="true">📖</span>
+          <span class="social-card__body">
+            <span class="social-card__title">Web 视觉小说 · 主线</span>
+            <span class="social-card__desc">沉浸式体验《爱丽丝庭院》主线物语</span>
+          </span>
+          <span class="social-card__arrow" aria-hidden="true">↗</span>
+        </a>
+
+        <a
+          class="social-card social-card--wallpaper gal-panel"
+          role="listitem"
+          href="https://girlishmarinewallpaper-crypto.github.io/wallpaper/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span class="social-card__icon" aria-hidden="true">🌸</span>
+          <span class="social-card__body">
+            <span class="social-card__title">同人壁纸花园</span>
+            <span class="social-card__desc">精选角色美图与高清壁纸收集</span>
+          </span>
+          <span class="social-card__arrow" aria-hidden="true">↗</span>
+        </a>
+
+        <a
+          class="social-card social-card--chat gal-panel"
+          role="listitem"
+          href="chat.html"
         >
           <span class="social-card__icon" aria-hidden="true">💬</span>
           <span class="social-card__body">
-            <span class="social-card__title">WhatsApp</span>
-            <span class="social-card__desc">联系 / 群组（请替换 wa.me 后数字为国际区号+号码，无 + 号）</span>
+            <span class="social-card__title">站内频道聊天室</span>
+            <span class="social-card__desc">无需外部账号，即时与同好对话发送贴纸</span>
           </span>
           <span class="social-card__arrow" aria-hidden="true">→</span>
         </a>
 
         <a
-          class="social-card social-card--facebook gal-panel"
+          class="social-card social-card--catalog gal-panel"
           role="listitem"
-          href="https://www.facebook.com/YOUR_PAGE_OR_GROUP"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="news.html"
         >
-          <span class="social-card__icon" aria-hidden="true">f</span>
+          <span class="social-card__icon" aria-hidden="true">✦</span>
           <span class="social-card__body">
-            <span class="social-card__title">Facebook</span>
-            <span class="social-card__desc">专页或社团链接</span>
-          </span>
-          <span class="social-card__arrow" aria-hidden="true">→</span>
-        </a>
-
-        <a
-          class="social-card social-card--x gal-panel"
-          role="listitem"
-          href="https://x.com/YOUR_HANDLE"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <span class="social-card__icon" aria-hidden="true">𝕏</span>
-          <span class="social-card__body">
-            <span class="social-card__title">X（Twitter）</span>
-            <span class="social-card__desc">动态与公告</span>
-          </span>
-          <span class="social-card__arrow" aria-hidden="true">→</span>
-        </a>
-
-        <a
-          class="social-card social-card--instagram gal-panel"
-          role="listitem"
-          href="https://www.instagram.com/YOUR_HANDLE"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <span class="social-card__icon" aria-hidden="true">◎</span>
-          <span class="social-card__body">
-            <span class="social-card__title">Instagram</span>
-            <span class="social-card__desc">视觉与幕后</span>
+            <span class="social-card__title">TCG 官方商品目录</span>
+            <span class="social-card__desc">实时货架浏览、高清看图与一键 WhatsApp 询单</span>
           </span>
           <span class="social-card__arrow" aria-hidden="true">→</span>
         </a>
       </div>
 
       <section class="social-more gal-panel">
-        <h2 class="social-more__title">站内相关</h2>
+        <h2 class="social-more__title">站内社区板块</h2>
         <ul class="social-more__list">
-          <li><a href="news.html">公告栏 · News board</a> — 表格同步资讯</li>
-          <li><a href="index.html">返回主应用</a> — 地图与各模块</li>
+          <li><a href="individualshop.html">私人摊位 · Individual Shop</a> — 玩家自由挂单交易区</li>
+          <li><a href="showcase.html">晒卡光荣墙 · Showcase</a> — 展示你的光荣收藏与共鸣点赞</li>
+          <li><a href="index.html">爱丽丝庭院主页</a> — 抽卡剧场、十三牌占卜与设定图书馆</li>
         </ul>
       </section>
-
-      <p class="social-footnote">
-        编辑本页 <code>social.html</code> 内各 <code>href</code> 即可更新链接；样式见 <code>social.css</code>。
-      </p>
     </div>
   </div>
 </body>

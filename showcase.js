@@ -269,15 +269,183 @@
     });
   }
 
-  function driveThumbUrl(link) {
+  function driveThumbUrl(link, width) {
     var m = link.match(/\/file\/d\/([^/]+)/);
     var id = m ? m[1] : null;
     if (!id) {
       m = link.match(/[?&]id=([^&]+)/);
       id = m ? m[1] : null;
     }
-    if (id) return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w480';
+    if (id) return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w' + (width || 480);
     return link;
+  }
+
+  /* ==================== 站内原生高清灯箱 (<dialog id="gal-lightbox">) ==================== */
+  var lbState_ = { links: [], index: 0, title: '', caption: '', zoomed: false };
+
+  function renderLightbox_() {
+    var img = document.getElementById('gal-lb-img');
+    var titleEl = document.getElementById('gal-lb-title');
+    var counterEl = document.getElementById('gal-lb-counter');
+    var captionEl = document.getElementById('gal-lb-caption');
+    var origEl = document.getElementById('gal-lb-orig');
+    var prevBtn = document.getElementById('gal-lb-prev');
+    var nextBtn = document.getElementById('gal-lb-next');
+    var zoomBtn = document.getElementById('gal-lb-zoom');
+    if (!img || !lbState_.links.length) return;
+    var url = lbState_.links[lbState_.index];
+    img.src = driveThumbUrl(url, 1600);
+    img.alt = lbState_.title || '晒卡大图';
+    img.classList.toggle('is-zoomed', lbState_.zoomed);
+    if (zoomBtn) zoomBtn.textContent = lbState_.zoomed ? '🔍 还原' : '🔍 放大';
+    if (titleEl) titleEl.textContent = lbState_.title || '晒卡大图预览';
+    if (counterEl) {
+      counterEl.textContent = lbState_.links.length > 1 ? ((lbState_.index + 1) + ' / ' + lbState_.links.length) : '';
+    }
+    if (captionEl) captionEl.textContent = lbState_.caption || '';
+    if (origEl) origEl.href = url;
+    var multi = lbState_.links.length > 1;
+    if (prevBtn) prevBtn.hidden = !multi;
+    if (nextBtn) nextBtn.hidden = !multi;
+  }
+
+  function stepLightbox_(delta) {
+    if (lbState_.links.length <= 1) return;
+    lbState_.index = (lbState_.index + delta + lbState_.links.length) % lbState_.links.length;
+    lbState_.zoomed = false;
+    renderLightbox_();
+  }
+
+  function bindLightbox_() {
+    var dlg = document.getElementById('gal-lightbox');
+    if (!dlg || dlg.dataset.lbBound) return;
+    dlg.dataset.lbBound = '1';
+    var prevBtn = document.getElementById('gal-lb-prev');
+    var nextBtn = document.getElementById('gal-lb-next');
+    var zoomBtn = document.getElementById('gal-lb-zoom');
+    var img = document.getElementById('gal-lb-img');
+    if (prevBtn) prevBtn.addEventListener('click', function () { stepLightbox_(-1); });
+    if (nextBtn) nextBtn.addEventListener('click', function () { stepLightbox_(1); });
+    var toggleZoom = function () {
+      lbState_.zoomed = !lbState_.zoomed;
+      renderLightbox_();
+    };
+    if (zoomBtn) zoomBtn.addEventListener('click', toggleZoom);
+    if (img) img.addEventListener('click', toggleZoom);
+    dlg.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowLeft') { e.preventDefault(); stepLightbox_(-1); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); stepLightbox_(1); }
+    });
+    var isOutside = function (e) {
+      var r = dlg.getBoundingClientRect();
+      return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+    };
+    var pressedOutside = false;
+    dlg.addEventListener('pointerdown', function (e) { pressedOutside = isOutside(e); });
+    dlg.addEventListener('pointerup', function (e) {
+      if (pressedOutside && isOutside(e)) dlg.close();
+    });
+  }
+
+  function openLightbox_(links, startIdx, title, caption) {
+    var dlg = document.getElementById('gal-lightbox');
+    if (!dlg || !links || !links.length) return;
+    bindLightbox_();
+    lbState_.links = links.slice();
+    lbState_.index = Math.max(0, Math.min(startIdx || 0, links.length - 1));
+    lbState_.title = title || '晒卡大图预览';
+    lbState_.caption = caption || '';
+    lbState_.zoomed = false;
+    renderLightbox_();
+    if (typeof dlg.showModal === 'function') {
+      if (!dlg.open) dlg.showModal();
+    } else {
+      dlg.setAttribute('open', '');
+    }
+  }
+
+  /* ==================== Firestore 单文档实时「✦ 共鸣点赞」 ==================== */
+  var LIKES_STORAGE_KEY = 'AliceGarden_ShowcaseLikes';
+  var likesDocRef_ = null;
+  var likesCounts_ = {};
+
+  function getLocalLikedMap_() {
+    try {
+      var raw = localStorage.getItem(LIKES_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveLocalLikedMap_(map) {
+    try {
+      localStorage.setItem(LIKES_STORAGE_KEY, JSON.stringify(map));
+    } catch (e) {}
+  }
+
+  function itemLikeKey_(r) {
+    var raw = String(r[0] || '') + '|' + String(r[2] || '') + '|' + String(r[1] || '').slice(0, 80);
+    var h = 2166136261;
+    for (var i = 0; i < raw.length; i++) {
+      h ^= raw.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return 'k_' + (h >>> 0).toString(36);
+  }
+
+  function syncLikeButtonsDom_() {
+    var likedMap = getLocalLikedMap_();
+    document.querySelectorAll('[data-like-key]').forEach(function (btn) {
+      var k = btn.getAttribute('data-like-key');
+      var cnt = Math.max(0, Number(likesCounts_[k] || 0));
+      var liked = !!likedMap[k];
+      if (liked && cnt === 0) cnt = 1;
+      btn.classList.toggle('is-liked', liked);
+      btn.setAttribute('aria-pressed', liked ? 'true' : 'false');
+      var numEl = btn.querySelector('.showcase-like-btn__count');
+      if (numEl) numEl.textContent = String(cnt);
+    });
+  }
+
+  function initShowcaseLikes_() {
+    try {
+      var cfg = window.__FIREBASE_CHAT_CONFIG__;
+      if (!cfg || !cfg.apiKey || typeof firebase === 'undefined') return;
+      if (!firebase.apps || !firebase.apps.length) {
+        firebase.initializeApp(cfg);
+      }
+      var db = firebase.firestore();
+      likesDocRef_ = db.collection('channels').doc('showcase_likes');
+      likesDocRef_.onSnapshot(
+        function (doc) {
+          if (doc && doc.exists) {
+            likesCounts_ = doc.data() || {};
+            syncLikeButtonsDom_();
+          }
+        },
+        function () {}
+      );
+    } catch (e) {}
+  }
+
+  function toggleResonanceLike_(likeKey, btn) {
+    var likedMap = getLocalLikedMap_();
+    if (likedMap[likeKey]) {
+      return;
+    }
+    likedMap[likeKey] = 1;
+    saveLocalLikedMap_(likedMap);
+    likesCounts_[likeKey] = Number(likesCounts_[likeKey] || 0) + 1;
+    syncLikeButtonsDom_();
+    if (btn) {
+      btn.classList.add('is-liked');
+    }
+    if (likesDocRef_ && typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue) {
+      var patch = {};
+      patch[likeKey] = firebase.firestore.FieldValue.increment(1);
+      likesDocRef_.set(patch, { merge: true }).catch(function () {});
+    }
   }
 
   function escapeHtml(str) {
@@ -360,9 +528,14 @@
       a.href = first;
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
+      a.title = '点击高清放大预览';
+      a.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        openLightbox_(links, 0, title || '晒卡大图预览', note || '');
+      });
       var img = document.createElement('img');
-      img.src = driveThumbUrl(first);
-      img.alt = '';
+      img.src = driveThumbUrl(first, 480);
+      img.alt = title || '晒卡照片';
       img.referrerPolicy = 'no-referrer';
       img.loading = 'lazy';
       img.onerror = function () {
@@ -408,10 +581,28 @@
       });
       body.appendChild(drives);
     }
+    var footer = document.createElement('div');
+    footer.className = 'showcase-card__footer';
     var meta = document.createElement('div');
     meta.className = 'showcase-card__meta';
     meta.textContent = time;
-    body.appendChild(meta);
+    footer.appendChild(meta);
+
+    var likeKey = itemLikeKey_(r);
+    var likedMap = getLocalLikedMap_();
+    var liked = !!likedMap[likeKey];
+    var countVal = Math.max(liked ? 1 : 0, Number(likesCounts_[likeKey] || 0));
+    var likeBtn = document.createElement('button');
+    likeBtn.type = 'button';
+    likeBtn.className = 'showcase-like-btn' + (liked ? ' is-liked' : '');
+    likeBtn.setAttribute('data-like-key', likeKey);
+    likeBtn.setAttribute('aria-pressed', liked ? 'true' : 'false');
+    likeBtn.innerHTML = '<span aria-hidden="true">✦</span><span>共鸣</span><span class="showcase-like-btn__count">' + countVal + '</span>';
+    likeBtn.addEventListener('click', function () {
+      toggleResonanceLike_(likeKey, likeBtn);
+    });
+    footer.appendChild(likeBtn);
+    body.appendChild(footer);
     card.appendChild(body);
 
     return card;
@@ -590,56 +781,30 @@
     var stage = document.getElementById('gal-stage');
     var vid = document.querySelector('.gal-bg-video');
     var boot = document.getElementById('gal-boot');
-    var settled = false;
+    var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    function revealPage_() {
-      if (settled) return;
-      settled = true;
-      document.body.classList.add('gal-ready');
-      if (boot) {
-        boot.setAttribute('aria-busy', 'false');
-        boot.setAttribute('aria-hidden', 'true');
-      }
+    document.body.classList.add('gal-ready');
+    if (boot) {
+      boot.setAttribute('aria-busy', 'false');
+      boot.setAttribute('aria-hidden', 'true');
     }
-
-    function onVideoReady_() {
-      if (settled) return;
-      if (stage) stage.classList.add('gal-video-ready');
-      revealPage_();
+    if (!vid || !stage) return;
+    if (reducedMotion) {
+      vid.pause();
+      stage.classList.add('gal-video-missing');
+      return;
     }
-
-    function onVideoMissing_() {
-      if (settled) return;
-      if (stage) stage.classList.add('gal-video-missing');
-      revealPage_();
-    }
-
-    if (!vid || !stage) {
-      revealPage_();
-    } else {
-      vid.preload = 'auto';
-      vid.addEventListener('canplaythrough', onVideoReady_);
-      vid.addEventListener('error', onVideoMissing_);
-      vid.addEventListener('progress', function () {
-        if (vid.readyState >= 4) onVideoReady_();
-      });
-      if (vid.readyState >= 4) {
-        onVideoReady_();
-      } else {
-        setTimeout(function () {
-          if (settled) return;
-          if (vid.error) onVideoMissing_();
-          else if (vid.readyState >= 2) {
-            if (stage) stage.classList.add('gal-video-ready');
-            revealPage_();
-          } else onVideoMissing_();
-        }, 18000);
-      }
-    }
+    vid.addEventListener('canplay', function () {
+      stage.classList.add('gal-video-ready');
+    }, { once: true });
+    vid.addEventListener('error', function () {
+      stage.classList.add('gal-video-missing');
+    }, { once: true });
   }
 
   function init() {
     initGalStage_();
+    initShowcaseLikes_();
     bindPagination_();
     bindFindBar_();
     bindConsentForm_();
