@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="第十三张空白牌贴纸">
+  <defs>
+    <radialGradient id="c13Glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f7dc96" stop-opacity="0.38"/>
+      <stop offset="100%" stop-color="#140e24" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="c13Paper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fffdf8"/>
+      <stop offset="100%" stop-color="#e8d8b7"/>
+    </linearGradient>
+    <linearGradient id="c13Gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff0c4"/>
+      <stop offset="100%" stop-color="#b98a3b"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="90" fill="url(#c13Glow)"/>
+  <g transform="translate(100, 96) rotate(-7)">
+    <!-- Back shadow card -->
+    <rect x="-46" y="-66" width="92" height="132" rx="10" fill="#23193b" stroke="#c3a4f7" stroke-width="1.4" transform="translate(10, 6) rotate(9)" opacity="0.85"/>
+    <!-- Front XIII Blank Card -->
+    <rect x="-48" y="-68" width="96" height="136" rx="11" fill="url(#c13Paper)" stroke="url(#c13Gold)" stroke-width="3"/>
+    <rect x="-39" y="-59" width="78" height="118" rx="6" fill="none" stroke="#a68142" stroke-width="1.1" stroke-dasharray="3 3"/>
+    <text x="0" y="-34" text-anchor="middle" fill="#6f4f1f" font-family="Georgia, serif" font-size="16" font-weight="700" letter-spacing="2.5">XIII</text>
+    <polygon points="0,-14 11,0 0,14 -11,0" fill="none" stroke="#a68142" stroke-width="1.6"/>
+    <circle cx="0" cy="0" r="3" fill="#c79b4d"/>
+    <text x="0" y="34" text-anchor="middle" fill="#5b4322" font-family="'Noto Serif SC', Georgia, serif" font-size="11" font-weight="700">空白之牌</text>
+    <text x="0" y="50" text-anchor="middle" fill="#8b6b3a" font-family="Georgia, serif" font-size="8.5" letter-spacing="1.6">UNDEFINED</text>
+  </g>
+  <polygon points="36,42 39,49 46,52 39,55 36,62 33,55 26,52 33,49" fill="#ffe7a6"/>
+  <polygon points="164,132 167,138 173,141 167,144 164,150 161,144 155,141 161,138" fill="#d9bfff"/>
+</svg>

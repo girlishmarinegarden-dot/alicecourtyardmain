@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Moel 黑猫贴纸">
+  <defs>
+    <radialGradient id="moelHalo" cx="50%" cy="50%" r="48%">
+      <stop offset="0%" stop-color="#e9c878" stop-opacity="0.34"/>
+      <stop offset="100%" stop-color="#1a1230" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="moelFur" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2c2444"/>
+      <stop offset="100%" stop-color="#110d1e"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="88" fill="url(#moelHalo)"/>
+  <!-- Floating crescent & star -->
+  <path d="M158,34 A14,14 0 1,0 172,50 A10,10 0 1,1 158,34 Z" fill="#f3d68a"/>
+  <polygon points="44,44 47,51 54,54 47,57 44,64 41,57 34,54 41,51" fill="#d9bfff"/>
+  <!-- Curled tail -->
+  <path d="M142,148 C172,144 176,112 154,104 C142,100 138,112 146,118" fill="none" stroke="#181228" stroke-width="11" stroke-linecap="round"/>
+  <path d="M142,148 C172,144 176,112 154,104" fill="none" stroke="#e9c878" stroke-width="1.2" opacity="0.55" stroke-linecap="round"/>
+  <!-- Cat body -->
+  <ellipse cx="100" cy="144" rx="44" ry="34" fill="url(#moelFur)" stroke="#e5c579" stroke-width="2"/>
+  <!-- Cat ears -->
+  <polygon points="58,82 50,36 86,62" fill="url(#moelFur)" stroke="#e5c579" stroke-width="2" stroke-linejoin="round"/>
+  <polygon points="142,82 150,36 114,62" fill="url(#moelFur)" stroke="#e5c579" stroke-width="2" stroke-linejoin="round"/>
+  <polygon points="62,74 58,48 79,64" fill="#4f376a"/>
+  <polygon points="138,74 142,48 121,64" fill="#4f376a"/>
+  <!-- Cat head -->
+  <ellipse cx="100" cy="96" rx="48" ry="40" fill="url(#moelFur)" stroke="#e5c579" stroke-width="2.2"/>
+  <!-- Golden luminous eyes -->
+  <ellipse cx="81" cy="94" rx="9" ry="11" fill="#ffd977"/>
+  <ellipse cx="119" cy="94" rx="9" ry="11" fill="#ffd977"/>
+  <ellipse cx="81" cy="94" rx="3.2" ry="8" fill="#171024"/>
+  <ellipse cx="119" cy="94" rx="3.2" ry="8" fill="#171024"/>
+  <circle cx="78" cy="89" r="2.4" fill="#ffffff"/>
+  <circle cx="116" cy="89" r="2.4" fill="#ffffff"/>
+  <!-- Nose & quiet smile -->
+  <polygon points="96,106 104,106 100,110" fill="#f3b6c6"/>
+  <path d="M92,113 Q96,117 100,112 Q104,117 108,113" fill="none" stroke="#f0d9a3" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- Collar & gold bell -->
+  <path d="M68,128 Q100,140 132,128" fill="none" stroke="#c084fc" stroke-width="4.5" stroke-linecap="round"/>
+  <circle cx="100" cy="136" r="7" fill="#f6d884" stroke="#7d5c24" stroke-width="1.4"/>
+  <text x="100" y="186" text-anchor="middle" fill="#f6dfb0" font-family="Georgia, serif" font-size="13" font-weight="700" letter-spacing="2.5">MOEL · 1%</text>
+</svg>
